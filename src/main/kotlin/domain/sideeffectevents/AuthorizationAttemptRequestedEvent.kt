@@ -1,0 +1,3 @@
+package domain.sideeffectevents
+
+data object AuthorizationAttemptRequestedEvent: SideEffectEvent
