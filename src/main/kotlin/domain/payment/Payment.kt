@@ -75,12 +75,20 @@ class Payment
         return applyNewEvent(event)
     }
 
-    fun addConfirmResponse(authorizeResponse: AuthorizeResponse, confirmParameters: Map<String, Any>): Payment
+    fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
     {
-        val event = ConfirmedEvent(
+        val event = ReturnedFromClient(
             version = nextVersion(),
-            authorizeResponse = authorizeResponse,
             confirmParameters = confirmParameters)
+
+        return applyNewEvent(event)
+    }
+
+    fun addConfirmResponse(authorizeResponse: AuthorizeResponse): Payment
+    {
+        val event = ConfirmationRequestedEvent(
+            version = nextVersion(),
+            authorizeResponse = authorizeResponse)
 
         return applyNewEvent(event)
     }

@@ -10,5 +10,6 @@ sealed interface PaymentStatus
     val newEvents: List<PaymentEvent>
     val newSideEffectEvents: List<SideEffectEvent>
     val paymentPayload: PaymentPayload?
+    fun applyRecordedEvent(event: PaymentEvent): PaymentStatus
     fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus
 }

@@ -13,5 +13,6 @@ data class RejectedByRouting
 
     ) : RejectedStatus
 {
+    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus = this
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus = this
 }

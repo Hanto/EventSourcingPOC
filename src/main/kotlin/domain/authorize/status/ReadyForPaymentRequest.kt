@@ -14,6 +14,19 @@ class ReadyForPaymentRequest : PaymentStatus
     override val paymentPayload: PaymentPayload? = null
     private val log = getLogger(ReadyForPaymentRequest::class.java.name)
 
+    fun addPaymentPayload(paymentPayload: PaymentPayload): PaymentStatus
+    {
+        val event = PaymentRequestedEvent(
+            version = baseVersion + newEvents.size + 1,
+            paymentPayload = paymentPayload)
+
+        return apply(event, isNew = true)
+    }
+
+    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus =
+
+        apply(event, isNew = false)
+
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)

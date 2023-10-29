@@ -20,6 +20,19 @@ data class ReadyForRisk
 {
     private val log = Logger.getLogger(ReadyForRisk::class.java.name)
 
+    fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): PaymentStatus
+    {
+        val event = RiskEvaluatedEvent(
+            version = baseVersion + newEvents.size + 1,
+            fraudAnalysisResult = fraudAnalysisResult)
+
+        return apply(event, isNew = true)
+    }
+
+    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus =
+
+        apply(event, isNew = false)
+
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
@@ -37,11 +50,12 @@ data class ReadyForRisk
         val newEvents = if (isNew) newEvents + event else newEvents
         val newVersion = if (isNew) baseVersion else event.version
 
+        newSideEffectEvents.addNewEvent(FraudEvaluationCompletedEvent, isNew)
+
         return when (event.fraudAnalysisResult)
         {
             is FraudAnalysisResult.Denied ->
             {
-                newSideEffectEvents.addNewEvent(FraudEvaluationCompletedEvent, isNew)
                 newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
 
                 RejectedByRisk(
@@ -54,8 +68,6 @@ data class ReadyForRisk
 
             is FraudAnalysisResult.Approved ->
             {
-                newSideEffectEvents.addNewEvent(FraudEvaluationCompletedEvent, isNew)
-
                 ReadyForRouting(
                     baseVersion = newVersion,
                     newEvents = newEvents,

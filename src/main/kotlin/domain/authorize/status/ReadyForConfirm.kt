@@ -1,6 +1,6 @@
 package domain.authorize.status
 
-import domain.authorize.events.AuthorizationRequestedEvent
+import domain.authorize.events.ConfirmationRequestedEvent
 import domain.authorize.events.PaymentEvent
 import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.gateway.ActionType
@@ -11,7 +11,7 @@ import domain.events.*
 import domain.payment.PaymentPayload
 import java.util.logging.Logger
 
-class ReadyForAuthorization
+class ReadyForConfirm
 (
     override val baseVersion: Int,
     override val newEvents: List<PaymentEvent>,
@@ -19,16 +19,17 @@ class ReadyForAuthorization
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: Int,
-    val paymentAccount: PaymentAccount
+    val paymentAccount: PaymentAccount,
+    val confirmParameters: Map<String, Any>
 
 ): PaymentStatus
 {
     companion object { private const val MAX_RETRIES = 1 }
-    private val log = Logger.getLogger(ReadyForAuthorization::class.java.name)
+    private val log = Logger.getLogger(ReadyForConfirm::class.java.name)
 
-    fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): PaymentStatus
+    fun addConfirmResponse(authorizeResponse: AuthorizeResponse): PaymentStatus
     {
-        val event = AuthorizationRequestedEvent(
+        val event = ConfirmationRequestedEvent(
             version = baseVersion + newEvents.size + 1,
             authorizeResponse = authorizeResponse)
 
@@ -43,26 +44,25 @@ class ReadyForAuthorization
 
         when (event)
         {
-            is AuthorizationRequestedEvent -> apply(event, isNew)
+            is ConfirmationRequestedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: AuthorizationRequestedEvent, isNew: Boolean): PaymentStatus
+    private fun apply(event: ConfirmationRequestedEvent, isNew: Boolean): PaymentStatus
     {
         val newSideEffectEvents = newSideEffectEvents.toMutableList()
         val newEvents = if (isNew) newEvents + event else newEvents
         val newVersion = if (isNew) baseVersion else event.version
-
-        newSideEffectEvents.addNewEvent(AuthorizationAttemptRequestedEvent, isNew)
 
         return when (event.authorizeResponse.status)
         {
             is AuthorizeStatus.Success ->
             {
                 newSideEffectEvents.addNewEvent(PaymentAuthorizedEvent, isNew)
+                newSideEffectEvents.addNewEvent(PaymentAuthenticationCompletedEvent, isNew)
 
                 Authorized(
                     baseVersion = newVersion,
@@ -77,7 +77,6 @@ class ReadyForAuthorization
 
             is AuthorizeStatus.ClientActionRequested ->
             {
-                newSideEffectEvents.addNewEvent(PaymentAuthenticationStartedEvent, isNew)
                 newSideEffectEvents.addNewEvent(getClientActionEvent(event.authorizeResponse.status), isNew)
 
                 ReadyForClientActionResponse(
@@ -95,8 +94,9 @@ class ReadyForAuthorization
             is AuthorizeStatus.Reject ->
             {
                 newSideEffectEvents.addNewEvent(AuthorizationAttemptRejectedEvent, isNew)
+                newSideEffectEvents.addNewEvent(PaymentAuthenticationCompletedEvent, isNew)
 
-                return if (retryAttemps < MAX_RETRIES)
+                if (retryAttemps < MAX_RETRIES)
                 {
                     newSideEffectEvents.addNewEvent(PaymentRetriedEvent, isNew)
 

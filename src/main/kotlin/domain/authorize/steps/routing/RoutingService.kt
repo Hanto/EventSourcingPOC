@@ -1,8 +1,8 @@
 package domain.authorize.steps.routing
 
-import domain.payment.Payment
+import domain.authorize.status.ReadyForAnyRouting
 
 interface RoutingService
 {
-    fun routeForPayment(payment: Payment): RoutingResult
+    fun routeForPayment(payment: ReadyForAnyRouting): RoutingResult
 }

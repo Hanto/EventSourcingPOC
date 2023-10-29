@@ -1,13 +1,15 @@
 package domain.authorize.status
 
-import domain.authorize.events.ConfirmedEvent
 import domain.authorize.events.PaymentEvent
+import domain.authorize.events.ReturnedFromClient
 import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.gateway.ActionType
 import domain.authorize.steps.gateway.AuthorizeStatus
 import domain.authorize.steps.gateway.ClientAction
 import domain.authorize.steps.routing.PaymentAccount
-import domain.events.*
+import domain.events.BrowserFingerprintRequestedEvent
+import domain.events.SideEffectEvent
+import domain.events.UserApprovalRequestedEvent
 import domain.payment.PaymentPayload
 import java.util.logging.Logger
 
@@ -22,110 +24,50 @@ class ReadyForClientActionResponse
     val paymentAccount: PaymentAccount,
     val clientAction: ClientAction,
 
-    ): PaymentStatus
+): PaymentStatus
 {
-    companion object { private const val MAX_RETRIES = 1 }
     private val log = Logger.getLogger(ReadyForClientActionResponse::class.java.name)
+
+    fun addConfirmParameters(confirmParameters: Map<String, Any>): PaymentStatus
+    {
+        val event = ReturnedFromClient(
+            version = baseVersion + newEvents.size + 1,
+            confirmParameters = confirmParameters)
+
+        return apply(event, isNew = true)
+    }
+
+    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus =
+
+        apply(event, isNew = false)
 
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
-            is ConfirmedEvent -> apply(event, isNew)
+            is ReturnedFromClient -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: ConfirmedEvent, isNew: Boolean): PaymentStatus
+    private fun apply(event: ReturnedFromClient, isNew: Boolean): PaymentStatus
     {
         val newSideEffectEvents = newSideEffectEvents.toMutableList()
         val newEvents = if (isNew) newEvents + event else newEvents
         val newVersion = if (isNew) baseVersion else event.version
 
-        return when (event.authorizeResponse.status)
-        {
-            is AuthorizeStatus.Success ->
-            {
-                newSideEffectEvents.addNewEvent(PaymentAuthorizedEvent, isNew)
-                newSideEffectEvents.addNewEvent(PaymentAuthenticationCompletedEvent, isNew)
-
-                Authorized(
-                    baseVersion = newVersion,
-                    newEvents = newEvents,
-                    paymentPayload = paymentPayload,
-                    newSideEffectEvents = newSideEffectEvents,
-                    riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemps = retryAttemps,
-                    paymentAccount = paymentAccount
-                )
-            }
-
-            is AuthorizeStatus.ClientActionRequested ->
-            {
-                newSideEffectEvents.addNewEvent(getClientActionEvent(event.authorizeResponse.status), isNew)
-
-                ReadyForClientActionResponse(
-                    baseVersion = newVersion,
-                    newEvents = newEvents,
-                    paymentPayload = paymentPayload,
-                    newSideEffectEvents = newSideEffectEvents,
-                    riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemps = retryAttemps,
-                    paymentAccount = paymentAccount,
-                    clientAction = event.authorizeResponse.status.clientAction
-                )
-            }
-
-            is AuthorizeStatus.Reject ->
-            {
-                newSideEffectEvents.addNewEvent(AuthorizationAttemptRejectedEvent, isNew)
-                newSideEffectEvents.addNewEvent(PaymentAuthenticationCompletedEvent, isNew)
-
-                if (retryAttemps < MAX_RETRIES)
-                {
-                    newSideEffectEvents.addNewEvent(PaymentRetriedEvent, isNew)
-
-                    ReadyForRoutingRetry(
-                        baseVersion = newVersion,
-                        newEvents = newEvents,
-                        paymentPayload = paymentPayload,
-                        newSideEffectEvents = newSideEffectEvents,
-                        riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemps + 1,
-                        paymentAccount = paymentAccount
-                    )
-                }
-                else
-                {
-                    newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
-
-                    RejectedByGateway(
-                        baseVersion = newVersion,
-                        newEvents = newEvents,
-                        paymentPayload = paymentPayload,
-                        newSideEffectEvents = newSideEffectEvents,
-                        riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemps,
-                        paymentAccount = paymentAccount
-                    )
-                }
-            }
-
-            is AuthorizeStatus.Fail ->
-            {
-                newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
-
-                Failed(
-                    baseVersion = newVersion,
-                    newEvents = newEvents,
-                    paymentPayload = paymentPayload,
-                    newSideEffectEvents = newSideEffectEvents,
-                    reason = "exception on authorization"
-                )
-            }
-        }
+        return ReadyForConfirm(
+            baseVersion = newVersion,
+            newEvents = newEvents,
+            newSideEffectEvents = newSideEffectEvents,
+            paymentPayload = paymentPayload,
+            riskAssessmentOutcome = riskAssessmentOutcome,
+            retryAttemps = retryAttemps,
+            paymentAccount = paymentAccount,
+            confirmParameters = event.confirmParameters
+        )
     }
 
     private fun getClientActionEvent(authorizeStatus: AuthorizeStatus.ClientActionRequested): SideEffectEvent =

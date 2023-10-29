@@ -1,9 +1,10 @@
 package domain.authorize.steps.gateway
 
-import domain.payment.Payment
+import domain.authorize.status.ReadyForAuthorization
+import domain.authorize.status.ReadyForConfirm
 
 interface AuthorizationGateway
 {
-    fun authorize(payment: Payment): AuthorizeResponse
-    fun confirm(payment: Payment): AuthorizeResponse
+    fun authorize(payment: ReadyForAuthorization): AuthorizeResponse
+    fun confirm(payment: ReadyForConfirm): AuthorizeResponse
 }

@@ -17,11 +17,24 @@ class ReadyForRouting
     override val newEvents: List<PaymentEvent>,
     override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
-    val riskAssessmentOutcome: RiskAssessmentOutcome,
+    override val riskAssessmentOutcome: RiskAssessmentOutcome,
 
-): PaymentStatus
+): PaymentStatus, ReadyForAnyRouting
 {
     private val log = Logger.getLogger(ReadyForRouting::class.java.name)
+
+    override fun addRoutingResult(routingResult: RoutingResult): PaymentStatus
+    {
+        val event = RoutingEvaluatedEvent(
+            version = baseVersion + newEvents.size + 1,
+            routingResult = routingResult)
+
+        return apply(event, isNew = true)
+    }
+
+    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus =
+
+        apply(event, isNew = false)
 
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
@@ -44,7 +57,6 @@ class ReadyForRouting
         {
             is RoutingResult.RoutingError ->
             {
-                newSideEffectEvents.addNewEvent(RoutingCompletedEvent, isNew)
                 newSideEffectEvents.addNewEvent(PaymentFailedEvent, isNew)
 
                 Failed(

@@ -12,7 +12,8 @@ data class Failed
     override val paymentPayload: PaymentPayload,
     val reason: String,
 
-    ): PaymentStatus
+): PaymentStatus
 {
+    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus = this
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus = this
 }

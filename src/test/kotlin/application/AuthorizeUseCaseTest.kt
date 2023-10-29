@@ -54,9 +54,9 @@ class AuthorizeUseCaseTest
         val payment = underTest.authorize(paymentPayload)
 
         println("\nPAYMENT EVENTS:\n")
-        payment.getNewEvents().forEach { println(it) }
+        payment.newEvents.forEach { println(it) }
         println("\nSIDE EFFECTS:\n")
-        payment.getNewSideEffects().forEach { println(it) }
+        payment.newSideEffectEvents.forEach { println(it) }
     }
 
     @Test
@@ -83,14 +83,14 @@ class AuthorizeUseCaseTest
         every { authorizationGateway.confirm( any()) }.returns( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)) )
 
         val paymentOnAuthorize = underTest.authorize(paymentPayload)
-        val paymentOnConfirm = underTest.confirm(paymentId, emptyMap())
+        val paymentOnConfirm = underTest.confirm(paymentId, mapOf("ECI" to "05"))
 
         println("\nPAYMENT EVENTS:\n")
-        paymentOnAuthorize.getNewEvents().forEach { println(it) }
-        paymentOnConfirm.getNewEvents().forEach { println(it) }
+        paymentOnAuthorize.newEvents.forEach { println(it) }
+        paymentOnConfirm.newEvents.forEach { println(it) }
         println("\nSIDE EFFECTS:\n")
-        paymentOnAuthorize.getNewSideEffects().forEach { println(it) }
-        paymentOnConfirm.getNewSideEffects().forEach { println(it) }
+        paymentOnAuthorize.newSideEffectEvents.forEach { println(it) }
+        paymentOnConfirm.newSideEffectEvents.forEach { println(it) }
     }
 
 }
