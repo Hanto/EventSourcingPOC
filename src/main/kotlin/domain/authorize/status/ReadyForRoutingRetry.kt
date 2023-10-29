@@ -5,11 +5,11 @@ import domain.authorize.events.RoutingEvaluatedEvent
 import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.routing.PaymentAccount
 import domain.authorize.steps.routing.RoutingResult
+import domain.events.PaymentFailedEvent
+import domain.events.PaymentRejectedEvent
+import domain.events.RoutingCompletedEvent
+import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.PaymentFailedEvent
-import domain.sideeffectevents.PaymentRejectedEvent
-import domain.sideeffectevents.RoutingCompletedEvent
-import domain.sideeffectevents.SideEffectEvent
 
 class ReadyForRoutingRetry
 (
@@ -19,9 +19,9 @@ class ReadyForRoutingRetry
     val retryAttemps: Int,
     val paymentAccount: PaymentAccount
 
-) : AuthorizationStatus
+) : PaymentStatus
 {
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
@@ -32,7 +32,7 @@ class ReadyForRoutingRetry
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): AuthorizationStatus =
+    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): PaymentStatus =
 
         when (event.routingResult)
         {
@@ -62,7 +62,7 @@ class ReadyForRoutingRetry
             }
         }
 
-    private fun retryIfDifferentAccount(event: RoutingResult.Proceed, isNew: Boolean): AuthorizationStatus =
+    private fun retryIfDifferentAccount(event: RoutingResult.Proceed, isNew: Boolean): PaymentStatus =
 
         if (event.account == paymentAccount)
         {
@@ -86,7 +86,7 @@ class ReadyForRoutingRetry
                 paymentAccount = event.account
             )
 
-    private fun failedDueToRoutingError(event: RoutingResult.RoutingError, isNew: Boolean): AuthorizationStatus =
+    private fun failedDueToRoutingError(event: RoutingResult.RoutingError, isNew: Boolean): PaymentStatus =
 
         when (event)
         {

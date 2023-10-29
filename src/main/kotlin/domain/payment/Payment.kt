@@ -1,17 +1,17 @@
 package domain.payment
 
 import domain.authorize.events.*
-import domain.authorize.status.AuthorizationStatus
+import domain.authorize.status.PaymentStatus
 import domain.authorize.status.ReadyForPaymentRequest
 import domain.authorize.steps.fraud.FraudAnalysisResult
 import domain.authorize.steps.gateway.AuthorizeResponse
 import domain.authorize.steps.routing.RoutingResult
-import domain.sideeffectevents.SideEffectEvent
+import domain.events.SideEffectEvent
 
 class Payment
 (
-    private val newEvents: MutableList<PaymentEvent> = mutableListOf(),
-    val authorizationStatus: AuthorizationStatus = ReadyForPaymentRequest(),
+    private val events: List<PaymentEvent> = emptyList(),
+    val paymentStatus: PaymentStatus = ReadyForPaymentRequest(),
     val baseVersion: Int = 0
 )
 {
@@ -20,10 +20,10 @@ class Payment
 
     fun applyRecordedEvent(event: PaymentEvent): Payment
     {
-        val newAuthorizationStatus = authorizationStatus.apply(event, isNew = false)
+        val newAuthorizationStatus = paymentStatus.apply(event, isNew = false)
         val newBaseVersion = event.version
 
-        return Payment(newEvents, newAuthorizationStatus, newBaseVersion)
+        return Payment(events, newAuthorizationStatus, newBaseVersion)
     }
 
     private fun applyNewEvent(event: PaymentEvent): Payment
@@ -31,14 +31,14 @@ class Payment
         if (event.version != nextVersion())
             throw IllegalArgumentException("new event version: ${event.version} doesn't match expected new version: ${nextVersion()}")
 
-        val newAuthorizationStatus = authorizationStatus.apply(event, isNew = true)
-        newEvents.add(event)
+        val newAuthorizationStatus = paymentStatus.apply(event, isNew = true)
+        val newEvents = events + event
 
         return Payment(newEvents, newAuthorizationStatus, baseVersion)
     }
 
     private fun nextVersion(): Int =
-        baseVersion + newEvents.size + 1
+        baseVersion + events.size + 1
 
     // ACTIONS:
     //------------------------------------------------------------------------------------------------------------------
@@ -93,17 +93,17 @@ class Payment
     //------------------------------------------------------------------------------------------------------------------
 
     fun getNewEvents(): List<PaymentEvent> =
-        newEvents.toList()
+        events.toList()
 
     fun getNewSideEffects(): List<SideEffectEvent> =
-        authorizationStatus.newSideEffectEvents.toList()
+        paymentStatus.newSideEffectEvents.toList()
 
     // MISC:
     //------------------------------------------------------------------------------------------------------------------
 
     fun getPaymentId(): PaymentId =
-        authorizationStatus.paymentPayload?.paymentId!!
+        paymentStatus.paymentPayload?.paymentId!!
 
     fun getPaymentPayload(): PaymentPayload =
-        authorizationStatus.paymentPayload!!
+        paymentStatus.paymentPayload!!
 }

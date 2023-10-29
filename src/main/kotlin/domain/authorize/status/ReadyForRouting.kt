@@ -4,11 +4,11 @@ import domain.authorize.events.PaymentEvent
 import domain.authorize.events.RoutingEvaluatedEvent
 import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.routing.RoutingResult
+import domain.events.PaymentFailedEvent
+import domain.events.PaymentRejectedEvent
+import domain.events.RoutingCompletedEvent
+import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.PaymentFailedEvent
-import domain.sideeffectevents.PaymentRejectedEvent
-import domain.sideeffectevents.RoutingCompletedEvent
-import domain.sideeffectevents.SideEffectEvent
 
 class ReadyForRouting
 (
@@ -16,9 +16,9 @@ class ReadyForRouting
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
 
-    ): AuthorizationStatus
+    ): PaymentStatus
 {
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
@@ -29,7 +29,7 @@ class ReadyForRouting
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): AuthorizationStatus =
+    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): PaymentStatus =
 
         when (event.routingResult)
         {
@@ -66,7 +66,7 @@ class ReadyForRouting
             }
         }
 
-    private fun failedDueToRoutingError(event: RoutingResult.RoutingError, isNew: Boolean): AuthorizationStatus =
+    private fun failedDueToRoutingError(event: RoutingResult.RoutingError, isNew: Boolean): PaymentStatus =
 
         when (event)
         {

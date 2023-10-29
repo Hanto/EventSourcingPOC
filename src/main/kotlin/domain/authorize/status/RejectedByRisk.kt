@@ -1,8 +1,8 @@
 package domain.authorize.status
 
 import domain.authorize.events.PaymentEvent
+import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.SideEffectEvent
 
 data class RejectedByRisk
 (
@@ -11,5 +11,5 @@ data class RejectedByRisk
 
 ) : RejectedStatus
 {
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus = this
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus = this
 }

@@ -1,8 +1,8 @@
 package domain.authorize.status
 
 import domain.authorize.events.PaymentEvent
+import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.SideEffectEvent
 
 data class Failed
 (
@@ -10,7 +10,7 @@ data class Failed
     override val paymentPayload: PaymentPayload,
     val reason: String,
 
-    ): AuthorizationStatus
+    ): PaymentStatus
 {
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus = this
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus = this
 }

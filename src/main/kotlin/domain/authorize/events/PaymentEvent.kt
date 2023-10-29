@@ -1,6 +1,8 @@
 package domain.authorize.events
 
-sealed interface PaymentEvent
+import domain.events.DomainEvent
+
+sealed interface PaymentEvent : DomainEvent
 {
     val version: Int
 }

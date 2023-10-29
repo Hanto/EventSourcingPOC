@@ -7,8 +7,8 @@ import domain.authorize.steps.gateway.ActionType
 import domain.authorize.steps.gateway.AuthorizeStatus
 import domain.authorize.steps.gateway.ClientAction
 import domain.authorize.steps.routing.PaymentAccount
+import domain.events.*
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.*
 
 class ReadyForClientActionResponse
 (
@@ -19,9 +19,9 @@ class ReadyForClientActionResponse
     val paymentAccount: PaymentAccount,
     val clientAction: ClientAction,
 
-    ): AuthorizationStatus
+    ): PaymentStatus
 {
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
@@ -32,7 +32,7 @@ class ReadyForClientActionResponse
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: ConfirmedEvent, isNew: Boolean): AuthorizationStatus
+    private fun apply(event: ConfirmedEvent, isNew: Boolean): PaymentStatus
     {
         return when (event.authorizeResponse.status)
         {
@@ -86,7 +86,7 @@ class ReadyForClientActionResponse
     }
 
     companion object { const val MAX_RETRIES = 1 }
-    private fun tryToRetry(isNew: Boolean): AuthorizationStatus
+    private fun tryToRetry(isNew: Boolean): PaymentStatus
     {
         return if (retryAttemps < MAX_RETRIES)
         {

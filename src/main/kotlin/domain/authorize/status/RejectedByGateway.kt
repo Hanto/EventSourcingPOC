@@ -3,8 +3,8 @@ package domain.authorize.status
 import domain.authorize.events.PaymentEvent
 import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.routing.PaymentAccount
+import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.SideEffectEvent
 
 class RejectedByGateway
 (
@@ -16,5 +16,5 @@ class RejectedByGateway
 
 ) : RejectedStatus
 {
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus = this
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus = this
 }

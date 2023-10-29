@@ -1,4 +1,4 @@
-package domain.sideeffectevents
+package domain.events
 
 data object PaymentRejectedEvent : SideEffectEvent {
 }

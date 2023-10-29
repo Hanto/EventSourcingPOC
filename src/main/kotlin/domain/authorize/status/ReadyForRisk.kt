@@ -3,19 +3,19 @@ package domain.authorize.status
 import domain.authorize.events.PaymentEvent
 import domain.authorize.events.RiskEvaluatedEvent
 import domain.authorize.steps.fraud.FraudAnalysisResult
+import domain.events.FraudEvaluationCompletedEvent
+import domain.events.PaymentRejectedEvent
+import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.FraudEvaluationCompletedEvent
-import domain.sideeffectevents.PaymentRejectedEvent
-import domain.sideeffectevents.SideEffectEvent
 
 data class ReadyForRisk
 (
     override val newSideEffectEvents: MutableList<SideEffectEvent>,
     override val paymentPayload: PaymentPayload
 
-): AuthorizationStatus
+): PaymentStatus
 {
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
@@ -26,7 +26,7 @@ data class ReadyForRisk
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: RiskEvaluatedEvent, isNew: Boolean): AuthorizationStatus =
+    private fun apply(event: RiskEvaluatedEvent, isNew: Boolean): PaymentStatus =
 
         when (event.fraudAnalysisResult)
         {

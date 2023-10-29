@@ -2,15 +2,15 @@ package domain.authorize.status
 
 import domain.authorize.events.PaymentEvent
 import domain.authorize.events.PaymentRequestedEvent
+import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.SideEffectEvent
 
-class ReadyForPaymentRequest : AuthorizationStatus
+class ReadyForPaymentRequest : PaymentStatus
 {
     override val paymentPayload: PaymentPayload? = null
     override val newSideEffectEvents: MutableList<SideEffectEvent> = mutableListOf()
 
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
@@ -21,7 +21,7 @@ class ReadyForPaymentRequest : AuthorizationStatus
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: PaymentRequestedEvent, isNew: Boolean): AuthorizationStatus =
+    private fun apply(event: PaymentRequestedEvent, isNew: Boolean): PaymentStatus =
 
         ReadyForRisk(
             paymentPayload = event.paymentPayload,

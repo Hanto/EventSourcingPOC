@@ -6,8 +6,8 @@ import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.gateway.ActionType
 import domain.authorize.steps.gateway.AuthorizeStatus
 import domain.authorize.steps.routing.PaymentAccount
+import domain.events.*
 import domain.payment.PaymentPayload
-import domain.sideeffectevents.*
 
 class ReadyForAuthorization
 (
@@ -17,9 +17,9 @@ class ReadyForAuthorization
     val retryAttemps: Int,
     val paymentAccount: PaymentAccount
 
-): AuthorizationStatus
+): PaymentStatus
 {
-    override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
@@ -30,7 +30,7 @@ class ReadyForAuthorization
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: AuthorizationRequestedEvent, isNew: Boolean): AuthorizationStatus
+    private fun apply(event: AuthorizationRequestedEvent, isNew: Boolean): PaymentStatus
     {
         addNewEvent(AuthorizationAttemptRequestedEvent, isNew)
 
@@ -85,7 +85,7 @@ class ReadyForAuthorization
     }
 
     companion object { const val MAX_RETRIES = 1 }
-    private fun tryToRetry(isNew: Boolean): AuthorizationStatus
+    private fun tryToRetry(isNew: Boolean): PaymentStatus
     {
         return if (retryAttemps < MAX_RETRIES)
         {
