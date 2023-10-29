@@ -10,7 +10,7 @@ import domain.payment.PaymentPayload
 
 data class ReadyForRisk
 (
-    override val newSideEffectEvents: MutableList<SideEffectEvent>,
+    override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload
 
 ): PaymentStatus
@@ -26,14 +26,16 @@ data class ReadyForRisk
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: RiskEvaluatedEvent, isNew: Boolean): PaymentStatus =
+    private fun apply(event: RiskEvaluatedEvent, isNew: Boolean): PaymentStatus
+    {
+        val newSideEffectEvents = newSideEffectEvents.toMutableList()
 
-        when (event.fraudAnalysisResult)
+        return when (event.fraudAnalysisResult)
         {
             is FraudAnalysisResult.Denied ->
             {
-                addNewEvent(FraudEvaluationCompletedEvent, isNew)
-                addNewEvent(PaymentRejectedEvent, isNew)
+                newSideEffectEvents.addNewEvent(FraudEvaluationCompletedEvent, isNew)
+                newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
 
                 RejectedByRisk(
                     paymentPayload = paymentPayload,
@@ -43,7 +45,7 @@ data class ReadyForRisk
 
             is FraudAnalysisResult.Approved ->
             {
-                addNewEvent(FraudEvaluationCompletedEvent, isNew)
+                newSideEffectEvents.addNewEvent(FraudEvaluationCompletedEvent, isNew)
 
                 ReadyForRouting(
                     paymentPayload = paymentPayload,
@@ -52,10 +54,11 @@ data class ReadyForRisk
                 )
             }
         }
+    }
 
-    private fun addNewEvent(event: SideEffectEvent, isNew: Boolean)
+    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
     {
         if (isNew)
-            newSideEffectEvents.add(event)
+            this.add(event)
     }
 }

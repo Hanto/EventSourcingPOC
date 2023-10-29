@@ -8,7 +8,7 @@ import domain.payment.PaymentPayload
 class ReadyForPaymentRequest : PaymentStatus
 {
     override val paymentPayload: PaymentPayload? = null
-    override val newSideEffectEvents: MutableList<SideEffectEvent> = mutableListOf()
+    override val newSideEffectEvents: List<SideEffectEvent> = mutableListOf()
 
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 

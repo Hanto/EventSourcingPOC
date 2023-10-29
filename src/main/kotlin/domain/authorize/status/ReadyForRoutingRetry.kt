@@ -13,7 +13,7 @@ import domain.payment.PaymentPayload
 
 class ReadyForRoutingRetry
 (
-    override val newSideEffectEvents: MutableList<SideEffectEvent>,
+    override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: Int,
@@ -32,22 +32,35 @@ class ReadyForRoutingRetry
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): PaymentStatus =
+    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): PaymentStatus
+    {
+        val newSideEffectEvents = newSideEffectEvents.toMutableList()
 
-        when (event.routingResult)
+        return when (event.routingResult)
         {
             is RoutingResult.RoutingError ->
             {
-                addNewEvent(RoutingCompletedEvent, isNew)
-                addNewEvent(PaymentFailedEvent, isNew)
+                newSideEffectEvents.addNewEvent(RoutingCompletedEvent, isNew)
+                newSideEffectEvents.addNewEvent(PaymentFailedEvent, isNew)
 
-                failedDueToRoutingError(event.routingResult, isNew)
+                when (event.routingResult)
+                {
+                    is RoutingResult.RoutingError.InvalidCurrency -> Failed(
+                        paymentPayload = paymentPayload,
+                        newSideEffectEvents = newSideEffectEvents,
+                        reason = "Currency not accepted")
+
+                    is RoutingResult.RoutingError.BankAccountNotFound -> Failed(
+                        paymentPayload = paymentPayload,
+                        newSideEffectEvents = newSideEffectEvents,
+                        reason = "Unable to find bank account")
+                }
             }
 
             is RoutingResult.Reject ->
             {
-                addNewEvent(RoutingCompletedEvent, isNew)
-                addNewEvent(PaymentRejectedEvent, isNew)
+                newSideEffectEvents.addNewEvent(RoutingCompletedEvent, isNew)
+                newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
 
                 RejectedByRouting(
                     paymentPayload = paymentPayload,
@@ -56,54 +69,36 @@ class ReadyForRoutingRetry
 
             is RoutingResult.Proceed ->
             {
-                addNewEvent(RoutingCompletedEvent, isNew)
+                newSideEffectEvents.addNewEvent(RoutingCompletedEvent, isNew)
 
-                retryIfDifferentAccount(event.routingResult, isNew)
+                if (event.routingResult.account == paymentAccount)
+                {
+                    newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
+
+                    RejectedByGateway(
+                        paymentPayload = paymentPayload,
+                        newSideEffectEvents = newSideEffectEvents,
+                        riskAssessmentOutcome = riskAssessmentOutcome,
+                        retryAttemps = retryAttemps,
+                        paymentAccount = event.routingResult.account
+                    )
+                }
+
+                else
+                    ReadyForAuthorization(
+                        paymentPayload = paymentPayload,
+                        newSideEffectEvents = newSideEffectEvents,
+                        riskAssessmentOutcome = riskAssessmentOutcome,
+                        retryAttemps = retryAttemps,
+                        paymentAccount = event.routingResult.account
+                    )
             }
         }
+    }
 
-    private fun retryIfDifferentAccount(event: RoutingResult.Proceed, isNew: Boolean): PaymentStatus =
-
-        if (event.account == paymentAccount)
-        {
-            addNewEvent(PaymentRejectedEvent, isNew)
-
-            RejectedByGateway(
-                paymentPayload = paymentPayload,
-                newSideEffectEvents = newSideEffectEvents,
-                riskAssessmentOutcome = riskAssessmentOutcome,
-                retryAttemps = retryAttemps,
-                paymentAccount = event.account
-            )
-        }
-
-        else
-            ReadyForAuthorization(
-                paymentPayload = paymentPayload,
-                newSideEffectEvents = newSideEffectEvents,
-                riskAssessmentOutcome = riskAssessmentOutcome,
-                retryAttemps = retryAttemps,
-                paymentAccount = event.account
-            )
-
-    private fun failedDueToRoutingError(event: RoutingResult.RoutingError, isNew: Boolean): PaymentStatus =
-
-        when (event)
-        {
-            is RoutingResult.RoutingError.InvalidCurrency -> Failed(
-                paymentPayload = paymentPayload,
-                newSideEffectEvents = newSideEffectEvents,
-                reason = "Currency not accepted")
-
-            is RoutingResult.RoutingError.BankAccountNotFound -> Failed(
-                paymentPayload = paymentPayload,
-                newSideEffectEvents = newSideEffectEvents,
-                reason = "Unable to find bank account")
-        }
-
-    private fun addNewEvent(event: SideEffectEvent, isNew: Boolean)
+    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
     {
         if (isNew)
-            newSideEffectEvents.add(event)
+            this.add(event)
     }
 }
