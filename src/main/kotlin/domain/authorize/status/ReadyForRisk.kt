@@ -7,7 +7,7 @@ import domain.events.FraudEvaluationCompletedEvent
 import domain.events.PaymentRejectedEvent
 import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
-import domain.utils.letIf
+import java.util.logging.Logger
 
 data class ReadyForRisk
 (
@@ -18,12 +18,14 @@ data class ReadyForRisk
 
 ): PaymentStatus
 {
+    private val log = Logger.getLogger(ReadyForRisk::class.java.name)
+
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
             is RiskEvaluatedEvent -> apply(event, isNew)
-            else -> this
+            else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
@@ -65,7 +67,9 @@ data class ReadyForRisk
         }
     }
 
-    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean) =
-
-        this.letIf({ isNew }, { this.add(event); this})
+    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
+    {
+        if (isNew)
+            this.add(event)
+    }
 }

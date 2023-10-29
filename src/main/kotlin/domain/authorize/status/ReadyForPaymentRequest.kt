@@ -4,6 +4,7 @@ import domain.authorize.events.PaymentEvent
 import domain.authorize.events.PaymentRequestedEvent
 import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
+import java.util.logging.Logger.getLogger
 
 class ReadyForPaymentRequest : PaymentStatus
 {
@@ -11,13 +12,14 @@ class ReadyForPaymentRequest : PaymentStatus
     override val newEvents: List<PaymentEvent> = emptyList()
     override val newSideEffectEvents: List<SideEffectEvent> = emptyList()
     override val paymentPayload: PaymentPayload? = null
+    private val log = getLogger(ReadyForPaymentRequest::class.java.name)
 
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
             is PaymentRequestedEvent -> apply(event, isNew)
-            else -> this
+            else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:

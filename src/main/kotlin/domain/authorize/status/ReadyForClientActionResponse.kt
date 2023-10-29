@@ -9,7 +9,7 @@ import domain.authorize.steps.gateway.ClientAction
 import domain.authorize.steps.routing.PaymentAccount
 import domain.events.*
 import domain.payment.PaymentPayload
-import domain.utils.letIf
+import java.util.logging.Logger
 
 class ReadyForClientActionResponse
 (
@@ -24,12 +24,15 @@ class ReadyForClientActionResponse
 
     ): PaymentStatus
 {
+    companion object { private const val MAX_RETRIES = 1 }
+    private val log = Logger.getLogger(ReadyForClientActionResponse::class.java.name)
+
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
         when (event)
         {
             is ConfirmedEvent -> apply(event, isNew)
-            else -> this
+            else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
@@ -61,11 +64,7 @@ class ReadyForClientActionResponse
 
             is AuthorizeStatus.ClientActionRequested ->
             {
-                when (event.authorizeResponse.status.clientAction.type)
-                {
-                    ActionType.FINGERPRINT -> newSideEffectEvents.addNewEvent(BrowserFingerprintRequestedEvent, isNew)
-                    ActionType.REDIRECT, ActionType.CHALLENGE -> newSideEffectEvents.addNewEvent(UserApprovalRequestedEvent, isNew)
-                }
+                newSideEffectEvents.addNewEvent(getClientActionEvent(event.authorizeResponse.status), isNew)
 
                 ReadyForClientActionResponse(
                     baseVersion = newVersion,
@@ -129,8 +128,17 @@ class ReadyForClientActionResponse
         }
     }
 
-    companion object { const val MAX_RETRIES = 1 }
-    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean) =
+    private fun getClientActionEvent(authorizeStatus: AuthorizeStatus.ClientActionRequested): SideEffectEvent =
 
-        this.letIf({ isNew }, { this.add(event); this})
+        when(authorizeStatus.clientAction.type)
+        {
+            ActionType.FINGERPRINT -> BrowserFingerprintRequestedEvent
+            ActionType.REDIRECT, ActionType.CHALLENGE -> UserApprovalRequestedEvent
+        }
+
+    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
+    {
+        if (isNew)
+            this.add(event)
+    }
 }
