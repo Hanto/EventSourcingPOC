@@ -8,7 +8,7 @@ import domain.payment.PaymentPayload
 
 class RejectedByGateway
 (
-    override val newSideEffectEvents: MutableList<SideEffectEvent>,
+    override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: Int,

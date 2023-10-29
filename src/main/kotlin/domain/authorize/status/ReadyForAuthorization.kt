@@ -115,7 +115,6 @@ class ReadyForAuthorization
     }
 
     companion object { const val MAX_RETRIES = 1 }
-
     private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
     {
         if (isNew)

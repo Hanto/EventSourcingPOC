@@ -6,7 +6,7 @@ import domain.payment.PaymentPayload
 
 data class Failed
 (
-    override val newSideEffectEvents: MutableList<SideEffectEvent>,
+    override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val reason: String,
 
