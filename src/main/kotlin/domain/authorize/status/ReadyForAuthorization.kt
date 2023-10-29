@@ -11,7 +11,7 @@ import domain.sideeffectevents.*
 
 class ReadyForAuthorization
 (
-    override val newEvents: MutableList<SideEffectEvent>,
+    override val newSideEffectEvents: MutableList<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: Int,
@@ -27,7 +27,7 @@ class ReadyForAuthorization
             else -> this
         }
 
-    // AUTHORIZATION EVALUATED:
+    // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
     private fun apply(event: AuthorizationRequestedEvent, isNew: Boolean): AuthorizationStatus
@@ -42,7 +42,7 @@ class ReadyForAuthorization
 
                 Authorized(
                     paymentPayload = paymentPayload,
-                    newEvents = newEvents,
+                    newSideEffectEvents = newSideEffectEvents,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount
@@ -51,11 +51,12 @@ class ReadyForAuthorization
 
             is AuthorizeStatus.ClientActionRequested ->
             {
+                addNewEvent(PaymentAuthenticationStartedEvent, isNew)
                 addNewEventsForClientAction(event.authorizeResponse.status.clientAction.type, isNew)
 
                 ReadyForClientActionResponse(
                     paymentPayload = paymentPayload,
-                    newEvents = newEvents,
+                    newSideEffectEvents = newSideEffectEvents,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount,
@@ -67,30 +68,7 @@ class ReadyForAuthorization
             {
                 addNewEvent(AuthorizationAttemptRejectedEvent, isNew)
 
-                return if (retryAttemps < 1)
-                {
-                    addNewEvent(PaymentRetriedEvent, isNew)
-
-                    ReadyForRoutingRetry(
-                        paymentPayload = paymentPayload,
-                        newEvents = newEvents,
-                        riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemps + 1,
-                        paymentAccount = paymentAccount
-                    )
-                }
-                else
-                {
-                    addNewEvent(PaymentRejectedEvent, isNew)
-
-                    RejectedByGateway(
-                        paymentPayload = paymentPayload,
-                        newEvents = newEvents,
-                        riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemps,
-                        paymentAccount = paymentAccount
-                    )
-                }
+                tryToRetry(isNew)
             }
 
             is AuthorizeStatus.Fail ->
@@ -99,10 +77,39 @@ class ReadyForAuthorization
 
                 Failed(
                     paymentPayload = paymentPayload,
-                    newEvents = newEvents,
+                    newSideEffectEvents = newSideEffectEvents,
                     reason = "exception on authorization"
                 )
             }
+        }
+    }
+
+    companion object { const val MAX_RETRIES = 1 }
+    private fun tryToRetry(isNew: Boolean): AuthorizationStatus
+    {
+        return if (retryAttemps < MAX_RETRIES)
+        {
+            addNewEvent(PaymentRetriedEvent, isNew)
+
+            ReadyForRoutingRetry(
+                paymentPayload = paymentPayload,
+                newSideEffectEvents = newSideEffectEvents,
+                riskAssessmentOutcome = riskAssessmentOutcome,
+                retryAttemps = retryAttemps + 1,
+                paymentAccount = paymentAccount
+            )
+        }
+        else
+        {
+            addNewEvent(PaymentRejectedEvent, isNew)
+
+            RejectedByGateway(
+                paymentPayload = paymentPayload,
+                newSideEffectEvents = newSideEffectEvents,
+                riskAssessmentOutcome = riskAssessmentOutcome,
+                retryAttemps = retryAttemps,
+                paymentAccount = paymentAccount
+            )
         }
     }
 
@@ -118,6 +125,6 @@ class ReadyForAuthorization
     private fun addNewEvent(event: SideEffectEvent, isNew: Boolean)
     {
         if (isNew)
-            newEvents.add(event)
+            newSideEffectEvents.add(event)
     }
 }

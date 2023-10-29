@@ -8,7 +8,8 @@ import domain.sideeffectevents.SideEffectEvent
 class ReadyForPaymentRequest : AuthorizationStatus
 {
     override val paymentPayload: PaymentPayload? = null
-    override val newEvents: MutableList<SideEffectEvent> = mutableListOf()
+    override val newSideEffectEvents: MutableList<SideEffectEvent> = mutableListOf()
+
     override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus =
 
         when (event)
@@ -17,13 +18,13 @@ class ReadyForPaymentRequest : AuthorizationStatus
             else -> this
         }
 
-    // MAIN:
+    // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
     private fun apply(event: PaymentRequestedEvent, isNew: Boolean): AuthorizationStatus =
 
         ReadyForRisk(
             paymentPayload = event.paymentPayload,
-            newEvents = newEvents
+            newSideEffectEvents = newSideEffectEvents
         )
 }

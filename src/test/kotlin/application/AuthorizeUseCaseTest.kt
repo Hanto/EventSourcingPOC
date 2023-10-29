@@ -7,6 +7,7 @@ import domain.authorize.steps.gateway.*
 import domain.authorize.steps.routing.PaymentAccount
 import domain.authorize.steps.routing.RoutingResult
 import domain.authorize.steps.routing.RoutingService
+import domain.payment.AuthorizationReference
 import domain.payment.Customer
 import domain.payment.PaymentId
 import domain.payment.PaymentPayload
@@ -35,6 +36,7 @@ class AuthorizeUseCaseTest
     {
         val paymentPayload = PaymentPayload(
             paymentId = PaymentId(UUID.randomUUID()),
+            authorizationReference = AuthorizationReference(id = "123456789"),
             customer = Customer("ivan", "delgado")
         )
 
@@ -63,6 +65,7 @@ class AuthorizeUseCaseTest
         val paymentId = PaymentId(UUID.randomUUID())
         val paymentPayload = PaymentPayload(
             paymentId = paymentId,
+            authorizationReference = AuthorizationReference(id = "123456789"),
             customer = Customer("ivan", "delgado")
         )
 
@@ -73,8 +76,8 @@ class AuthorizeUseCaseTest
             .andThen( RoutingResult.Proceed(PaymentAccount()) )
 
         every { authorizationGateway.authorize(any()) }
-            .returns( AuthorizeResponse(AuthorizeStatus.ClientActionRequested(ClientAction(ActionType.CHALLENGE)) ))
-            .andThen( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED) ))
+            .returns( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED) ))
+            .andThen( AuthorizeResponse(AuthorizeStatus.ClientActionRequested(ClientAction(ActionType.CHALLENGE)) ))
             .andThen( AuthorizeResponse(AuthorizeStatus.Success) )
 
         every { authorizationGateway.confirm( any()) }.returns( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)) )

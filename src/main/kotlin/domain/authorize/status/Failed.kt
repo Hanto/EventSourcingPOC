@@ -6,7 +6,7 @@ import domain.sideeffectevents.SideEffectEvent
 
 data class Failed
 (
-    override val newEvents: MutableList<SideEffectEvent>,
+    override val newSideEffectEvents: MutableList<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val reason: String,
 

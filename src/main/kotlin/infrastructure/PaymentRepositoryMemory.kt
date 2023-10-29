@@ -11,7 +11,7 @@ class PaymentRepositoryMemory: PaymentRepository
 
     override fun save(payment: Payment)
     {
-        val savedVersion = map[payment.getPaymentPayload().paymentId]?.last()?.version
+        val savedVersion = map[payment.getPaymentId()]?.last()?.version
 
         if (savedVersion?.let { it != payment.baseVersion } == true)
             throw RuntimeException("OptimisticLockException: base version doesn't match stored version")

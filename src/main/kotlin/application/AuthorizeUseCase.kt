@@ -18,6 +18,51 @@ class AuthorizeUseCase
     private val paymentRepository: PaymentRepository,
 )
 {
+    // NON FUNCTIONAL WAY:
+    //------------------------------------------------------------------------------------------------------------------
+
+    fun authorizeOld(paymentPayload: PaymentPayload): Payment
+    {
+        val payment = Payment(paymentPayload)
+
+        payment.addFraudAnalysisResult(riskService.assessRisk(payment))
+
+        if (payment.authorizationStatus is ReadyForRouting)
+            tryToAuthorizeOld(payment)
+
+        paymentRepository.save(payment)
+        return payment
+    }
+
+    private fun tryToAuthorizeOld(payment: Payment)
+    {
+        payment.addRoutingResult(routingService.routeForPayment(payment))
+
+        if (payment.authorizationStatus is ReadyForAuthorization)
+        {
+            payment.addAuthorizeResponse(authorizeService.authorize(payment))
+
+            if (payment.authorizationStatus is ReadyForRoutingRetry)
+                tryToAuthorizeOld(payment)
+        }
+    }
+
+    fun confirmOld(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
+    {
+        val payment = Payment(paymentRepository.load(paymentId)!!)
+
+        payment.addConfirmResponse(authorizeService.confirm(payment), confirmParams)
+
+        if (payment.authorizationStatus is ReadyForRoutingRetry)
+            tryToAuthorizeOld(payment)
+
+        paymentRepository.save(payment)
+        return payment
+    }
+
+    // FUNCTIONAL WAY:
+    //------------------------------------------------------------------------------------------------------------------
+
     fun authorize(paymentPayload: PaymentPayload): Payment
     {
         val payment = paymentRequestedStep(paymentPayload)
@@ -120,47 +165,5 @@ class AuthorizeUseCase
             is Authorized -> payment.right()
             else -> payment.left()
         }
-    }
-
-    // NON FUNCTIONAL WAY:
-    //------------------------------------------------------------------------------------------------------------------
-
-    fun authorizeOld(paymentPayload: PaymentPayload): Payment
-    {
-        val payment = Payment(paymentPayload)
-
-        payment.addFraudAnalysisResult(riskService.assessRisk(payment))
-
-        if (payment.authorizationStatus is ReadyForRouting)
-            tryToAuthorizeOld(payment)
-
-        paymentRepository.save(payment)
-        return payment
-    }
-
-    private fun tryToAuthorizeOld(payment: Payment)
-    {
-        payment.addRoutingResult(routingService.routeForPayment(payment))
-
-        if (payment.authorizationStatus is ReadyForAuthorization)
-        {
-            payment.addAuthorizeResponse(authorizeService.authorize(payment))
-
-            if (payment.authorizationStatus is ReadyForRoutingRetry)
-                tryToAuthorizeOld(payment)
-        }
-    }
-
-    fun confirmOld(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
-    {
-        val payment = Payment(paymentRepository.load(paymentId)!!)
-
-        payment.addConfirmResponse(authorizeService.confirm(payment), confirmParams)
-
-        if (payment.authorizationStatus is ReadyForRoutingRetry)
-            tryToAuthorizeOld(payment)
-
-        paymentRepository.save(payment)
-        return payment
     }
 }

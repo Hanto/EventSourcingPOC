@@ -16,6 +16,9 @@ class Payment
     var baseVersion = 0
         private set
 
+    // CONSTRUCTOR:
+    //------------------------------------------------------------------------------------------------------------------
+
     constructor(paymentPayload: PaymentPayload)
     {
         val event = PaymentRequestedEvent(
@@ -50,7 +53,7 @@ class Payment
     private fun nextVersion(): Int =
         baseVersion + newEvents.size + 1
 
-    // MAIN:
+    // ACTIONS:
     //------------------------------------------------------------------------------------------------------------------
 
     fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult)
@@ -97,10 +100,13 @@ class Payment
         newEvents.toList()
 
     fun getNewSideEffects(): List<SideEffectEvent> =
-        authorizationStatus.newEvents.toList()
+        authorizationStatus.newSideEffectEvents.toList()
 
     // MISC:
     //------------------------------------------------------------------------------------------------------------------
+
+    fun getPaymentId(): PaymentId =
+        authorizationStatus.paymentPayload?.paymentId!!
 
     fun getPaymentPayload(): PaymentPayload =
         authorizationStatus.paymentPayload!!

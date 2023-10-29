@@ -7,15 +7,16 @@ import domain.authorize.steps.routing.RoutingResult
 import domain.payment.PaymentPayload
 import domain.sideeffectevents.PaymentFailedEvent
 import domain.sideeffectevents.PaymentRejectedEvent
+import domain.sideeffectevents.RoutingCompletedEvent
 import domain.sideeffectevents.SideEffectEvent
 
 class ReadyForRouting
 (
-    override val newEvents: MutableList<SideEffectEvent>,
+    override val newSideEffectEvents: MutableList<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
 
-): AuthorizationStatus
+    ): AuthorizationStatus
 {
     override fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus =
 
@@ -25,7 +26,7 @@ class ReadyForRouting
             else -> this
         }
 
-    // ROUTING EVALUATED:
+    // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
     private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): AuthorizationStatus =
@@ -34,6 +35,7 @@ class ReadyForRouting
         {
             is RoutingResult.RoutingError ->
             {
+                addNewEvent(RoutingCompletedEvent, isNew)
                 addNewEvent(PaymentFailedEvent, isNew)
 
                 failedDueToRoutingError(event.routingResult, isNew)
@@ -41,19 +43,22 @@ class ReadyForRouting
 
             is RoutingResult.Reject ->
             {
+                addNewEvent(RoutingCompletedEvent, isNew)
                 addNewEvent(PaymentRejectedEvent, isNew)
 
                 RejectedByRouting(
                     paymentPayload = paymentPayload,
-                    newEvents = newEvents
+                    newSideEffectEvents = newSideEffectEvents
                 )
             }
 
             is RoutingResult.Proceed ->
             {
+                addNewEvent(RoutingCompletedEvent, isNew)
+
                 ReadyForAuthorization(
                     paymentPayload = paymentPayload,
-                    newEvents = newEvents,
+                    newSideEffectEvents = newSideEffectEvents,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = 0,
                     paymentAccount = event.routingResult.account
@@ -67,18 +72,18 @@ class ReadyForRouting
         {
             is RoutingResult.RoutingError.InvalidCurrency -> Failed(
                 paymentPayload = paymentPayload,
-                newEvents = newEvents,
+                newSideEffectEvents = newSideEffectEvents,
                 reason = "Currency not accepted")
 
             is RoutingResult.RoutingError.BankAccountNotFound -> Failed(
                 paymentPayload = paymentPayload,
-                newEvents = newEvents,
+                newSideEffectEvents = newSideEffectEvents,
                 reason = "Unable to find bank account")
         }
 
     private fun addNewEvent(event: SideEffectEvent, isNew: Boolean)
     {
         if (isNew)
-            newEvents.add(event)
+            newSideEffectEvents.add(event)
     }
 }

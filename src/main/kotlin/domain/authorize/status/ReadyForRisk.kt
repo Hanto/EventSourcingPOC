@@ -10,7 +10,7 @@ import domain.sideeffectevents.SideEffectEvent
 
 data class ReadyForRisk
 (
-    override val newEvents: MutableList<SideEffectEvent>,
+    override val newSideEffectEvents: MutableList<SideEffectEvent>,
     override val paymentPayload: PaymentPayload
 
 ): AuthorizationStatus
@@ -23,7 +23,7 @@ data class ReadyForRisk
             else -> this
         }
 
-    // RISK EVALUATED:
+    // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
     private fun apply(event: RiskEvaluatedEvent, isNew: Boolean): AuthorizationStatus =
@@ -37,7 +37,8 @@ data class ReadyForRisk
 
                 RejectedByRisk(
                     paymentPayload = paymentPayload,
-                    newEvents = newEvents)
+                    newSideEffectEvents = newSideEffectEvents
+                )
             }
 
             is FraudAnalysisResult.Approved ->
@@ -46,14 +47,15 @@ data class ReadyForRisk
 
                 ReadyForRouting(
                     paymentPayload = paymentPayload,
-                    newEvents = newEvents,
-                    riskAssessmentOutcome = event.fraudAnalysisResult.riskAssessmentOutcome)
+                    newSideEffectEvents = newSideEffectEvents,
+                    riskAssessmentOutcome = event.fraudAnalysisResult.riskAssessmentOutcome
+                )
             }
         }
 
     private fun addNewEvent(event: SideEffectEvent, isNew: Boolean)
     {
         if (isNew)
-            newEvents.add(event)
+            newSideEffectEvents.add(event)
     }
 }

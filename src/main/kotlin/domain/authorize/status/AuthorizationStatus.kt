@@ -6,7 +6,7 @@ import domain.sideeffectevents.SideEffectEvent
 
 sealed interface AuthorizationStatus
 {
-    val newEvents: MutableList<SideEffectEvent>
+    val newSideEffectEvents: MutableList<SideEffectEvent>
     val paymentPayload: PaymentPayload?
     fun apply(event: PaymentEvent, isNew: Boolean): AuthorizationStatus
 }
