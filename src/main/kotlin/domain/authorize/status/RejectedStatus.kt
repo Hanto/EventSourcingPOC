@@ -1,3 +1,3 @@
 package domain.authorize.status
 
-sealed interface RejectedStatus: PaymentStatus
+sealed interface RejectedStatus: Payment

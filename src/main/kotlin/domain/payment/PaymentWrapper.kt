@@ -1,36 +1,36 @@
 package domain.payment
 
 import domain.authorize.events.*
-import domain.authorize.status.PaymentStatus
+import domain.authorize.status.Payment
 import domain.authorize.status.ReadyForPaymentRequest
 import domain.authorize.steps.fraud.FraudAnalysisResult
 import domain.authorize.steps.gateway.AuthorizeResponse
 import domain.authorize.steps.routing.RoutingResult
 import domain.events.SideEffectEvent
 
-class Payment
+class PaymentWrapper
 (
-    val paymentStatus: PaymentStatus = ReadyForPaymentRequest(),
+    val payment: Payment = ReadyForPaymentRequest(),
 )
 {
     // CONSTRUCTOR:
     //------------------------------------------------------------------------------------------------------------------
 
-    fun applyRecordedEvent(event: PaymentEvent): Payment
+    fun applyRecordedEvent(event: PaymentEvent): PaymentWrapper
     {
-        val newAuthorizationStatus = paymentStatus.apply(event, isNew = false)
+        val newPayment = payment.apply(event, isNew = false)
 
-        return Payment(newAuthorizationStatus)
+        return PaymentWrapper(newPayment)
     }
 
-    private fun applyNewEvent(event: PaymentEvent): Payment
+    private fun applyNewEvent(event: PaymentEvent): PaymentWrapper
     {
         if (event.version != nextVersion())
             throw IllegalArgumentException("new event version: ${event.version} doesn't match expected new version: ${nextVersion()}")
 
-        val newAuthorizationStatus = paymentStatus.apply(event, isNew = true)
+        val newPayment = payment.apply(event, isNew = true)
 
-        return Payment(newAuthorizationStatus)
+        return PaymentWrapper(newPayment)
     }
 
     private fun nextVersion(): Int =
@@ -39,7 +39,7 @@ class Payment
     // ACTIONS:
     //------------------------------------------------------------------------------------------------------------------
 
-    fun addPaymentPayload(paymentPayload: PaymentPayload): Payment
+    fun addPaymentPayload(paymentPayload: PaymentPayload): PaymentWrapper
     {
         val event = PaymentRequestedEvent(
             version = nextVersion(),
@@ -48,7 +48,7 @@ class Payment
         return applyNewEvent(event)
     }
 
-    fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): Payment
+    fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): PaymentWrapper
     {
         val event = RiskEvaluatedEvent(
             version = nextVersion(),
@@ -57,7 +57,7 @@ class Payment
         return applyNewEvent(event)
     }
 
-    fun addRoutingResult(routingResult: RoutingResult): Payment
+    fun addRoutingResult(routingResult: RoutingResult): PaymentWrapper
     {
         val event = RoutingEvaluatedEvent(
             version = nextVersion(),
@@ -66,7 +66,7 @@ class Payment
         return applyNewEvent(event)
     }
 
-    fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
+    fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): PaymentWrapper
     {
         val event = AuthorizationRequestedEvent(
             version = nextVersion(),
@@ -75,7 +75,7 @@ class Payment
         return applyNewEvent(event)
     }
 
-    fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
+    fun addConfirmParameters(confirmParameters: Map<String, Any>): PaymentWrapper
     {
         val event = ReturnedFromClient(
             version = nextVersion(),
@@ -84,7 +84,7 @@ class Payment
         return applyNewEvent(event)
     }
 
-    fun addConfirmResponse(authorizeResponse: AuthorizeResponse): Payment
+    fun addConfirmResponse(authorizeResponse: AuthorizeResponse): PaymentWrapper
     {
         val event = ConfirmationRequestedEvent(
             version = nextVersion(),
@@ -97,20 +97,20 @@ class Payment
     //------------------------------------------------------------------------------------------------------------------
 
     fun getNewEvents(): List<PaymentEvent> =
-        paymentStatus.newEvents
+        payment.paymentEvents
 
     fun getNewSideEffects(): List<SideEffectEvent> =
-        paymentStatus.newSideEffectEvents
+        payment.sideEffectEvents
 
     // MISC:
     //------------------------------------------------------------------------------------------------------------------
 
     fun getBaseVersion(): Int =
-        paymentStatus.baseVersion
+        payment.baseVersion
 
     fun getPaymentId(): PaymentId =
-        paymentStatus.paymentPayload?.paymentId!!
+        payment.paymentPayload?.paymentId!!
 
     fun getPaymentPayload(): PaymentPayload =
-        paymentStatus.paymentPayload!!
+        payment.paymentPayload!!
 }

@@ -1,10 +1,10 @@
 package domain.repositories
 
-import domain.authorize.status.PaymentStatus
+import domain.authorize.status.Payment
 import domain.payment.PaymentId
 
 interface PaymentRepository
 {
-    fun save(payment: PaymentStatus)
-    fun load(paymentId: PaymentId): PaymentStatus?
+    fun save(payment: Payment): Payment
+    fun load(paymentId: PaymentId): Payment?
 }

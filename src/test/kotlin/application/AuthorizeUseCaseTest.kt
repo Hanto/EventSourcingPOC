@@ -34,8 +34,9 @@ class AuthorizeUseCaseTest
     @Test
     fun no3ds()
     {
+        val paymentId = PaymentId(UUID.randomUUID())
         val paymentPayload = PaymentPayload(
-            paymentId = PaymentId(UUID.randomUUID()),
+            paymentId = paymentId,
             authorizationReference = AuthorizationReference(id = "123456789"),
             customer = Customer("ivan", "delgado")
         )
@@ -54,9 +55,9 @@ class AuthorizeUseCaseTest
         val payment = underTest.authorize(paymentPayload)
 
         println("\nPAYMENT EVENTS:\n")
-        payment.newEvents.forEach { println(it) }
+        paymentRepository.loadEvents(paymentId) .forEach { println(it) }
         println("\nSIDE EFFECTS:\n")
-        payment.newSideEffectEvents.forEach { println(it) }
+        payment.sideEffectEvents.forEach { println(it) }
     }
 
     @Test
@@ -86,11 +87,10 @@ class AuthorizeUseCaseTest
         val paymentOnConfirm = underTest.confirm(paymentId, mapOf("ECI" to "05"))
 
         println("\nPAYMENT EVENTS:\n")
-        paymentOnAuthorize.newEvents.forEach { println(it) }
-        paymentOnConfirm.newEvents.forEach { println(it) }
+        paymentRepository.loadEvents(paymentId) .forEach { println(it) }
         println("\nSIDE EFFECTS:\n")
-        paymentOnAuthorize.newSideEffectEvents.forEach { println(it) }
-        paymentOnConfirm.newSideEffectEvents.forEach { println(it) }
+        paymentOnAuthorize.sideEffectEvents.forEach { println(it) }
+        paymentOnConfirm.sideEffectEvents.forEach { println(it) }
     }
 
 }

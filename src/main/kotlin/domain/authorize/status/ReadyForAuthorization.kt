@@ -11,35 +11,31 @@ import domain.events.*
 import domain.payment.PaymentPayload
 import java.util.logging.Logger
 
-class ReadyForAuthorization
+data class ReadyForAuthorization
 (
     override val baseVersion: Int,
-    override val newEvents: List<PaymentEvent>,
-    override val newSideEffectEvents: List<SideEffectEvent>,
+    override val paymentEvents: List<PaymentEvent>,
+    override val sideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: Int,
     val paymentAccount: PaymentAccount
 
-): PaymentStatus
+): AbstractPayment(), Payment
 {
     companion object { private const val MAX_RETRIES = 1 }
     private val log = Logger.getLogger(ReadyForAuthorization::class.java.name)
 
-    fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): PaymentStatus
+    fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
     {
         val event = AuthorizationRequestedEvent(
-            version = baseVersion + newEvents.size + 1,
+            version = nextVersion(),
             authorizeResponse = authorizeResponse)
 
         return apply(event, isNew = true)
     }
 
-    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus =
-
-        apply(event, isNew = false)
-
-    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): Payment =
 
         when (event)
         {
@@ -50,11 +46,11 @@ class ReadyForAuthorization
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: AuthorizationRequestedEvent, isNew: Boolean): PaymentStatus
+    private fun apply(event: AuthorizationRequestedEvent, isNew: Boolean): Payment
     {
-        val newSideEffectEvents = newSideEffectEvents.toMutableList()
-        val newEvents = if (isNew) newEvents + event else newEvents
-        val newVersion = if (isNew) baseVersion else event.version
+        val newEvents = addEventIfNew(event, isNew)
+        val newVersion = upgradeVersionIfReplay(event, isNew)
+        val newSideEffectEvents = toMutableSideEffectEvents()
 
         newSideEffectEvents.addNewEvent(AuthorizationAttemptRequestedEvent, isNew)
 
@@ -66,9 +62,9 @@ class ReadyForAuthorization
 
                 Authorized(
                     baseVersion = newVersion,
-                    newEvents = newEvents,
+                    paymentEvents = newEvents,
+                    sideEffectEvents = newSideEffectEvents,
                     paymentPayload = paymentPayload,
-                    newSideEffectEvents = newSideEffectEvents,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount
@@ -82,9 +78,9 @@ class ReadyForAuthorization
 
                 ReadyForClientActionResponse(
                     baseVersion = newVersion,
-                    newEvents = newEvents,
+                    paymentEvents = newEvents,
+                    sideEffectEvents = newSideEffectEvents,
                     paymentPayload = paymentPayload,
-                    newSideEffectEvents = newSideEffectEvents,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount,
@@ -102,9 +98,9 @@ class ReadyForAuthorization
 
                     ReadyForRoutingRetry(
                         baseVersion = newVersion,
-                        newEvents = newEvents,
+                        paymentEvents = newEvents,
+                        sideEffectEvents = newSideEffectEvents,
                         paymentPayload = paymentPayload,
-                        newSideEffectEvents = newSideEffectEvents,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps + 1,
                         paymentAccount = paymentAccount
@@ -116,9 +112,9 @@ class ReadyForAuthorization
 
                     RejectedByGateway(
                         baseVersion = newVersion,
-                        newEvents = newEvents,
+                        paymentEvents = newEvents,
+                        sideEffectEvents = newSideEffectEvents,
                         paymentPayload = paymentPayload,
-                        newSideEffectEvents = newSideEffectEvents,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
                         paymentAccount = paymentAccount
@@ -132,9 +128,9 @@ class ReadyForAuthorization
 
                 Failed(
                     baseVersion = newVersion,
-                    newEvents = newEvents,
+                    paymentEvents = newEvents,
+                    sideEffectEvents = newSideEffectEvents,
                     paymentPayload = paymentPayload,
-                    newSideEffectEvents = newSideEffectEvents,
                     reason = "exception on authorization"
                 )
             }
@@ -148,10 +144,4 @@ class ReadyForAuthorization
             ActionType.FINGERPRINT -> BrowserFingerprintRequestedEvent
             ActionType.REDIRECT, ActionType.CHALLENGE -> UserApprovalRequestedEvent
         }
-
-    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
-    {
-        if (isNew)
-            this.add(event)
-    }
 }

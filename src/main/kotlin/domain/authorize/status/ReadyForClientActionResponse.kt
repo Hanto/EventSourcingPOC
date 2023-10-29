@@ -3,45 +3,37 @@ package domain.authorize.status
 import domain.authorize.events.PaymentEvent
 import domain.authorize.events.ReturnedFromClient
 import domain.authorize.steps.fraud.RiskAssessmentOutcome
-import domain.authorize.steps.gateway.ActionType
-import domain.authorize.steps.gateway.AuthorizeStatus
 import domain.authorize.steps.gateway.ClientAction
 import domain.authorize.steps.routing.PaymentAccount
-import domain.events.BrowserFingerprintRequestedEvent
 import domain.events.SideEffectEvent
-import domain.events.UserApprovalRequestedEvent
 import domain.payment.PaymentPayload
 import java.util.logging.Logger
 
-class ReadyForClientActionResponse
+data class ReadyForClientActionResponse
 (
     override val baseVersion: Int,
-    override val newEvents: List<PaymentEvent>,
-    override val newSideEffectEvents: List<SideEffectEvent>,
+    override val paymentEvents: List<PaymentEvent>,
+    override val sideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: Int,
     val paymentAccount: PaymentAccount,
     val clientAction: ClientAction,
 
-): PaymentStatus
+    ): AbstractPayment(), Payment
 {
     private val log = Logger.getLogger(ReadyForClientActionResponse::class.java.name)
 
-    fun addConfirmParameters(confirmParameters: Map<String, Any>): PaymentStatus
+    fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
     {
         val event = ReturnedFromClient(
-            version = baseVersion + newEvents.size + 1,
+            version = nextVersion(),
             confirmParameters = confirmParameters)
 
         return apply(event, isNew = true)
     }
 
-    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus =
-
-        apply(event, isNew = false)
-
-    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): Payment =
 
         when (event)
         {
@@ -52,35 +44,21 @@ class ReadyForClientActionResponse
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: ReturnedFromClient, isNew: Boolean): PaymentStatus
+    private fun apply(event: ReturnedFromClient, isNew: Boolean): Payment
     {
-        val newSideEffectEvents = newSideEffectEvents.toMutableList()
-        val newEvents = if (isNew) newEvents + event else newEvents
-        val newVersion = if (isNew) baseVersion else event.version
+        val newEvents = addEventIfNew(event, isNew)
+        val newVersion = upgradeVersionIfReplay(event, isNew)
+        val newSideEffectEvents = toMutableSideEffectEvents()
 
         return ReadyForConfirm(
             baseVersion = newVersion,
-            newEvents = newEvents,
-            newSideEffectEvents = newSideEffectEvents,
+            paymentEvents = newEvents,
+            sideEffectEvents = newSideEffectEvents,
             paymentPayload = paymentPayload,
             riskAssessmentOutcome = riskAssessmentOutcome,
             retryAttemps = retryAttemps,
             paymentAccount = paymentAccount,
             confirmParameters = event.confirmParameters
         )
-    }
-
-    private fun getClientActionEvent(authorizeStatus: AuthorizeStatus.ClientActionRequested): SideEffectEvent =
-
-        when(authorizeStatus.clientAction.type)
-        {
-            ActionType.FINGERPRINT -> BrowserFingerprintRequestedEvent
-            ActionType.REDIRECT, ActionType.CHALLENGE -> UserApprovalRequestedEvent
-        }
-
-    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
-    {
-        if (isNew)
-            this.add(event)
     }
 }

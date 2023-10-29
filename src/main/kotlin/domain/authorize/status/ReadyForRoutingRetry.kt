@@ -12,34 +12,30 @@ import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
 import java.util.logging.Logger
 
-class ReadyForRoutingRetry
+data class ReadyForRoutingRetry
 (
     override val baseVersion: Int,
-    override val newEvents: List<PaymentEvent>,
-    override val newSideEffectEvents: List<SideEffectEvent>,
+    override val paymentEvents: List<PaymentEvent>,
+    override val sideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     override val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: Int,
     val paymentAccount: PaymentAccount
 
-) : PaymentStatus, ReadyForAnyRouting
+) : AbstractPayment(), Payment, ReadyForAnyRouting
 {
     private val log = Logger.getLogger(ReadyForRoutingRetry::class.java.name)
 
-    override fun addRoutingResult(routingResult: RoutingResult): PaymentStatus
+    override fun addRoutingResult(routingResult: RoutingResult): Payment
     {
         val event = RoutingEvaluatedEvent(
-            version = baseVersion + newEvents.size + 1,
+            version = nextVersion(),
             routingResult = routingResult)
 
         return apply(event, isNew = true)
     }
 
-    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus =
-
-        apply(event, isNew = false)
-
-    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
+    override fun apply(event: PaymentEvent, isNew: Boolean): Payment =
 
         when (event)
         {
@@ -50,11 +46,11 @@ class ReadyForRoutingRetry
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): PaymentStatus
+    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): Payment
     {
-        val newSideEffectEvents = newSideEffectEvents.toMutableList()
-        val newEvents = if (isNew) newEvents + event else newEvents
-        val newVersion = if (isNew) baseVersion else event.version
+        val newEvents = addEventIfNew(event, isNew)
+        val newVersion = upgradeVersionIfReplay(event, isNew)
+        val newSideEffectEvents = toMutableSideEffectEvents()
 
         return when (event.routingResult)
         {
@@ -65,9 +61,9 @@ class ReadyForRoutingRetry
 
                 Failed(
                     baseVersion = newVersion,
-                    newEvents = newEvents,
+                    paymentEvents = newEvents,
+                    sideEffectEvents = newSideEffectEvents,
                     paymentPayload = paymentPayload,
-                    newSideEffectEvents = newSideEffectEvents,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 
@@ -78,9 +74,9 @@ class ReadyForRoutingRetry
 
                 RejectedByRouting(
                     baseVersion = newVersion,
-                    newEvents = newEvents,
-                    paymentPayload = paymentPayload,
-                    newSideEffectEvents = newSideEffectEvents)
+                    paymentEvents = newEvents,
+                    sideEffectEvents = newSideEffectEvents,
+                    paymentPayload = paymentPayload)
             }
 
             is RoutingResult.Proceed ->
@@ -93,9 +89,9 @@ class ReadyForRoutingRetry
 
                     RejectedByGateway(
                         baseVersion = newVersion,
-                        newEvents = newEvents,
+                        paymentEvents = newEvents,
+                        sideEffectEvents = newSideEffectEvents,
                         paymentPayload = paymentPayload,
-                        newSideEffectEvents = newSideEffectEvents,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
                         paymentAccount = event.routingResult.account
@@ -105,9 +101,9 @@ class ReadyForRoutingRetry
                 else
                     ReadyForAuthorization(
                         baseVersion = newVersion,
-                        newEvents = newEvents,
+                        paymentEvents = newEvents,
+                        sideEffectEvents = newSideEffectEvents,
                         paymentPayload = paymentPayload,
-                        newSideEffectEvents = newSideEffectEvents,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
                         paymentAccount = event.routingResult.account
@@ -123,10 +119,4 @@ class ReadyForRoutingRetry
             is RoutingResult.RoutingError.InvalidCurrency -> "Currency not accepted"
             is RoutingResult.RoutingError.BankAccountNotFound -> "Unable to find bank account"
         }
-
-    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
-    {
-        if (isNew)
-            this.add(event)
-    }
 }

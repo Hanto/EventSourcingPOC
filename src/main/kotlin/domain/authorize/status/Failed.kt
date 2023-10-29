@@ -7,13 +7,12 @@ import domain.payment.PaymentPayload
 data class Failed
 (
     override val baseVersion: Int,
-    override val newEvents: List<PaymentEvent>,
-    override val newSideEffectEvents: List<SideEffectEvent>,
+    override val paymentEvents: List<PaymentEvent>,
+    override val sideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val reason: String,
 
-): PaymentStatus
+    ): AbstractPayment(), Payment
 {
-    override fun applyRecordedEvent(event: PaymentEvent): PaymentStatus = this
-    override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus = this
+    override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
 }
