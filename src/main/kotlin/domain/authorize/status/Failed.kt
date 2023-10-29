@@ -6,6 +6,8 @@ import domain.payment.PaymentPayload
 
 data class Failed
 (
+    override val baseVersion: Int,
+    override val newEvents: List<PaymentEvent>,
     override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val reason: String,

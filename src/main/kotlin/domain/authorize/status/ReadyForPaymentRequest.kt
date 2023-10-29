@@ -7,8 +7,10 @@ import domain.payment.PaymentPayload
 
 class ReadyForPaymentRequest : PaymentStatus
 {
+    override val baseVersion: Int = 0
+    override val newEvents: List<PaymentEvent> = emptyList()
+    override val newSideEffectEvents: List<SideEffectEvent> = emptyList()
     override val paymentPayload: PaymentPayload? = null
-    override val newSideEffectEvents: List<SideEffectEvent> = mutableListOf()
 
     override fun apply(event: PaymentEvent, isNew: Boolean): PaymentStatus =
 
@@ -21,10 +23,17 @@ class ReadyForPaymentRequest : PaymentStatus
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: PaymentRequestedEvent, isNew: Boolean): PaymentStatus =
+    private fun apply(event: PaymentRequestedEvent, isNew: Boolean): PaymentStatus
+    {
+        val newSideEffectEvents = newSideEffectEvents.toMutableList()
+        val newEvents = if (isNew) newEvents + event else newEvents
+        val newVersion = if (isNew) baseVersion else event.version
 
-        ReadyForRisk(
+        return ReadyForRisk(
+            baseVersion = newVersion,
+            newEvents = newEvents,
             paymentPayload = event.paymentPayload,
             newSideEffectEvents = newSideEffectEvents
         )
+    }
 }

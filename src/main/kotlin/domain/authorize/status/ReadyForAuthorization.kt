@@ -8,9 +8,12 @@ import domain.authorize.steps.gateway.AuthorizeStatus
 import domain.authorize.steps.routing.PaymentAccount
 import domain.events.*
 import domain.payment.PaymentPayload
+import domain.utils.letIf
 
 class ReadyForAuthorization
 (
+    override val baseVersion: Int,
+    override val newEvents: List<PaymentEvent>,
     override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
@@ -33,6 +36,8 @@ class ReadyForAuthorization
     private fun apply(event: AuthorizationRequestedEvent, isNew: Boolean): PaymentStatus
     {
         val newSideEffectEvents = newSideEffectEvents.toMutableList()
+        val newEvents = if (isNew) newEvents + event else newEvents
+        val newVersion = if (isNew) baseVersion else event.version
 
         newSideEffectEvents.addNewEvent(AuthorizationAttemptRequestedEvent, isNew)
 
@@ -43,6 +48,8 @@ class ReadyForAuthorization
                 newSideEffectEvents.addNewEvent(PaymentAuthorizedEvent, isNew)
 
                 Authorized(
+                    baseVersion = newVersion,
+                    newEvents = newEvents,
                     paymentPayload = paymentPayload,
                     newSideEffectEvents = newSideEffectEvents,
                     riskAssessmentOutcome = riskAssessmentOutcome,
@@ -62,6 +69,8 @@ class ReadyForAuthorization
                 }
 
                 ReadyForClientActionResponse(
+                    baseVersion = newVersion,
+                    newEvents = newEvents,
                     paymentPayload = paymentPayload,
                     newSideEffectEvents = newSideEffectEvents,
                     riskAssessmentOutcome = riskAssessmentOutcome,
@@ -80,6 +89,8 @@ class ReadyForAuthorization
                     newSideEffectEvents.addNewEvent(PaymentRetriedEvent, isNew)
 
                     ReadyForRoutingRetry(
+                        baseVersion = newVersion,
+                        newEvents = newEvents,
                         paymentPayload = paymentPayload,
                         newSideEffectEvents = newSideEffectEvents,
                         riskAssessmentOutcome = riskAssessmentOutcome,
@@ -92,6 +103,8 @@ class ReadyForAuthorization
                     newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
 
                     RejectedByGateway(
+                        baseVersion = newVersion,
+                        newEvents = newEvents,
                         paymentPayload = paymentPayload,
                         newSideEffectEvents = newSideEffectEvents,
                         riskAssessmentOutcome = riskAssessmentOutcome,
@@ -106,6 +119,8 @@ class ReadyForAuthorization
                 newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
 
                 Failed(
+                    baseVersion = newVersion,
+                    newEvents = newEvents,
                     paymentPayload = paymentPayload,
                     newSideEffectEvents = newSideEffectEvents,
                     reason = "exception on authorization"
@@ -115,9 +130,7 @@ class ReadyForAuthorization
     }
 
     companion object { const val MAX_RETRIES = 1 }
-    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
-    {
-        if (isNew)
-            this.add(event)
-    }
+    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean) =
+
+        this.letIf({ isNew }, { this.add(event); this})
 }

@@ -6,6 +6,8 @@ import domain.payment.PaymentPayload
 
 data class RejectedByRouting
 (
+    override val baseVersion: Int,
+    override val newEvents: List<PaymentEvent>,
     override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
 

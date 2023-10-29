@@ -10,6 +10,7 @@ import domain.payment.Payment
 import domain.payment.PaymentId
 import domain.payment.PaymentPayload
 import domain.repositories.PaymentRepository
+import domain.utils.letIf
 
 class AuthorizeUseCase
 (
@@ -45,13 +46,4 @@ class AuthorizeUseCase
         paymentRepository.save(payment)
         return payment
     }
-
-    // HELPER:
-    //------------------------------------------------------------------------------------------------------------------
-
-    private fun <T>T.letIf(predicate: (T) -> Boolean, function: (T) -> T ): T =
-
-        if (predicate.invoke(this))
-            function.invoke(this)
-        else this
 }

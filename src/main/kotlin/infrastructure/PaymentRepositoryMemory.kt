@@ -13,8 +13,8 @@ class PaymentRepositoryMemory: PaymentRepository
     {
         val savedVersion = map[payment.getPaymentId()]?.last()?.version
 
-        if (savedVersion?.let { it != payment.baseVersion } == true)
-            throw RuntimeException("OptimisticLockException: base version doesn't match stored version")
+        if (savedVersion?.let { it != payment.getBaseVersion() } == true)
+            throw RuntimeException("OptimisticLockException: base version: $savedVersion doesn't match stored version: ${payment.getBaseVersion()}")
 
         val events = map.getOrPut(payment.getPaymentPayload().paymentId) { mutableListOf() }
         events.addAll(payment.getNewEvents())

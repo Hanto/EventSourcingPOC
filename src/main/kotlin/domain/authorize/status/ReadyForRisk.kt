@@ -7,9 +7,12 @@ import domain.events.FraudEvaluationCompletedEvent
 import domain.events.PaymentRejectedEvent
 import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
+import domain.utils.letIf
 
 data class ReadyForRisk
 (
+    override val baseVersion: Int,
+    override val newEvents: List<PaymentEvent>,
     override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload
 
@@ -29,6 +32,8 @@ data class ReadyForRisk
     private fun apply(event: RiskEvaluatedEvent, isNew: Boolean): PaymentStatus
     {
         val newSideEffectEvents = newSideEffectEvents.toMutableList()
+        val newEvents = if (isNew) newEvents + event else newEvents
+        val newVersion = if (isNew) baseVersion else event.version
 
         return when (event.fraudAnalysisResult)
         {
@@ -38,6 +43,8 @@ data class ReadyForRisk
                 newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
 
                 RejectedByRisk(
+                    baseVersion = newVersion,
+                    newEvents = newEvents,
                     paymentPayload = paymentPayload,
                     newSideEffectEvents = newSideEffectEvents
                 )
@@ -48,6 +55,8 @@ data class ReadyForRisk
                 newSideEffectEvents.addNewEvent(FraudEvaluationCompletedEvent, isNew)
 
                 ReadyForRouting(
+                    baseVersion = newVersion,
+                    newEvents = newEvents,
                     paymentPayload = paymentPayload,
                     newSideEffectEvents = newSideEffectEvents,
                     riskAssessmentOutcome = event.fraudAnalysisResult.riskAssessmentOutcome
@@ -56,9 +65,7 @@ data class ReadyForRisk
         }
     }
 
-    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
-    {
-        if (isNew)
-            this.add(event)
-    }
+    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean) =
+
+        this.letIf({ isNew }, { this.add(event); this})
 }

@@ -10,9 +10,12 @@ import domain.events.PaymentRejectedEvent
 import domain.events.RoutingCompletedEvent
 import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
+import domain.utils.letIf
 
 class ReadyForRoutingRetry
 (
+    override val baseVersion: Int,
+    override val newEvents: List<PaymentEvent>,
     override val newSideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
@@ -35,6 +38,8 @@ class ReadyForRoutingRetry
     private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): PaymentStatus
     {
         val newSideEffectEvents = newSideEffectEvents.toMutableList()
+        val newEvents = if (isNew) newEvents + event else newEvents
+        val newVersion = if (isNew) baseVersion else event.version
 
         return when (event.routingResult)
         {
@@ -46,11 +51,15 @@ class ReadyForRoutingRetry
                 when (event.routingResult)
                 {
                     is RoutingResult.RoutingError.InvalidCurrency -> Failed(
+                        baseVersion = newVersion,
+                        newEvents = newEvents,
                         paymentPayload = paymentPayload,
                         newSideEffectEvents = newSideEffectEvents,
                         reason = "Currency not accepted")
 
                     is RoutingResult.RoutingError.BankAccountNotFound -> Failed(
+                        baseVersion = event.version,
+                        newEvents = newEvents,
                         paymentPayload = paymentPayload,
                         newSideEffectEvents = newSideEffectEvents,
                         reason = "Unable to find bank account")
@@ -63,6 +72,8 @@ class ReadyForRoutingRetry
                 newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
 
                 RejectedByRouting(
+                    baseVersion = newVersion,
+                    newEvents = newEvents,
                     paymentPayload = paymentPayload,
                     newSideEffectEvents = newSideEffectEvents)
             }
@@ -76,6 +87,8 @@ class ReadyForRoutingRetry
                     newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
 
                     RejectedByGateway(
+                        baseVersion = newVersion,
+                        newEvents = newEvents,
                         paymentPayload = paymentPayload,
                         newSideEffectEvents = newSideEffectEvents,
                         riskAssessmentOutcome = riskAssessmentOutcome,
@@ -86,6 +99,8 @@ class ReadyForRoutingRetry
 
                 else
                     ReadyForAuthorization(
+                        baseVersion = newVersion,
+                        newEvents = newEvents,
                         paymentPayload = paymentPayload,
                         newSideEffectEvents = newSideEffectEvents,
                         riskAssessmentOutcome = riskAssessmentOutcome,
@@ -96,9 +111,7 @@ class ReadyForRoutingRetry
         }
     }
 
-    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean)
-    {
-        if (isNew)
-            this.add(event)
-    }
+    private fun MutableList<SideEffectEvent>.addNewEvent(event: SideEffectEvent, isNew: Boolean) =
+
+        this.letIf({ isNew }, { this.add(event); this})
 }

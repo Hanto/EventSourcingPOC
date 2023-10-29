@@ -10,9 +10,7 @@ import domain.events.SideEffectEvent
 
 class Payment
 (
-    private val newEvents: List<PaymentEvent> = emptyList(),
     val paymentStatus: PaymentStatus = ReadyForPaymentRequest(),
-    val baseVersion: Int = 0
 )
 {
     // CONSTRUCTOR:
@@ -21,9 +19,8 @@ class Payment
     fun applyRecordedEvent(event: PaymentEvent): Payment
     {
         val newAuthorizationStatus = paymentStatus.apply(event, isNew = false)
-        val newBaseVersion = event.version
 
-        return Payment(newEvents, newAuthorizationStatus, newBaseVersion)
+        return Payment(newAuthorizationStatus)
     }
 
     private fun applyNewEvent(event: PaymentEvent): Payment
@@ -32,13 +29,12 @@ class Payment
             throw IllegalArgumentException("new event version: ${event.version} doesn't match expected new version: ${nextVersion()}")
 
         val newAuthorizationStatus = paymentStatus.apply(event, isNew = true)
-        val newEvents = newEvents + event
 
-        return Payment(newEvents, newAuthorizationStatus, baseVersion)
+        return Payment(newAuthorizationStatus)
     }
 
     private fun nextVersion(): Int =
-        baseVersion + newEvents.size + 1
+        getBaseVersion() + getNewEvents().size + 1
 
     // ACTIONS:
     //------------------------------------------------------------------------------------------------------------------
@@ -93,13 +89,16 @@ class Payment
     //------------------------------------------------------------------------------------------------------------------
 
     fun getNewEvents(): List<PaymentEvent> =
-        newEvents.toList()
+        paymentStatus.newEvents
 
     fun getNewSideEffects(): List<SideEffectEvent> =
-        paymentStatus.newSideEffectEvents.toList()
+        paymentStatus.newSideEffectEvents
 
     // MISC:
     //------------------------------------------------------------------------------------------------------------------
+
+    fun getBaseVersion(): Int =
+        paymentStatus.baseVersion
 
     fun getPaymentId(): PaymentId =
         paymentStatus.paymentPayload?.paymentId!!
