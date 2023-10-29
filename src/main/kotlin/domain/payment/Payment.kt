@@ -10,7 +10,7 @@ import domain.events.SideEffectEvent
 
 class Payment
 (
-    private val events: List<PaymentEvent> = emptyList(),
+    private val newEvents: List<PaymentEvent> = emptyList(),
     val paymentStatus: PaymentStatus = ReadyForPaymentRequest(),
     val baseVersion: Int = 0
 )
@@ -23,7 +23,7 @@ class Payment
         val newAuthorizationStatus = paymentStatus.apply(event, isNew = false)
         val newBaseVersion = event.version
 
-        return Payment(events, newAuthorizationStatus, newBaseVersion)
+        return Payment(newEvents, newAuthorizationStatus, newBaseVersion)
     }
 
     private fun applyNewEvent(event: PaymentEvent): Payment
@@ -32,13 +32,13 @@ class Payment
             throw IllegalArgumentException("new event version: ${event.version} doesn't match expected new version: ${nextVersion()}")
 
         val newAuthorizationStatus = paymentStatus.apply(event, isNew = true)
-        val newEvents = events + event
+        val newEvents = newEvents + event
 
         return Payment(newEvents, newAuthorizationStatus, baseVersion)
     }
 
     private fun nextVersion(): Int =
-        baseVersion + events.size + 1
+        baseVersion + newEvents.size + 1
 
     // ACTIONS:
     //------------------------------------------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ class Payment
     //------------------------------------------------------------------------------------------------------------------
 
     fun getNewEvents(): List<PaymentEvent> =
-        events.toList()
+        newEvents.toList()
 
     fun getNewSideEffects(): List<SideEffectEvent> =
         paymentStatus.newSideEffectEvents.toList()
