@@ -12,7 +12,7 @@ sealed interface Payment
     val paymentPayload: PaymentPayload?
     fun applyRecordedEvent(event: PaymentEvent): Payment
     fun apply(event: PaymentEvent, isNew: Boolean): Payment
-    fun emptyEvents(): Payment
+    fun flushPaymentEvents(): Payment
     {
         return when(this)
         {

@@ -19,7 +19,7 @@ class PaymentRepositoryMemory: PaymentRepository
         val events = map.getOrPut(payment.paymentPayload?.paymentId!!) { mutableListOf() }
         events.addAll(payment.paymentEvents)
 
-        return payment.emptyEvents()
+        return payment.flushPaymentEvents()
     }
 
     override fun load(paymentId: PaymentId): Payment?

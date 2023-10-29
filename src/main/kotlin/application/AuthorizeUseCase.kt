@@ -56,6 +56,8 @@ class AuthorizeUseCase
             function.invoke(this as T, this)
         else this
 
+    // WITH WRAPPER:
+    //------------------------------------------------------------------------------------------------------------------
 
     fun authorize2(paymentPayload: PaymentPayload): PaymentWrapper
     {
