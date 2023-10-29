@@ -23,38 +23,39 @@ class AuthorizeUseCase
 
     fun authorizeOld(paymentPayload: PaymentPayload): Payment
     {
-        val payment = Payment(paymentPayload)
+        var payment = Payment().addPaymentPayload(paymentPayload)
 
-        payment.addFraudAnalysisResult(riskService.assessRisk(payment))
+        payment = payment.addFraudAnalysisResult(riskService.assessRisk(payment))
 
         if (payment.authorizationStatus is ReadyForRouting)
-            tryToAuthorizeOld(payment)
+            payment = tryToAuthorizeOld(payment)
 
         paymentRepository.save(payment)
         return payment
     }
 
-    private fun tryToAuthorizeOld(payment: Payment)
+    private fun tryToAuthorizeOld(input: Payment): Payment
     {
-        payment.addRoutingResult(routingService.routeForPayment(payment))
+        var payment = input.addRoutingResult(routingService.routeForPayment(input))
 
         if (payment.authorizationStatus is ReadyForAuthorization)
         {
-            payment.addAuthorizeResponse(authorizeService.authorize(payment))
+            payment = payment.addAuthorizeResponse(authorizeService.authorize(payment))
 
             if (payment.authorizationStatus is ReadyForRoutingRetry)
-                tryToAuthorizeOld(payment)
+                payment = tryToAuthorizeOld(payment)
         }
+        return payment
     }
 
     fun confirmOld(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
     {
-        val payment = Payment(paymentRepository.load(paymentId)!!)
+        var payment = paymentRepository.load(paymentId)!!
 
-        payment.addConfirmResponse(authorizeService.confirm(payment), confirmParams)
+        payment = payment.addConfirmResponse(authorizeService.confirm(payment), confirmParams)
 
         if (payment.authorizationStatus is ReadyForRoutingRetry)
-            tryToAuthorizeOld(payment)
+            payment = tryToAuthorizeOld(payment)
 
         paymentRepository.save(payment)
         return payment
@@ -83,7 +84,7 @@ class AuthorizeUseCase
 
     fun confirm(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
     {
-        val payment = loadPaymentStep(paymentId)
+        val payment = paymentRepository.load(paymentId)!!
 
         confirmStep(payment, confirmParams)
             .handleErrorWith { rejectedByGateway -> retryStep(rejectedByGateway)
@@ -99,7 +100,8 @@ class AuthorizeUseCase
 
     private fun paymentRequestedStep(paymentPayload: PaymentPayload): Either<Payment, Payment>
     {
-        val payment = Payment(paymentPayload)
+        var payment = Payment()
+        payment = payment.addPaymentPayload(paymentPayload)
 
         return when (payment.authorizationStatus)
         {
@@ -108,9 +110,9 @@ class AuthorizeUseCase
         }
     }
 
-    private fun riskEvaluationStep(payment: Payment): Either<Payment, Payment>
+    private fun riskEvaluationStep(input: Payment): Either<Payment, Payment>
     {
-        payment.addFraudAnalysisResult(riskService.assessRisk(payment))
+        val payment = input.addFraudAnalysisResult(riskService.assessRisk(input))
 
         return when (payment.authorizationStatus)
         {
@@ -119,9 +121,9 @@ class AuthorizeUseCase
         }
     }
 
-    private fun routingStep(payment: Payment): Either<Payment, Payment>
+    private fun routingStep(input: Payment): Either<Payment, Payment>
     {
-        payment.addRoutingResult(routingService.routeForPayment(payment))
+        val payment = input.addRoutingResult(routingService.routeForPayment(input))
 
         return when (payment.authorizationStatus)
         {
@@ -130,9 +132,9 @@ class AuthorizeUseCase
         }
     }
 
-    private fun authorizationStep(payment: Payment): Either<Payment, Payment>
+    private fun authorizationStep(input: Payment): Either<Payment, Payment>
     {
-        payment.addAuthorizeResponse(authorizeService.authorize(payment))
+        val payment = input.addAuthorizeResponse(authorizeService.authorize(input))
 
         return when (payment.authorizationStatus)
         {
@@ -150,15 +152,9 @@ class AuthorizeUseCase
         }
     }
 
-    private fun loadPaymentStep(paymentId: PaymentId): Payment
+    private fun confirmStep(input: Payment, confirmParams: Map<String, Any>): Either<Payment, Payment>
     {
-        val events = paymentRepository.load(paymentId)
-        return Payment(events!!)
-    }
-
-    private fun confirmStep(payment: Payment, confirmParams: Map<String, Any>): Either<Payment, Payment>
-    {
-        payment.addConfirmResponse(authorizeService.confirm(payment), confirmParams)
+        val payment = input.addConfirmResponse(authorizeService.confirm(input), confirmParams)
 
         return when (payment.authorizationStatus)
         {

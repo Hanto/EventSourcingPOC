@@ -9,45 +9,32 @@ import domain.authorize.steps.routing.RoutingResult
 import domain.sideeffectevents.SideEffectEvent
 
 class Payment
+(
+    private val newEvents: MutableList<PaymentEvent> = mutableListOf(),
+    val authorizationStatus: AuthorizationStatus = ReadyForPaymentRequest(),
+    val baseVersion: Int = 0
+)
 {
-    private val newEvents: MutableList<PaymentEvent> = mutableListOf()
-    var authorizationStatus: AuthorizationStatus = ReadyForPaymentRequest()
-        private set
-    var baseVersion = 0
-        private set
-
     // CONSTRUCTOR:
     //------------------------------------------------------------------------------------------------------------------
 
-    constructor(paymentPayload: PaymentPayload)
+    fun applyRecordedEvent(event: PaymentEvent): Payment
     {
-        val event = PaymentRequestedEvent(
-            version = nextVersion(),
-            paymentPayload = paymentPayload)
+        val newAuthorizationStatus = authorizationStatus.apply(event, isNew = false)
+        val newBaseVersion = event.version
 
-        applyNewEvent(event)
+        return Payment(newEvents, newAuthorizationStatus, newBaseVersion)
     }
 
-    constructor(events: List<PaymentEvent>)
-    {
-        events
-            .sortedBy { it.version }
-            .forEach { applyRecordedEvent(it) }
-    }
-
-    private fun applyRecordedEvent(event: PaymentEvent)
-    {
-        authorizationStatus = authorizationStatus.apply(event, isNew = false)
-        baseVersion = event.version
-    }
-
-    private fun applyNewEvent(event: PaymentEvent)
+    private fun applyNewEvent(event: PaymentEvent): Payment
     {
         if (event.version != nextVersion())
             throw IllegalArgumentException("new event version: ${event.version} doesn't match expected new version: ${nextVersion()}")
 
-        authorizationStatus = authorizationStatus.apply(event, isNew = true)
+        val newAuthorizationStatus = authorizationStatus.apply(event, isNew = true)
         newEvents.add(event)
+
+        return Payment(newEvents, newAuthorizationStatus, baseVersion)
     }
 
     private fun nextVersion(): Int =
@@ -56,41 +43,50 @@ class Payment
     // ACTIONS:
     //------------------------------------------------------------------------------------------------------------------
 
-    fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult)
+    fun addPaymentPayload(paymentPayload: PaymentPayload): Payment
+    {
+        val event = PaymentRequestedEvent(
+            version = nextVersion(),
+            paymentPayload = paymentPayload)
+
+        return applyNewEvent(event)
+    }
+
+    fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): Payment
     {
         val event = RiskEvaluatedEvent(
             version = nextVersion(),
             fraudAnalysisResult = fraudAnalysisResult)
 
-        applyNewEvent(event)
+        return applyNewEvent(event)
     }
 
-    fun addRoutingResult(routingResult: RoutingResult)
+    fun addRoutingResult(routingResult: RoutingResult): Payment
     {
         val event = RoutingEvaluatedEvent(
             version = nextVersion(),
             routingResult = routingResult)
 
-        applyNewEvent(event)
+        return applyNewEvent(event)
     }
 
-    fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse)
+    fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
     {
         val event = AuthorizationRequestedEvent(
             version = nextVersion(),
             authorizeResponse = authorizeResponse)
 
-        applyNewEvent(event)
+        return applyNewEvent(event)
     }
 
-    fun addConfirmResponse(authorizeResponse: AuthorizeResponse, confirmParameters: Map<String, Any>)
+    fun addConfirmResponse(authorizeResponse: AuthorizeResponse, confirmParameters: Map<String, Any>): Payment
     {
         val event = ConfirmedEvent(
             version = nextVersion(),
             authorizeResponse = authorizeResponse,
             confirmParameters = confirmParameters)
 
-        applyNewEvent(event)
+        return applyNewEvent(event)
     }
 
     // EVENTS:

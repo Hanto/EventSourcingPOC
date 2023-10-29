@@ -20,7 +20,11 @@ class PaymentRepositoryMemory: PaymentRepository
         events.addAll(payment.getNewEvents())
     }
 
-    override fun load(paymentId: PaymentId): List<PaymentEvent>? =
+    override fun load(paymentId: PaymentId): Payment?
+    {
+        val events = map[paymentId]
+        val payment = Payment()
 
-        map[paymentId]
+        return payment.let { events?.fold(payment) { payment, event -> payment.applyRecordedEvent(event) } }
+    }
 }
