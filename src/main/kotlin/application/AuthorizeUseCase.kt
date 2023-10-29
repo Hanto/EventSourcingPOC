@@ -21,8 +21,7 @@ class AuthorizeUseCase
 {
     fun authorize(paymentPayload: PaymentPayload): Payment
     {
-        val payment = Payment()
-            .let { it.addPaymentPayload(paymentPayload) }
+        val payment = Payment().addPaymentPayload(paymentPayload)
             .let { it.addFraudAnalysisResult(riskService.assessRisk(it)) }
             .letIf ({ it.paymentStatus is ReadyForRouting }, { tryToAuthorize(it) })
 
