@@ -42,6 +42,7 @@ data class PaymentWrapper
     fun addPaymentPayload(paymentPayload: PaymentPayload): PaymentWrapper
     {
         val event = PaymentRequestedEvent(
+            paymentId = paymentPayload.paymentId,
             version = nextVersion(),
             paymentPayload = paymentPayload)
 
@@ -51,6 +52,7 @@ data class PaymentWrapper
     fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): PaymentWrapper
     {
         val event = RiskEvaluatedEvent(
+            paymentId = getPaymentPayload().paymentId,
             version = nextVersion(),
             fraudAnalysisResult = fraudAnalysisResult)
 
@@ -60,6 +62,7 @@ data class PaymentWrapper
     fun addRoutingResult(routingResult: RoutingResult): PaymentWrapper
     {
         val event = RoutingEvaluatedEvent(
+            paymentId = getPaymentPayload().paymentId,
             version = nextVersion(),
             routingResult = routingResult)
 
@@ -69,6 +72,7 @@ data class PaymentWrapper
     fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): PaymentWrapper
     {
         val event = AuthorizationRequestedEvent(
+            paymentId = getPaymentPayload().paymentId,
             version = nextVersion(),
             authorizeResponse = authorizeResponse)
 
@@ -77,7 +81,8 @@ data class PaymentWrapper
 
     fun addConfirmParameters(confirmParameters: Map<String, Any>): PaymentWrapper
     {
-        val event = ReturnedFromClient(
+        val event = ReturnedFromClientEvent(
+            paymentId = getPaymentPayload().paymentId,
             version = nextVersion(),
             confirmParameters = confirmParameters)
 
@@ -87,6 +92,7 @@ data class PaymentWrapper
     fun addConfirmResponse(authorizeResponse: AuthorizeResponse): PaymentWrapper
     {
         val event = ConfirmationRequestedEvent(
+            paymentId = getPaymentPayload().paymentId,
             version = nextVersion(),
             authorizeResponse = authorizeResponse)
 

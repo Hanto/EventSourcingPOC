@@ -31,6 +31,7 @@ data class ReadyForAuthorization
     fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
     {
         val event = AuthorizationRequestedEvent(
+            paymentId = paymentPayload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
 

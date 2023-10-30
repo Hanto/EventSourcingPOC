@@ -25,6 +25,7 @@ data class ReadyForRisk
     fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): Payment
     {
         val event = RiskEvaluatedEvent(
+            paymentId = paymentPayload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             fraudAnalysisResult = fraudAnalysisResult)
 

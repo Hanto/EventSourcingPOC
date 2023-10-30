@@ -25,6 +25,7 @@ data class ReadyForRouting
     override fun addRoutingResult(routingResult: RoutingResult): Payment
     {
         val event = RoutingEvaluatedEvent(
+            paymentId = paymentPayload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             routingResult = routingResult)
 

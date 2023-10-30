@@ -19,6 +19,7 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment
     fun addPaymentPayload(paymentPayload: PaymentPayload): Payment
     {
         val event = PaymentRequestedEvent(
+            paymentId = paymentPayload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             paymentPayload = paymentPayload)
 

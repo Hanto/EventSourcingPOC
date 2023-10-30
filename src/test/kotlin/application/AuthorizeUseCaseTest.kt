@@ -11,6 +11,7 @@ import domain.payment.AuthorizationReference
 import domain.payment.Customer
 import domain.payment.PaymentId
 import domain.payment.PaymentPayload
+import infrastructure.EventPublisherMemory
 import infrastructure.PaymentRepositoryMemory
 import io.mockk.every
 import io.mockk.mockk
@@ -22,12 +23,14 @@ class AuthorizeUseCaseTest
     private val riskService = mockk<RiskAssessmentService>()
     private val routingService = mockk<RoutingService>()
     private val authorizationGateway = mockk<AuthorizationGateway>()
+    private val eventPublisher = EventPublisherMemory()
     private val paymentRepository = PaymentRepositoryMemory()
 
     private val underTest = AuthorizeUseCase(
         riskService = riskService,
         routingService = routingService,
         authorizeService = authorizationGateway,
+        eventPublisher = eventPublisher,
         paymentRepository = paymentRepository
     )
 
@@ -52,12 +55,12 @@ class AuthorizeUseCaseTest
             .andThen( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED) ))
             .andThen( AuthorizeResponse(AuthorizeStatus.Success) )
 
-        val payment = underTest.authorize(paymentPayload)
+        underTest.authorize(paymentPayload)
 
         println("\nPAYMENT EVENTS:\n")
         paymentRepository.loadEvents(paymentId) .forEach { println(it) }
         println("\nSIDE EFFECTS:\n")
-        payment.sideEffectEvents.forEach { println(it) }
+        eventPublisher.list.forEach { println(it) }
     }
 
     @Test
@@ -83,14 +86,12 @@ class AuthorizeUseCaseTest
 
         every { authorizationGateway.confirm( any()) }.returns( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)) )
 
-        val paymentOnAuthorize = underTest.authorize(paymentPayload)
-        val paymentOnConfirm = underTest.confirm(paymentId, mapOf("ECI" to "05"))
+        underTest.authorize(paymentPayload)
+        underTest.confirm(paymentId, mapOf("ECI" to "05"))
 
         println("\nPAYMENT EVENTS:\n")
         paymentRepository.loadEvents(paymentId) .forEach { println(it) }
         println("\nSIDE EFFECTS:\n")
-        paymentOnAuthorize.sideEffectEvents.forEach { println(it) }
-        paymentOnConfirm.sideEffectEvents.forEach { println(it) }
+        eventPublisher.list.forEach { println(it) }
     }
-
 }

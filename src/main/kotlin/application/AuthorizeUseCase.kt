@@ -4,6 +4,7 @@ import domain.authorize.status.*
 import domain.authorize.steps.fraud.RiskAssessmentService
 import domain.authorize.steps.gateway.AuthorizationGateway
 import domain.authorize.steps.routing.RoutingService
+import domain.events.EventPublisher
 import domain.payment.PaymentId
 import domain.payment.PaymentPayload
 import domain.payment.PaymentWrapper
@@ -15,6 +16,7 @@ class AuthorizeUseCase
     private val routingService: RoutingService,
     private val authorizeService: AuthorizationGateway,
     private val paymentRepository: PaymentRepository,
+    private val eventPublisher: EventPublisher
 )
 {
     fun authorize(paymentPayload: PaymentPayload): Payment
@@ -23,6 +25,7 @@ class AuthorizeUseCase
             .letIf { it: ReadyForRisk -> it.addFraudAnalysisResult(riskService.assessRisk(it)) }
             .letIf { it: ReadyForRouting -> tryToAuthorize(it) }
             .let { paymentRepository.save(it) }
+            .also { sendSideEffectEvents(it) }
     }
 
     private fun tryToAuthorize(input: ReadyForAnyRouting): Payment
@@ -39,6 +42,13 @@ class AuthorizeUseCase
             .letIf { it: ReadyForConfirm -> it.addConfirmResponse(authorizeService.confirm(it)) }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
             .let { paymentRepository.save(it) }
+            .also { sendSideEffectEvents(it) }
+    }
+
+    private fun sendSideEffectEvents(payment: Payment)
+    {
+        payment.sideEffectEvents.forEach { eventPublisher.publish(it) }
+        payment.flushSideEffectEvents()
     }
 
     // HELPER:

@@ -32,6 +32,7 @@ data class ReadyForConfirm
     fun addConfirmResponse(authorizeResponse: AuthorizeResponse): Payment
     {
         val event = ConfirmationRequestedEvent(
+            paymentId = paymentPayload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
 

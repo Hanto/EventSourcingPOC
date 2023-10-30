@@ -1,7 +1,7 @@
 package domain.authorize.status
 
 import domain.authorize.events.PaymentEvent
-import domain.authorize.events.ReturnedFromClient
+import domain.authorize.events.ReturnedFromClientEvent
 import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.gateway.ClientAction
 import domain.authorize.steps.routing.PaymentAccount
@@ -29,7 +29,8 @@ data class ReadyForClientActionResponse
 
     fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
     {
-        val event = ReturnedFromClient(
+        val event = ReturnedFromClientEvent(
+            paymentId = paymentPayload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             confirmParameters = confirmParameters)
 
@@ -40,14 +41,14 @@ data class ReadyForClientActionResponse
 
         when (event)
         {
-            is ReturnedFromClient -> apply(event, isNew)
+            is ReturnedFromClientEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: ReturnedFromClient, isNew: Boolean): Payment
+    private fun apply(event: ReturnedFromClientEvent, isNew: Boolean): Payment
     {
         val newVersion = baseVersion.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
