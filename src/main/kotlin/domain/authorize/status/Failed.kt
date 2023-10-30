@@ -10,7 +10,7 @@ data class Failed
     override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val paymentPayload: PaymentPayload,
+    override val payload: PaymentPayload,
     val reason: String,
 
     ): AbstractPayment(), Payment

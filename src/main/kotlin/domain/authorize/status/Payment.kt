@@ -10,7 +10,7 @@ sealed interface Payment
     val baseVersion: Version
     val paymentEvents: List<PaymentEvent>
     val sideEffectEvents: List<SideEffectEvent>
-    val paymentPayload: PaymentPayload?
+    val payload: PaymentPayload?
     fun applyRecordedEvent(event: PaymentEvent): Payment
     fun apply(event: PaymentEvent, isNew: Boolean): Payment
     fun flushPaymentEvents(): Payment

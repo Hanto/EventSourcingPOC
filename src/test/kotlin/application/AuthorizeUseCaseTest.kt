@@ -7,10 +7,11 @@ import domain.authorize.steps.gateway.*
 import domain.authorize.steps.routing.PaymentAccount
 import domain.authorize.steps.routing.RoutingResult
 import domain.authorize.steps.routing.RoutingService
-import domain.payment.AuthorizationReference
-import domain.payment.Customer
-import domain.payment.PaymentId
 import domain.payment.PaymentPayload
+import domain.payment.payload.AuthorizationReference
+import domain.payment.payload.Customer
+import domain.payment.payload.PaymentId
+import domain.payment.payload.paymentmethod.CreditCardPayment
 import infrastructure.EventPublisherMemory
 import infrastructure.PaymentRepositoryMemory
 import io.mockk.every
@@ -41,7 +42,8 @@ class AuthorizeUseCaseTest
         val paymentPayload = PaymentPayload(
             paymentId = paymentId,
             authorizationReference = AuthorizationReference(id = "123456789"),
-            customer = Customer("ivan", "delgado")
+            customer = Customer("ivan", "delgado"),
+            paymentMethod = CreditCardPayment
         )
 
         every { riskService.assessRisk(any()) }.returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.FRICTIONLESS) )
@@ -70,7 +72,8 @@ class AuthorizeUseCaseTest
         val paymentPayload = PaymentPayload(
             paymentId = paymentId,
             authorizationReference = AuthorizationReference(id = "123456789"),
-            customer = Customer("ivan", "delgado")
+            customer = Customer("ivan", "delgado"),
+            paymentMethod = CreditCardPayment
         )
 
         every { riskService.assessRisk(any()) }.returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.FRICTIONLESS) )

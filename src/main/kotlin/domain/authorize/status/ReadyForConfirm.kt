@@ -11,6 +11,7 @@ import domain.events.*
 import domain.payment.PaymentPayload
 import domain.payment.RetryAttemp
 import domain.payment.Version
+import domain.payment.payload.paymentmethod.KlarnaPayment
 import java.util.logging.Logger
 
 data class ReadyForConfirm
@@ -18,7 +19,7 @@ data class ReadyForConfirm
     override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val paymentPayload: PaymentPayload,
+    override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
@@ -32,7 +33,7 @@ data class ReadyForConfirm
     fun addConfirmResponse(authorizeResponse: AuthorizeResponse): Payment
     {
         val event = ConfirmationRequestedEvent(
-            paymentId = paymentPayload.paymentId,
+            paymentId = payload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
 
@@ -63,11 +64,14 @@ data class ReadyForConfirm
                 newSideEffectEvents.addIfNew(PaymentAuthorizedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
 
+                if (payload.paymentMethod is KlarnaPayment)
+                    newSideEffectEvents.addIfNew(KlarnaOrderPlacedEvent, isNew)
+
                 Authorized(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount
@@ -82,7 +86,7 @@ data class ReadyForConfirm
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount,
@@ -103,7 +107,7 @@ data class ReadyForConfirm
                         baseVersion = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,
-                        paymentPayload = paymentPayload,
+                        payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps.next(),
                         paymentAccount = paymentAccount
@@ -117,7 +121,7 @@ data class ReadyForConfirm
                         baseVersion = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,
-                        paymentPayload = paymentPayload,
+                        payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
                         paymentAccount = paymentAccount
@@ -128,12 +132,13 @@ data class ReadyForConfirm
             is AuthorizeStatus.Fail ->
             {
                 newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
 
                 Failed(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     reason = "exception on authorization"
                 )
             }

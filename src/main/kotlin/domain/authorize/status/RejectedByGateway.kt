@@ -13,12 +13,12 @@ data class RejectedByGateway
     override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val paymentPayload: PaymentPayload,
+    override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount
 
-) : AbstractPayment(), Payment
+) : AbstractPayment(), Payment, Rejected
 {
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
 }

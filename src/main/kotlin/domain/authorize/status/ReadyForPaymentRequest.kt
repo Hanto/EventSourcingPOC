@@ -13,7 +13,7 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment
     override val baseVersion: Version = Version.firstVersion()
     override val paymentEvents: List<PaymentEvent> = emptyList()
     override val sideEffectEvents: List<SideEffectEvent> = emptyList()
-    override val paymentPayload: PaymentPayload? = null
+    override val payload: PaymentPayload? = null
     private val log = getLogger(ReadyForPaymentRequest::class.java.name)
 
     fun addPaymentPayload(paymentPayload: PaymentPayload): Payment
@@ -47,7 +47,7 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment
             baseVersion = newVersion,
             paymentEvents = newEvents,
             sideEffectEvents = newSideEffectEvents.list,
-            paymentPayload = event.paymentPayload
+            payload = event.paymentPayload
         )
     }
 }

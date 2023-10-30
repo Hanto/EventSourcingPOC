@@ -1,7 +1,7 @@
 package domain.authorize.events
 
-import domain.payment.PaymentId
 import domain.payment.Version
+import domain.payment.payload.PaymentId
 
 data class ReturnedFromClientEvent
 (

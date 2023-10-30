@@ -1,7 +1,7 @@
 package domain.repositories
 
 import domain.authorize.status.Payment
-import domain.payment.PaymentId
+import domain.payment.payload.PaymentId
 
 interface PaymentRepository
 {

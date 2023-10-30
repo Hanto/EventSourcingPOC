@@ -3,8 +3,8 @@ package infrastructure
 import domain.authorize.events.PaymentEvent
 import domain.authorize.status.Payment
 import domain.authorize.status.ReadyForPaymentRequest
-import domain.payment.PaymentId
 import domain.payment.Version
+import domain.payment.payload.PaymentId
 import domain.repositories.PaymentRepository
 
 class PaymentRepositoryMemory: PaymentRepository
@@ -13,11 +13,11 @@ class PaymentRepositoryMemory: PaymentRepository
 
     override fun save(payment: Payment): Payment
     {
-        val savedVersion = map[payment.paymentPayload?.paymentId!!]?.last()?.version
+        val savedVersion = map[payment.payload?.paymentId!!]?.last()?.version
 
         verifyDataConsistency(payment, savedVersion)
 
-        val events = map.getOrPut(payment.paymentPayload?.paymentId!!) { mutableListOf() }
+        val events = map.getOrPut(payment.payload?.paymentId!!) { mutableListOf() }
         events.addAll(payment.paymentEvents)
 
         return payment.flushPaymentEvents()

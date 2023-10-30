@@ -16,7 +16,7 @@ data class ReadyForRisk
     override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val paymentPayload: PaymentPayload
+    override val payload: PaymentPayload
 
 ): AbstractPayment(), Payment
 {
@@ -25,7 +25,7 @@ data class ReadyForRisk
     fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): Payment
     {
         val event = RiskEvaluatedEvent(
-            paymentId = paymentPayload.paymentId,
+            paymentId = payload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             fraudAnalysisResult = fraudAnalysisResult)
 
@@ -61,7 +61,7 @@ data class ReadyForRisk
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                 )
             }
 
@@ -71,7 +71,7 @@ data class ReadyForRisk
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     riskAssessmentOutcome = event.fraudAnalysisResult.riskAssessmentOutcome
                 )
             }

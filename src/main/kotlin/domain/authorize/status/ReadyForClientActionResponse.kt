@@ -17,7 +17,7 @@ data class ReadyForClientActionResponse
     override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val paymentPayload: PaymentPayload,
+    override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
@@ -30,7 +30,7 @@ data class ReadyForClientActionResponse
     fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
     {
         val event = ReturnedFromClientEvent(
-            paymentId = paymentPayload.paymentId,
+            paymentId = payload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             confirmParameters = confirmParameters)
 
@@ -58,7 +58,7 @@ data class ReadyForClientActionResponse
             baseVersion = newVersion,
             paymentEvents = newEvents,
             sideEffectEvents = newSideEffectEvents.list,
-            paymentPayload = paymentPayload,
+            payload = payload,
             riskAssessmentOutcome = riskAssessmentOutcome,
             retryAttemps = retryAttemps,
             paymentAccount = paymentAccount,

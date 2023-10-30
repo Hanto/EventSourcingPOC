@@ -10,9 +10,9 @@ data class RejectedByRouting
     override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val paymentPayload: PaymentPayload,
+    override val payload: PaymentPayload,
 
-    ) : AbstractPayment(), Payment
+    ) : AbstractPayment(), Payment, Rejected
 {
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
 }

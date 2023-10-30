@@ -1,4 +1,4 @@
-package domain.payment
+package domain.payment.payload
 
 data class Customer
 (

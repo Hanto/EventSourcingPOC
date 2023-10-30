@@ -1,8 +1,8 @@
 package domain.authorize.events
 
 import domain.authorize.steps.gateway.AuthorizeResponse
-import domain.payment.PaymentId
 import domain.payment.Version
+import domain.payment.payload.PaymentId
 
 data class ConfirmationRequestedEvent
 (

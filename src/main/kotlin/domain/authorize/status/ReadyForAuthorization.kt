@@ -11,6 +11,7 @@ import domain.events.*
 import domain.payment.PaymentPayload
 import domain.payment.RetryAttemp
 import domain.payment.Version
+import domain.payment.payload.paymentmethod.KlarnaPayment
 import java.util.logging.Logger
 
 data class ReadyForAuthorization
@@ -18,7 +19,7 @@ data class ReadyForAuthorization
     override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val paymentPayload: PaymentPayload,
+    override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount
@@ -31,7 +32,7 @@ data class ReadyForAuthorization
     fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
     {
         val event = AuthorizationRequestedEvent(
-            paymentId = paymentPayload.paymentId,
+            paymentId = payload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
 
@@ -63,11 +64,14 @@ data class ReadyForAuthorization
             {
                 newSideEffectEvents.addIfNew(PaymentAuthorizedEvent, isNew)
 
+                if (payload.paymentMethod is KlarnaPayment)
+                    newSideEffectEvents.addIfNew(KlarnaOrderPlacedEvent, isNew)
+
                 Authorized(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount
@@ -83,7 +87,7 @@ data class ReadyForAuthorization
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount,
@@ -103,7 +107,7 @@ data class ReadyForAuthorization
                         baseVersion = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,
-                        paymentPayload = paymentPayload,
+                        payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps.next(),
                         paymentAccount = paymentAccount
@@ -117,7 +121,7 @@ data class ReadyForAuthorization
                         baseVersion = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,
-                        paymentPayload = paymentPayload,
+                        payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
                         paymentAccount = paymentAccount
@@ -133,7 +137,7 @@ data class ReadyForAuthorization
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     reason = "exception on authorization"
                 )
             }

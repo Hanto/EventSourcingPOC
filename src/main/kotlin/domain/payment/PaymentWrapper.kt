@@ -7,6 +7,7 @@ import domain.authorize.steps.fraud.FraudAnalysisResult
 import domain.authorize.steps.gateway.AuthorizeResponse
 import domain.authorize.steps.routing.RoutingResult
 import domain.events.SideEffectEvent
+import domain.payment.payload.PaymentId
 
 data class PaymentWrapper
 (
@@ -115,8 +116,8 @@ data class PaymentWrapper
         payment.baseVersion
 
     fun getPaymentId(): PaymentId =
-        payment.paymentPayload?.paymentId!!
+        payment.payload?.paymentId!!
 
     fun getPaymentPayload(): PaymentPayload =
-        payment.paymentPayload!!
+        payment.payload!!
 }

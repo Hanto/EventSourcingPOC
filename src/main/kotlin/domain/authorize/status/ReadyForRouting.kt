@@ -15,17 +15,17 @@ data class ReadyForRouting
     override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val paymentPayload: PaymentPayload,
+    override val payload: PaymentPayload,
     override val riskAssessmentOutcome: RiskAssessmentOutcome,
 
-    ): AbstractPayment(), Payment, ReadyForAnyRouting
+    ): AbstractPayment(), Payment, Routed
 {
     private val log = Logger.getLogger(ReadyForRouting::class.java.name)
 
     override fun addRoutingResult(routingResult: RoutingResult): Payment
     {
         val event = RoutingEvaluatedEvent(
-            paymentId = paymentPayload.paymentId,
+            paymentId = payload.paymentId,
             version = baseVersion.nextEventVersion(paymentEvents),
             routingResult = routingResult)
 
@@ -59,7 +59,7 @@ data class ReadyForRouting
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 
@@ -72,7 +72,7 @@ data class ReadyForRouting
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                 )
             }
 
@@ -84,7 +84,7 @@ data class ReadyForRouting
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    paymentPayload = paymentPayload,
+                    payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = RetryAttemp.firstNormalAttemp(),
                     paymentAccount = event.routingResult.account

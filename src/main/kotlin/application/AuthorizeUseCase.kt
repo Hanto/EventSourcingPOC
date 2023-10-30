@@ -5,10 +5,11 @@ import domain.authorize.steps.fraud.RiskAssessmentService
 import domain.authorize.steps.gateway.AuthorizationGateway
 import domain.authorize.steps.routing.RoutingService
 import domain.events.EventPublisher
-import domain.payment.PaymentId
 import domain.payment.PaymentPayload
 import domain.payment.PaymentWrapper
+import domain.payment.payload.PaymentId
 import domain.repositories.PaymentRepository
+import domain.utils.letIf
 
 class AuthorizeUseCase
 (
@@ -28,7 +29,7 @@ class AuthorizeUseCase
             .also { sendSideEffectEvents(it) }
     }
 
-    private fun tryToAuthorize(input: ReadyForAnyRouting): Payment
+    private fun tryToAuthorize(input: Routed): Payment
     {
         return input.addRoutingResult(routingService.routeForPayment(input))
             .letIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
@@ -54,12 +55,6 @@ class AuthorizeUseCase
     // HELPER:
     //------------------------------------------------------------------------------------------------------------------
 
-    private inline fun <reified T>Payment.letIf(function: (T) -> Payment): Payment =
-
-        if (this is T)
-            function.invoke(this as T)
-        else this
-
     private inline fun <reified T> PaymentWrapper.letIf(function: (T, PaymentWrapper) -> PaymentWrapper): PaymentWrapper =
 
         if (this.payment is T)
@@ -79,7 +74,7 @@ class AuthorizeUseCase
     private fun tryToAuthorize2(input: PaymentWrapper): PaymentWrapper
     {
         return input
-            .letIf { it: ReadyForAnyRouting, p -> p.addRoutingResult(routingService.routeForPayment(it)) }
+            .letIf { it: Routed, p -> p.addRoutingResult(routingService.routeForPayment(it)) }
             .letIf { it: ReadyForAuthorization, p -> p.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letIf {  _: ReadyForRoutingRetry, p -> tryToAuthorize2(p) }
     }

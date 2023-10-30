@@ -1,8 +1,8 @@
 package domain.authorize.events
 
 import domain.events.DomainEvent
-import domain.payment.PaymentId
 import domain.payment.Version
+import domain.payment.payload.PaymentId
 
 sealed interface PaymentEvent : DomainEvent
 {
