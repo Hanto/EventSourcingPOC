@@ -6,9 +6,9 @@ import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.gateway.ClientAction
 import domain.authorize.steps.routing.PaymentAccount
 import domain.events.SideEffectEvent
+import domain.events.SideEffectEventList
 import domain.payment.PaymentPayload
 import domain.payment.RetryAttemp
-import domain.payment.SideEffectEventList
 import domain.payment.Version
 import java.util.logging.Logger
 

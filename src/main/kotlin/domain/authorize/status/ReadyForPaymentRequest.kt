@@ -3,8 +3,8 @@ package domain.authorize.status
 import domain.authorize.events.PaymentEvent
 import domain.authorize.events.PaymentRequestedEvent
 import domain.events.SideEffectEvent
+import domain.events.SideEffectEventList
 import domain.payment.PaymentPayload
-import domain.payment.SideEffectEventList
 import domain.payment.Version
 import java.util.logging.Logger.getLogger
 

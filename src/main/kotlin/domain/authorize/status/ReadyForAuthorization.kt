@@ -10,7 +10,6 @@ import domain.authorize.steps.routing.PaymentAccount
 import domain.events.*
 import domain.payment.PaymentPayload
 import domain.payment.RetryAttemp
-import domain.payment.SideEffectEventList
 import domain.payment.Version
 import java.util.logging.Logger
 

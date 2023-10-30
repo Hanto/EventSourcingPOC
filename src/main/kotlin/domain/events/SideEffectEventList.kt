@@ -1,6 +1,4 @@
-package domain.payment
-
-import domain.events.SideEffectEvent
+package domain.events
 
 class SideEffectEventList
 (

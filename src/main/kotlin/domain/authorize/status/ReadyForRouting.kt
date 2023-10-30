@@ -4,13 +4,9 @@ import domain.authorize.events.PaymentEvent
 import domain.authorize.events.RoutingEvaluatedEvent
 import domain.authorize.steps.fraud.RiskAssessmentOutcome
 import domain.authorize.steps.routing.RoutingResult
-import domain.events.PaymentFailedEvent
-import domain.events.PaymentRejectedEvent
-import domain.events.RoutingCompletedEvent
-import domain.events.SideEffectEvent
+import domain.events.*
 import domain.payment.PaymentPayload
 import domain.payment.RetryAttemp
-import domain.payment.SideEffectEventList
 import domain.payment.Version
 import java.util.logging.Logger
 

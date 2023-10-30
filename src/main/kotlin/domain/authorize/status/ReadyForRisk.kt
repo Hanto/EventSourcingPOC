@@ -6,8 +6,8 @@ import domain.authorize.steps.fraud.FraudAnalysisResult
 import domain.events.FraudEvaluationCompletedEvent
 import domain.events.PaymentRejectedEvent
 import domain.events.SideEffectEvent
+import domain.events.SideEffectEventList
 import domain.payment.PaymentPayload
-import domain.payment.SideEffectEventList
 import domain.payment.Version
 import java.util.logging.Logger
 
