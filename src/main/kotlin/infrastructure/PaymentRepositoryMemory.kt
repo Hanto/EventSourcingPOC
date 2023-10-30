@@ -4,6 +4,7 @@ import domain.authorize.events.PaymentEvent
 import domain.authorize.status.Payment
 import domain.authorize.status.ReadyForPaymentRequest
 import domain.payment.PaymentId
+import domain.payment.Version
 import domain.repositories.PaymentRepository
 
 class PaymentRepositoryMemory: PaymentRepository
@@ -34,9 +35,9 @@ class PaymentRepositoryMemory: PaymentRepository
 
         map.getOrDefault(paymentId, emptyList())
 
-    private fun verifyDataConsistency(payment: Payment, savedVersion: Int?)
+    private fun verifyDataConsistency(payment: Payment, savedVersion: Version?)
     {
-        if  (savedVersion?.let { it != payment.baseVersion } == true)
+        if  (!payment.baseVersion.isSameVersion(savedVersion))
             throw RuntimeException("OptimisticLockException: base version: $savedVersion doesn't match stored version: ${payment.baseVersion}")
     }
 }

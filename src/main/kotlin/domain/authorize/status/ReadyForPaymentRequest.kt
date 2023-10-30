@@ -4,11 +4,13 @@ import domain.authorize.events.PaymentEvent
 import domain.authorize.events.PaymentRequestedEvent
 import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
+import domain.payment.SideEffectEventList
+import domain.payment.Version
 import java.util.logging.Logger.getLogger
 
 class ReadyForPaymentRequest : AbstractPayment(), Payment
 {
-    override val baseVersion: Int = 0
+    override val baseVersion: Version = Version.firstVersion()
     override val paymentEvents: List<PaymentEvent> = emptyList()
     override val sideEffectEvents: List<SideEffectEvent> = emptyList()
     override val paymentPayload: PaymentPayload? = null
@@ -17,7 +19,7 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment
     fun addPaymentPayload(paymentPayload: PaymentPayload): Payment
     {
         val event = PaymentRequestedEvent(
-            version = nextVersion(),
+            version = baseVersion.nextEventVersion(paymentEvents),
             paymentPayload = paymentPayload)
 
         return apply(event, isNew = true)
@@ -36,14 +38,14 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment
 
     private fun apply(event: PaymentRequestedEvent, isNew: Boolean): Payment
     {
+        val newVersion = baseVersion.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
-        val newVersion = upgradeVersionIfReplay(event, isNew)
-        val newSideEffectEvents = toMutableSideEffectEvents()
+        val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
         return ReadyForRisk(
             baseVersion = newVersion,
             paymentEvents = newEvents,
-            sideEffectEvents = newSideEffectEvents,
+            sideEffectEvents = newSideEffectEvents.list,
             paymentPayload = event.paymentPayload
         )
     }

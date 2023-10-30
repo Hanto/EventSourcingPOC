@@ -10,16 +10,19 @@ import domain.events.PaymentRejectedEvent
 import domain.events.RoutingCompletedEvent
 import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
+import domain.payment.RetryAttemp
+import domain.payment.SideEffectEventList
+import domain.payment.Version
 import java.util.logging.Logger
 
 data class ReadyForRoutingRetry
 (
-    override val baseVersion: Int,
+    override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     override val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemps: Int,
+    val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount
 
 ) : AbstractPayment(), Payment, ReadyForAnyRouting
@@ -29,7 +32,7 @@ data class ReadyForRoutingRetry
     override fun addRoutingResult(routingResult: RoutingResult): Payment
     {
         val event = RoutingEvaluatedEvent(
-            version = nextVersion(),
+            version = baseVersion.nextEventVersion(paymentEvents),
             routingResult = routingResult)
 
         return apply(event, isNew = true)
@@ -48,49 +51,49 @@ data class ReadyForRoutingRetry
 
     private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): Payment
     {
+        val newVersion = baseVersion.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
-        val newVersion = upgradeVersionIfReplay(event, isNew)
-        val newSideEffectEvents = toMutableSideEffectEvents()
+        val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
         return when (event.routingResult)
         {
             is RoutingResult.RoutingError ->
             {
-                newSideEffectEvents.addNewEvent(RoutingCompletedEvent, isNew)
-                newSideEffectEvents.addNewEvent(PaymentFailedEvent, isNew)
+                newSideEffectEvents.addIfNew(RoutingCompletedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentFailedEvent, isNew)
 
                 Failed(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
                     paymentPayload = paymentPayload,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 
             is RoutingResult.Reject ->
             {
-                newSideEffectEvents.addNewEvent(RoutingCompletedEvent, isNew)
-                newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
+                newSideEffectEvents.addIfNew(RoutingCompletedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
 
                 RejectedByRouting(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
                     paymentPayload = paymentPayload)
             }
 
             is RoutingResult.Proceed ->
             {
-                newSideEffectEvents.addNewEvent(RoutingCompletedEvent, isNew)
+                newSideEffectEvents.addIfNew(RoutingCompletedEvent, isNew)
 
                 if (event.routingResult.account == paymentAccount)
                 {
-                    newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
+                    newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
 
                     RejectedByGateway(
                         baseVersion = newVersion,
                         paymentEvents = newEvents,
-                        sideEffectEvents = newSideEffectEvents,
+                        sideEffectEvents = newSideEffectEvents.list,
                         paymentPayload = paymentPayload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
@@ -102,7 +105,7 @@ data class ReadyForRoutingRetry
                     ReadyForAuthorization(
                         baseVersion = newVersion,
                         paymentEvents = newEvents,
-                        sideEffectEvents = newSideEffectEvents,
+                        sideEffectEvents = newSideEffectEvents.list,
                         paymentPayload = paymentPayload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,

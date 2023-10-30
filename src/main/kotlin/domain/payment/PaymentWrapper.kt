@@ -8,7 +8,7 @@ import domain.authorize.steps.gateway.AuthorizeResponse
 import domain.authorize.steps.routing.RoutingResult
 import domain.events.SideEffectEvent
 
-class PaymentWrapper
+data class PaymentWrapper
 (
     val payment: Payment = ReadyForPaymentRequest(),
 )
@@ -25,7 +25,7 @@ class PaymentWrapper
 
     private fun applyNewEvent(event: PaymentEvent): PaymentWrapper
     {
-        if (event.version != nextVersion())
+        if (!event.version.isSameVersion(nextVersion()))
             throw IllegalArgumentException("new event version: ${event.version} doesn't match expected new version: ${nextVersion()}")
 
         val newPayment = payment.apply(event, isNew = true)
@@ -33,8 +33,8 @@ class PaymentWrapper
         return PaymentWrapper(newPayment)
     }
 
-    private fun nextVersion(): Int =
-        getBaseVersion() + getNewEvents().size + 1
+    private fun nextVersion(): Version =
+        getBaseVersion().nextEventVersion(getNewEvents())
 
     // ACTIONS:
     //------------------------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ class PaymentWrapper
     // MISC:
     //------------------------------------------------------------------------------------------------------------------
 
-    fun getBaseVersion(): Int =
+    fun getBaseVersion(): Version =
         payment.baseVersion
 
     fun getPaymentId(): PaymentId =

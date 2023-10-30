@@ -7,16 +7,19 @@ import domain.authorize.steps.gateway.ClientAction
 import domain.authorize.steps.routing.PaymentAccount
 import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
+import domain.payment.RetryAttemp
+import domain.payment.SideEffectEventList
+import domain.payment.Version
 import java.util.logging.Logger
 
 data class ReadyForClientActionResponse
 (
-    override val baseVersion: Int,
+    override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemps: Int,
+    val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val clientAction: ClientAction,
 
@@ -27,7 +30,7 @@ data class ReadyForClientActionResponse
     fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
     {
         val event = ReturnedFromClient(
-            version = nextVersion(),
+            version = baseVersion.nextEventVersion(paymentEvents),
             confirmParameters = confirmParameters)
 
         return apply(event, isNew = true)
@@ -46,14 +49,14 @@ data class ReadyForClientActionResponse
 
     private fun apply(event: ReturnedFromClient, isNew: Boolean): Payment
     {
+        val newVersion = baseVersion.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
-        val newVersion = upgradeVersionIfReplay(event, isNew)
-        val newSideEffectEvents = toMutableSideEffectEvents()
+        val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
         return ReadyForConfirm(
             baseVersion = newVersion,
             paymentEvents = newEvents,
-            sideEffectEvents = newSideEffectEvents,
+            sideEffectEvents = newSideEffectEvents.list,
             paymentPayload = paymentPayload,
             riskAssessmentOutcome = riskAssessmentOutcome,
             retryAttemps = retryAttemps,

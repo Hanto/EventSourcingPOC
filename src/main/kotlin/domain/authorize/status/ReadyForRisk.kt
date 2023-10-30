@@ -7,11 +7,13 @@ import domain.events.FraudEvaluationCompletedEvent
 import domain.events.PaymentRejectedEvent
 import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
+import domain.payment.SideEffectEventList
+import domain.payment.Version
 import java.util.logging.Logger
 
 data class ReadyForRisk
 (
-    override val baseVersion: Int,
+    override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload
@@ -23,7 +25,7 @@ data class ReadyForRisk
     fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): Payment
     {
         val event = RiskEvaluatedEvent(
-            version = nextVersion(),
+            version = baseVersion.nextEventVersion(paymentEvents),
             fraudAnalysisResult = fraudAnalysisResult)
 
         return apply(event, isNew = true)
@@ -42,22 +44,22 @@ data class ReadyForRisk
 
     private fun apply(event: RiskEvaluatedEvent, isNew: Boolean): Payment
     {
+        val newVersion = baseVersion.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
-        val newVersion = upgradeVersionIfReplay(event, isNew)
-        val newSideEffectEvents = toMutableSideEffectEvents()
+        val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
-        newSideEffectEvents.addNewEvent(FraudEvaluationCompletedEvent, isNew)
+        newSideEffectEvents.addIfNew(FraudEvaluationCompletedEvent, isNew)
 
         return when (event.fraudAnalysisResult)
         {
             is FraudAnalysisResult.Denied ->
             {
-                newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
 
                 RejectedByRisk(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
                     paymentPayload = paymentPayload,
                 )
             }
@@ -67,7 +69,7 @@ data class ReadyForRisk
                 ReadyForRouting(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
                     paymentPayload = paymentPayload,
                     riskAssessmentOutcome = event.fraudAnalysisResult.riskAssessmentOutcome
                 )

@@ -9,16 +9,19 @@ import domain.authorize.steps.gateway.AuthorizeStatus
 import domain.authorize.steps.routing.PaymentAccount
 import domain.events.*
 import domain.payment.PaymentPayload
+import domain.payment.RetryAttemp
+import domain.payment.SideEffectEventList
+import domain.payment.Version
 import java.util.logging.Logger
 
 data class ReadyForConfirm
 (
-    override val baseVersion: Int,
+    override val baseVersion: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
     override val paymentPayload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemps: Int,
+    val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val confirmParameters: Map<String, Any>
 
@@ -30,7 +33,7 @@ data class ReadyForConfirm
     fun addConfirmResponse(authorizeResponse: AuthorizeResponse): Payment
     {
         val event = ConfirmationRequestedEvent(
-            version = nextVersion(),
+            version = baseVersion.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
 
         return apply(event, isNew = true)
@@ -49,21 +52,21 @@ data class ReadyForConfirm
 
     private fun apply(event: ConfirmationRequestedEvent, isNew: Boolean): Payment
     {
+        val newVersion = baseVersion.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
-        val newVersion = upgradeVersionIfReplay(event, isNew)
-        val newSideEffectEvents = toMutableSideEffectEvents()
+        val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
         return when (event.authorizeResponse.status)
         {
             is AuthorizeStatus.Success ->
             {
-                newSideEffectEvents.addNewEvent(PaymentAuthorizedEvent, isNew)
-                newSideEffectEvents.addNewEvent(PaymentAuthenticationCompletedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentAuthorizedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
 
                 Authorized(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
                     paymentPayload = paymentPayload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
@@ -73,12 +76,12 @@ data class ReadyForConfirm
 
             is AuthorizeStatus.ClientActionRequested ->
             {
-                newSideEffectEvents.addNewEvent(getClientActionEvent(event.authorizeResponse.status), isNew)
+                newSideEffectEvents.addIfNew(getClientActionEvent(event.authorizeResponse.status), isNew)
 
                 ReadyForClientActionResponse(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
                     paymentPayload = paymentPayload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
@@ -89,31 +92,31 @@ data class ReadyForConfirm
 
             is AuthorizeStatus.Reject ->
             {
-                newSideEffectEvents.addNewEvent(AuthorizationAttemptRejectedEvent, isNew)
-                newSideEffectEvents.addNewEvent(PaymentAuthenticationCompletedEvent, isNew)
+                newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
 
-                if (retryAttemps < MAX_RETRIES)
+                if (retryAttemps.value < MAX_RETRIES)
                 {
-                    newSideEffectEvents.addNewEvent(PaymentRetriedEvent, isNew)
+                    newSideEffectEvents.addIfNew(PaymentRetriedEvent, isNew)
 
                     ReadyForRoutingRetry(
                         baseVersion = newVersion,
                         paymentEvents = newEvents,
-                        sideEffectEvents = newSideEffectEvents,
+                        sideEffectEvents = newSideEffectEvents.list,
                         paymentPayload = paymentPayload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemps + 1,
+                        retryAttemps = retryAttemps.next(),
                         paymentAccount = paymentAccount
                     )
                 }
                 else
                 {
-                    newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
+                    newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
 
                     RejectedByGateway(
                         baseVersion = newVersion,
                         paymentEvents = newEvents,
-                        sideEffectEvents = newSideEffectEvents,
+                        sideEffectEvents = newSideEffectEvents.list,
                         paymentPayload = paymentPayload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
@@ -124,12 +127,12 @@ data class ReadyForConfirm
 
             is AuthorizeStatus.Fail ->
             {
-                newSideEffectEvents.addNewEvent(PaymentRejectedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
 
                 Failed(
                     baseVersion = newVersion,
                     paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
                     paymentPayload = paymentPayload,
                     reason = "exception on authorization"
                 )
