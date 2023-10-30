@@ -1,17 +1,17 @@
 package application
 
-import domain.lifecycle.steps.fraud.FraudAnalysisResult
-import domain.lifecycle.steps.fraud.RiskAssessmentOutcome
-import domain.lifecycle.steps.fraud.RiskAssessmentService
-import domain.lifecycle.steps.gateway.*
-import domain.lifecycle.steps.routing.PaymentAccount
-import domain.lifecycle.steps.routing.RoutingResult
-import domain.lifecycle.steps.routing.RoutingService
 import domain.payment.PaymentPayload
 import domain.payment.payload.AuthorizationReference
 import domain.payment.payload.Customer
 import domain.payment.payload.PaymentId
 import domain.payment.payload.paymentmethod.CreditCardPayment
+import domain.services.fraud.FraudAnalysisResult
+import domain.services.fraud.RiskAssessmentOutcome
+import domain.services.fraud.RiskAssessmentService
+import domain.services.gateway.*
+import domain.services.routing.PaymentAccount
+import domain.services.routing.RoutingResult
+import domain.services.routing.RoutingService
 import infrastructure.EventPublisherMemory
 import infrastructure.PaymentRepositoryMemory
 import io.mockk.every

@@ -1,9 +1,9 @@
 package infrastructure
 
-import domain.lifecycle.events.PaymentEvent
-import domain.lifecycle.status.Payment
-import domain.lifecycle.status.ReadyForPaymentRequest
 import domain.payment.Version
+import domain.payment.lifecycle.events.PaymentEvent
+import domain.payment.lifecycle.status.Payment
+import domain.payment.lifecycle.status.ReadyForPaymentRequest
 import domain.payment.payload.PaymentId
 import domain.repositories.PaymentRepository
 

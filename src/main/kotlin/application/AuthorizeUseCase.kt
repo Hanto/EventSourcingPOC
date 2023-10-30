@@ -1,14 +1,14 @@
 package application
 
 import domain.events.EventPublisher
-import domain.lifecycle.status.*
-import domain.lifecycle.steps.fraud.RiskAssessmentService
-import domain.lifecycle.steps.gateway.AuthorizationGateway
-import domain.lifecycle.steps.routing.RoutingService
 import domain.payment.PaymentPayload
 import domain.payment.PaymentWrapper
+import domain.payment.lifecycle.status.*
 import domain.payment.payload.PaymentId
 import domain.repositories.PaymentRepository
+import domain.services.fraud.RiskAssessmentService
+import domain.services.gateway.AuthorizationGateway
+import domain.services.routing.RoutingService
 import domain.utils.letIf
 
 class AuthorizeUseCase
@@ -24,12 +24,12 @@ class AuthorizeUseCase
     {
         return ReadyForPaymentRequest().addPaymentPayload(paymentPayload)
             .letIf { it: ReadyForRisk -> it.addFraudAnalysisResult(riskService.assessRisk(it)) }
-            .letIf { it: ReadyForRouting -> tryToAuthorize(it) }
+            .letIf { it: ReadyForRoutingInitial -> tryToAuthorize(it) }
             .let { paymentRepository.save(it) }
             .also { sendSideEffectEvents(it) }
     }
 
-    private fun tryToAuthorize(input: Routed): Payment
+    private fun tryToAuthorize(input: ReadyForRouting): Payment
     {
         return input.addRoutingResult(routingService.routeForPayment(input))
             .letIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
@@ -68,14 +68,14 @@ class AuthorizeUseCase
     {
         return PaymentWrapper().addPaymentPayload(paymentPayload)
             .letIf { it: ReadyForRisk, p -> p.addFraudAnalysisResult(riskService.assessRisk(it)) }
-            .letIf {  _: ReadyForRouting, p -> tryToAuthorize2(p) }
+            .letIf { _: ReadyForRoutingInitial, p -> tryToAuthorize2(p) }
     }
 
     private fun tryToAuthorize2(input: PaymentWrapper): PaymentWrapper
     {
         return input
-            .letIf { it: Routed, p -> p.addRoutingResult(routingService.routeForPayment(it)) }
+            .letIf { it: ReadyForRouting, p -> p.addRoutingResult(routingService.routeForPayment(it)) }
             .letIf { it: ReadyForAuthorization, p -> p.addAuthorizeResponse(authorizeService.authorize(it)) }
-            .letIf {  _: ReadyForRoutingRetry, p -> tryToAuthorize2(p) }
+            .letIf { _: ReadyForRoutingRetry, p -> tryToAuthorize2(p) }
     }
 }

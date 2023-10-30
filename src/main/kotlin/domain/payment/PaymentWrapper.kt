@@ -1,13 +1,13 @@
 package domain.payment
 
 import domain.events.SideEffectEvent
-import domain.lifecycle.events.*
-import domain.lifecycle.status.Payment
-import domain.lifecycle.status.ReadyForPaymentRequest
-import domain.lifecycle.steps.fraud.FraudAnalysisResult
-import domain.lifecycle.steps.gateway.AuthorizeResponse
-import domain.lifecycle.steps.routing.RoutingResult
+import domain.payment.lifecycle.events.*
+import domain.payment.lifecycle.status.Payment
+import domain.payment.lifecycle.status.ReadyForPaymentRequest
 import domain.payment.payload.PaymentId
+import domain.services.fraud.FraudAnalysisResult
+import domain.services.gateway.AuthorizeResponse
+import domain.services.routing.RoutingResult
 
 data class PaymentWrapper
 (
