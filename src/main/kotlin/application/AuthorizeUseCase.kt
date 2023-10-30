@@ -1,10 +1,10 @@
 package application
 
-import domain.authorize.status.*
-import domain.authorize.steps.fraud.RiskAssessmentService
-import domain.authorize.steps.gateway.AuthorizationGateway
-import domain.authorize.steps.routing.RoutingService
 import domain.events.EventPublisher
+import domain.lifecycle.status.*
+import domain.lifecycle.steps.fraud.RiskAssessmentService
+import domain.lifecycle.steps.gateway.AuthorizationGateway
+import domain.lifecycle.steps.routing.RoutingService
 import domain.payment.PaymentPayload
 import domain.payment.PaymentWrapper
 import domain.payment.payload.PaymentId

@@ -1,12 +1,12 @@
 package application
 
-import domain.authorize.steps.fraud.FraudAnalysisResult
-import domain.authorize.steps.fraud.RiskAssessmentOutcome
-import domain.authorize.steps.fraud.RiskAssessmentService
-import domain.authorize.steps.gateway.*
-import domain.authorize.steps.routing.PaymentAccount
-import domain.authorize.steps.routing.RoutingResult
-import domain.authorize.steps.routing.RoutingService
+import domain.lifecycle.steps.fraud.FraudAnalysisResult
+import domain.lifecycle.steps.fraud.RiskAssessmentOutcome
+import domain.lifecycle.steps.fraud.RiskAssessmentService
+import domain.lifecycle.steps.gateway.*
+import domain.lifecycle.steps.routing.PaymentAccount
+import domain.lifecycle.steps.routing.RoutingResult
+import domain.lifecycle.steps.routing.RoutingService
 import domain.payment.PaymentPayload
 import domain.payment.payload.AuthorizationReference
 import domain.payment.payload.Customer

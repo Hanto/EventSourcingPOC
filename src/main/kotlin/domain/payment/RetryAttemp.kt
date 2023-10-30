@@ -2,7 +2,7 @@ package domain.payment
 
 data class RetryAttemp
 (
-    val value: Int
+    private val value: Int
 )
 {
     companion object
@@ -13,5 +13,8 @@ data class RetryAttemp
     }
 
     fun next(): RetryAttemp =
-        RetryAttemp(value +1)
+        RetryAttemp(value + 1)
+
+    fun isLessThan(int: Int): Boolean =
+        value < int
 }

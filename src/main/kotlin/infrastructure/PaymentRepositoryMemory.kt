@@ -1,8 +1,8 @@
 package infrastructure
 
-import domain.authorize.events.PaymentEvent
-import domain.authorize.status.Payment
-import domain.authorize.status.ReadyForPaymentRequest
+import domain.lifecycle.events.PaymentEvent
+import domain.lifecycle.status.Payment
+import domain.lifecycle.status.ReadyForPaymentRequest
 import domain.payment.Version
 import domain.payment.payload.PaymentId
 import domain.repositories.PaymentRepository
@@ -37,7 +37,7 @@ class PaymentRepositoryMemory: PaymentRepository
 
     private fun verifyDataConsistency(payment: Payment, savedVersion: Version?)
     {
-        if  (!payment.baseVersion.isSameVersion(savedVersion))
-            throw RuntimeException("OptimisticLockException: base version: $savedVersion doesn't match stored version: ${payment.baseVersion}")
+        if  (!payment.version.isSameVersion(savedVersion))
+            throw RuntimeException("OptimisticLockException: base version: $savedVersion doesn't match stored version: ${payment.version}")
     }
 }

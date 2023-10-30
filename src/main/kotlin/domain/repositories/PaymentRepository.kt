@@ -1,6 +1,6 @@
 package domain.repositories
 
-import domain.authorize.status.Payment
+import domain.lifecycle.status.Payment
 import domain.payment.payload.PaymentId
 
 interface PaymentRepository
