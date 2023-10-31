@@ -9,6 +9,7 @@ import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.lifecycle.events.ReturnedFromClientEvent
 import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.gateway.ClientAction
+import domain.services.gateway.ThreeDSStatus
 import domain.services.routing.PaymentAccount
 import java.util.logging.Logger
 
@@ -22,8 +23,9 @@ data class ReadyForClientActionResponse
     val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val clientAction: ClientAction,
+    val threeDSStatus: ThreeDSStatus
 
-    ): AbstractPayment(), Payment
+    ): AbstractPayment(), Payment, AuthorizePending
 {
     private val log = Logger.getLogger(ReadyForClientActionResponse::class.java.name)
 

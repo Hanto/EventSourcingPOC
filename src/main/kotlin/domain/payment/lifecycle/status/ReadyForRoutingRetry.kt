@@ -19,7 +19,7 @@ data class ReadyForRoutingRetry
     override val payload: PaymentPayload,
     override val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: RetryAttemp,
-    val paymentAccount: PaymentAccount
+    val paymentAccount: PaymentAccount,
 
 ) : AbstractPayment(), Payment, ReadyForRouting
 {
@@ -76,7 +76,9 @@ data class ReadyForRoutingRetry
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    payload = payload)
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                )
             }
 
             is RoutingResult.Proceed ->
@@ -87,14 +89,14 @@ data class ReadyForRoutingRetry
                 {
                     newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
 
-                    RejectedByGateway(
+                    RejectedByRoutingRetry(
                         version = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,
                         payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
-                        paymentAccount = event.routingResult.account
+                        paymentAccount = event.routingResult.account,
                     )
                 }
 

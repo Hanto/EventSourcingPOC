@@ -7,6 +7,8 @@ data class RetryAttemp
 {
     companion object
     {
+        private const val MAX_RETRIES = 1
+
         @JvmStatic
         fun firstNormalAttemp() =
             RetryAttemp(0)
@@ -15,6 +17,6 @@ data class RetryAttemp
     fun next(): RetryAttemp =
         RetryAttemp(value + 1)
 
-    fun isLessThan(int: Int): Boolean =
-        value < int
+    fun canRetry(): Boolean =
+        value < MAX_RETRIES
 }

@@ -18,7 +18,7 @@ data class ReadyForRisk
     override val sideEffectEvents: List<SideEffectEvent>,
     override val payload: PaymentPayload
 
-): AbstractPayment(), Payment
+): AbstractPayment(), Payment, AuthorizeInProgress
 {
     private val log = Logger.getLogger(ReadyForRisk::class.java.name)
 

@@ -75,6 +75,11 @@ sealed interface Payment : Versionable
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
+            is RejectedByRoutingRetry -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
         }
     }
 
@@ -135,6 +140,11 @@ sealed interface Payment : Versionable
                 sideEffectEvents = emptyList()
             )
             is RejectedByRouting -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is RejectedByRoutingRetry -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()

@@ -4,6 +4,7 @@ import domain.events.SideEffectEvent
 import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
+import domain.services.fraud.RiskAssessmentOutcome
 
 data class RejectedByRouting
 (
@@ -11,6 +12,7 @@ data class RejectedByRouting
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
     override val payload: PaymentPayload,
+    val riskAssessmentOutcome: RiskAssessmentOutcome,
 
     ) : AbstractPayment(), Payment, Rejected
 {

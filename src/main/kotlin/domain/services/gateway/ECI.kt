@@ -3,7 +3,7 @@ package domain.services.gateway
 
 data class ECI
 (
-    val value: Int?
+    val value: Int
 )
 {
     // ALTERNATIVE CONSTRUCTOR:
@@ -11,9 +11,9 @@ data class ECI
 
     companion object
     {
-        operator fun invoke(value: String?): ECI =
+        operator fun invoke(value: String): ECI =
 
-            ECI(value?.ifEmpty { null }?.toInt())
+            ECI(value.toInt())
     }
 
     // VALIDATOR:
@@ -21,29 +21,24 @@ data class ECI
 
     init
     {
-        require(value in listOf(null,0,1,2,5,6,7)) { "ECI value not allowed: $value" }
+        require(value in listOf(0,1,2,5,6,7)) { "ECI value not allowed: $value" }
     }
 
     // MAIN:
     //--------------------------------------------------------------------------------------------------------
 
-    fun outcome(): EciOutcome =
+    fun result(): EciResult =
 
         when (value)
         {
-            null -> NoThreeDS
-            2,5 -> ThreeDS(EciResult.SUCCESSFUL)
-            1,6 -> ThreeDS(EciResult.ATTEMPTED)
-            0,7 -> ThreeDS(EciResult.REJECTED)
+            2,5 -> EciResult.SUCCESSFUL
+            1,6 -> EciResult.ATTEMPTED
+            0,7 -> EciResult.REJECTED
             else -> throw RuntimeException("ECI value not allowed: $value")
         }
 
     // HELPER:
     //--------------------------------------------------------------------------------------------------------
-
-    sealed class EciOutcome
-    data object NoThreeDS: EciOutcome()
-    data class ThreeDS(val outcome: EciResult): EciOutcome()
 
     enum class EciResult
     {

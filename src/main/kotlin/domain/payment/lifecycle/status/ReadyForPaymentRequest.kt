@@ -8,7 +8,7 @@ import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.lifecycle.events.PaymentRequestedEvent
 import java.util.logging.Logger.getLogger
 
-class ReadyForPaymentRequest : AbstractPayment(), Payment
+class ReadyForPaymentRequest : AbstractPayment(), Payment, AuthorizeInProgress
 {
     override val version: Version = Version.firstVersion()
     override val paymentEvents: List<PaymentEvent> = emptyList()

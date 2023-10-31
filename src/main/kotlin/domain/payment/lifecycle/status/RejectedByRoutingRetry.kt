@@ -6,10 +6,9 @@ import domain.payment.RetryAttemp
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.services.fraud.RiskAssessmentOutcome
-import domain.services.gateway.ThreeDSStatus
 import domain.services.routing.PaymentAccount
 
-data class RejectedByGateway
+data class RejectedByRoutingRetry
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -18,7 +17,6 @@ data class RejectedByGateway
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
-    val threeDSStatus: ThreeDSStatus
 
 ) : AbstractPayment(), Payment, Rejected
 {

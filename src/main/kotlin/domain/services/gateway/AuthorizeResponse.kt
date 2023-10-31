@@ -1,17 +1,47 @@
 package domain.services.gateway
 
-data class AuthorizeResponse
-(
-    val status: AuthorizeStatus,
-    val threeDSInformation: ThreeDSInformation?
-)
+sealed interface AuthorizeResponse
+{
+    val threeDSStatus: ThreeDSStatus
 
-sealed class AuthorizeStatus {
+    data class Success(
 
-    data object Success : AuthorizeStatus()
-    data class Reject(val errorDescription: String, val errorCode: String?, val errorReason: ErrorReason?, val rejectionUseCase: RejectionUseCase = RejectionUseCase.UNDEFINED) : AuthorizeStatus()
-    data class Fail(val errorDescription: String, val timeout: Boolean, val exception: Exception?) : AuthorizeStatus()
-    data class ClientActionRequested(val clientAction: ClientAction) : AuthorizeStatus()
+        override val threeDSStatus: ThreeDSStatus,
+
+    ) : AuthorizeResponse
+
+    data class Reject(
+
+        override val threeDSStatus: ThreeDSStatus,
+        val errorDescription: String,
+        val errorCode: String,
+        val errorReason: ErrorReason,
+        val rejectionUseCase: RejectionUseCase = RejectionUseCase.UNDEFINED
+
+    ) : AuthorizeResponse
+
+    data class Fail(
+
+        override val threeDSStatus: ThreeDSStatus,
+        val errorDescription: String,
+        val timeout: Boolean,
+        val exception: Exception
+
+    ) : AuthorizeResponse
+
+    data class ClientActionRequested(
+
+        override val threeDSStatus: ThreeDSStatus,
+        val clientAction: ClientAction
+
+    ) : AuthorizeResponse
+}
+
+sealed class ThreeDSStatus
+{
+    data object PendingThreeDS: ThreeDSStatus()
+    data object NoThreeDS: ThreeDSStatus()
+    data class ThreeDS(val info: ThreeDSInformation): ThreeDSStatus()
 }
 
 data class ClientAction

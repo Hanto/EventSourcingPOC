@@ -1,3 +1,3 @@
 package domain.payment.lifecycle.status
 
-sealed interface Rejected: Payment
+sealed interface Rejected: Payment, AuthorizeEnded

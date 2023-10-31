@@ -52,9 +52,9 @@ class AuthorizeUseCaseTest
             eci = ECI(5)
         )
 
-        val authReject = AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED), threeDSInformation)
-        val authClientAction = AuthorizeResponse(AuthorizeStatus.ClientActionRequested(ClientAction(ActionType.CHALLENGE)), threeDSInformation )
-        val authSuccess = AuthorizeResponse(AuthorizeStatus.Success, threeDSInformation)
+        val authReject = AuthorizeResponse.Reject(ThreeDSStatus.ThreeDS(threeDSInformation),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
+        val authClientAction = AuthorizeResponse.ClientActionRequested(ThreeDSStatus.PendingThreeDS, ClientAction(ActionType.CHALLENGE))
+        val authSuccess = AuthorizeResponse.Success(ThreeDSStatus.ThreeDS(threeDSInformation))
 
         every { riskService.assessRisk(any()) }.returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.FRICTIONLESS) )
         every { routingService.routeForPayment(any()) }
@@ -91,10 +91,9 @@ class AuthorizeUseCaseTest
             eci = ECI(5)
         )
 
-        val authReject = AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED), threeDSInformation)
-        val authClientAction = AuthorizeResponse(AuthorizeStatus.ClientActionRequested(ClientAction(ActionType.CHALLENGE)), threeDSInformation )
-        val authSuccess = AuthorizeResponse(AuthorizeStatus.Success, threeDSInformation)
-
+        val authReject = AuthorizeResponse.Reject(ThreeDSStatus.ThreeDS(threeDSInformation),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
+        val authClientAction = AuthorizeResponse.ClientActionRequested(ThreeDSStatus.PendingThreeDS, ClientAction(ActionType.CHALLENGE))
+        val authSuccess = AuthorizeResponse.Success(ThreeDSStatus.ThreeDS(threeDSInformation))
 
         every { riskService.assessRisk(any()) }.returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.FRICTIONLESS) )
         every { routingService.routeForPayment(any()) }

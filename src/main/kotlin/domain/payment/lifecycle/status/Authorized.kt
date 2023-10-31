@@ -6,6 +6,7 @@ import domain.payment.RetryAttemp
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.services.fraud.RiskAssessmentOutcome
+import domain.services.gateway.ThreeDSStatus
 import domain.services.routing.PaymentAccount
 
 data class Authorized
@@ -16,9 +17,10 @@ data class Authorized
     override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val retryAttemps: RetryAttemp,
-    val paymentAccount: PaymentAccount
+    val paymentAccount: PaymentAccount,
+    val threeDSStatus: ThreeDSStatus
 
-): AbstractPayment(), Payment
+): AbstractPayment(), Payment, AuthorizeEnded
 {
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
 }

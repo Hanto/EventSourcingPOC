@@ -10,7 +10,6 @@ import domain.payment.payload.paymentmethod.KlarnaPayment
 import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.gateway.ActionType
 import domain.services.gateway.AuthorizeResponse
-import domain.services.gateway.AuthorizeStatus
 import domain.services.routing.PaymentAccount
 import java.util.logging.Logger
 
@@ -24,9 +23,8 @@ data class ReadyForAuthorization
     val retryAttemp: RetryAttemp,
     val paymentAccount: PaymentAccount
 
-): AbstractPayment(), Payment
+): AbstractPayment(), Payment, AuthorizeInProgress
 {
-    companion object { private const val MAX_RETRIES = 1 }
     private val log = Logger.getLogger(ReadyForAuthorization::class.java.name)
 
     fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
@@ -58,9 +56,9 @@ data class ReadyForAuthorization
 
         newSideEffectEvents.addIfNew(AuthorizationAttemptRequestedEvent, isNew)
 
-        return when (event.authorizeResponse.status)
+        return when (event.authorizeResponse)
         {
-            is AuthorizeStatus.Success ->
+            is AuthorizeResponse.Success ->
             {
                 newSideEffectEvents.addIfNew(PaymentAuthorizedEvent, isNew)
 
@@ -74,14 +72,15 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemp,
-                    paymentAccount = paymentAccount
+                    paymentAccount = paymentAccount,
+                    threeDSStatus = event.authorizeResponse.threeDSStatus
                 )
             }
 
-            is AuthorizeStatus.ClientActionRequested ->
+            is AuthorizeResponse.ClientActionRequested ->
             {
                 newSideEffectEvents.addIfNew(PaymentAuthenticationStartedEvent, isNew)
-                newSideEffectEvents.addIfNew(getClientActionEvent(event.authorizeResponse.status), isNew)
+                newSideEffectEvents.addIfNew(getClientActionEvent(event.authorizeResponse), isNew)
 
                 ReadyForClientActionResponse(
                     version = newVersion,
@@ -91,15 +90,16 @@ data class ReadyForAuthorization
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemp,
                     paymentAccount = paymentAccount,
-                    clientAction = event.authorizeResponse.status.clientAction
+                    clientAction = event.authorizeResponse.clientAction,
+                    threeDSStatus = event.authorizeResponse.threeDSStatus
                 )
             }
 
-            is AuthorizeStatus.Reject ->
+            is AuthorizeResponse.Reject ->
             {
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
 
-                return if (retryAttemp.isLessThan(MAX_RETRIES))
+                return if (retryAttemp.canRetry())
                 {
                     newSideEffectEvents.addIfNew(PaymentRetriedEvent, isNew)
 
@@ -110,7 +110,7 @@ data class ReadyForAuthorization
                         payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemp.next(),
-                        paymentAccount = paymentAccount
+                        paymentAccount = paymentAccount,
                     )
                 }
                 else
@@ -124,12 +124,13 @@ data class ReadyForAuthorization
                         payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemp,
-                        paymentAccount = paymentAccount
+                        paymentAccount = paymentAccount,
+                        threeDSStatus = event.authorizeResponse.threeDSStatus
                     )
                 }
             }
 
-            is AuthorizeStatus.Fail ->
+            is AuthorizeResponse.Fail ->
             {
                 newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
 
@@ -144,7 +145,7 @@ data class ReadyForAuthorization
         }
     }
 
-    private fun getClientActionEvent(authorizeStatus: AuthorizeStatus.ClientActionRequested): SideEffectEvent =
+    private fun getClientActionEvent(authorizeStatus: AuthorizeResponse.ClientActionRequested): SideEffectEvent =
 
         when(authorizeStatus.clientAction.type)
         {

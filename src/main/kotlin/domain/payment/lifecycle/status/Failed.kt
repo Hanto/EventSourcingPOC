@@ -13,7 +13,7 @@ data class Failed
     override val payload: PaymentPayload,
     val reason: String,
 
-    ): AbstractPayment(), Payment
+    ): AbstractPayment(), Payment, AuthorizeEnded
 {
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
 }

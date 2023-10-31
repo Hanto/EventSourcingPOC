@@ -73,6 +73,7 @@ data class ReadyForRoutingInitial
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
                     payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
                 )
             }
 

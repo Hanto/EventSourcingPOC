@@ -10,7 +10,6 @@ import domain.payment.payload.paymentmethod.KlarnaPayment
 import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.gateway.ActionType
 import domain.services.gateway.AuthorizeResponse
-import domain.services.gateway.AuthorizeStatus
 import domain.services.routing.PaymentAccount
 import java.util.logging.Logger
 
@@ -25,9 +24,8 @@ data class ReadyForConfirm
     val paymentAccount: PaymentAccount,
     val confirmParameters: Map<String, Any>
 
-): AbstractPayment(), Payment
+): AbstractPayment(), Payment, AuthorizeInProgress
 {
-    companion object { private const val MAX_RETRIES = 1 }
     private val log = Logger.getLogger(ReadyForConfirm::class.java.name)
 
     fun addConfirmResponse(authorizeResponse: AuthorizeResponse): Payment
@@ -57,9 +55,9 @@ data class ReadyForConfirm
         val newEvents = addEventIfNew(event, isNew)
         val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
-        return when (event.authorizeResponse.status)
+        return when (event.authorizeResponse)
         {
-            is AuthorizeStatus.Success ->
+            is AuthorizeResponse.Success ->
             {
                 newSideEffectEvents.addIfNew(PaymentAuthorizedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
@@ -74,13 +72,14 @@ data class ReadyForConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
-                    paymentAccount = paymentAccount
+                    paymentAccount = paymentAccount,
+                    threeDSStatus = event.authorizeResponse.threeDSStatus
                 )
             }
 
-            is AuthorizeStatus.ClientActionRequested ->
+            is AuthorizeResponse.ClientActionRequested ->
             {
-                newSideEffectEvents.addIfNew(getClientActionEvent(event.authorizeResponse.status), isNew)
+                newSideEffectEvents.addIfNew(getClientActionEvent(event.authorizeResponse), isNew)
 
                 ReadyForClientActionResponse(
                     version = newVersion,
@@ -90,16 +89,17 @@ data class ReadyForConfirm
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     retryAttemps = retryAttemps,
                     paymentAccount = paymentAccount,
-                    clientAction = event.authorizeResponse.status.clientAction
+                    clientAction = event.authorizeResponse.clientAction,
+                    threeDSStatus = event.authorizeResponse.threeDSStatus
                 )
             }
 
-            is AuthorizeStatus.Reject ->
+            is AuthorizeResponse.Reject ->
             {
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
 
-                if (retryAttemps.isLessThan(MAX_RETRIES))
+                if (retryAttemps.canRetry())
                 {
                     newSideEffectEvents.addIfNew(PaymentRetriedEvent, isNew)
 
@@ -110,7 +110,7 @@ data class ReadyForConfirm
                         payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps.next(),
-                        paymentAccount = paymentAccount
+                        paymentAccount = paymentAccount,
                     )
                 }
                 else
@@ -124,12 +124,13 @@ data class ReadyForConfirm
                         payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
                         retryAttemps = retryAttemps,
-                        paymentAccount = paymentAccount
+                        paymentAccount = paymentAccount,
+                        threeDSStatus = event.authorizeResponse.threeDSStatus
                     )
                 }
             }
 
-            is AuthorizeStatus.Fail ->
+            is AuthorizeResponse.Fail ->
             {
                 newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
@@ -145,7 +146,7 @@ data class ReadyForConfirm
         }
     }
 
-    private fun getClientActionEvent(authorizeStatus: AuthorizeStatus.ClientActionRequested): SideEffectEvent =
+    private fun getClientActionEvent(authorizeStatus: AuthorizeResponse.ClientActionRequested): SideEffectEvent =
 
         when(authorizeStatus.clientAction.type)
         {
