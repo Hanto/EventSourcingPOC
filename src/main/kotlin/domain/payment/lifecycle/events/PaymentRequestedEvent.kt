@@ -1,8 +1,8 @@
 package domain.payment.lifecycle.events
 
-import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.payload.PaymentId
+import domain.payment.payload.PaymentPayload
 
 data class PaymentRequestedEvent
 (

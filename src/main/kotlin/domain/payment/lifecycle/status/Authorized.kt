@@ -2,9 +2,9 @@ package domain.payment.lifecycle.status
 
 import domain.events.SideEffectEvent
 import domain.payment.Attempt
-import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
+import domain.payment.payload.PaymentPayload
 import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.gateway.ThreeDSStatus
 import domain.services.routing.PaymentAccount

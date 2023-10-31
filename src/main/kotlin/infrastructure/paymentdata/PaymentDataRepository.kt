@@ -9,10 +9,10 @@ class PaymentDataRepository
     private val paymentAdapter: PaymentAdapter,
 )
 {
-    fun save(input: Payment): PaymentData
+    fun save(payment: Payment): PaymentData
     {
-        val events = paymentRepository.loadEvents(input.payload().paymentId)
+        val events = paymentRepository.loadEvents(payment.payload().paymentId)
 
-        return paymentAdapter.toPaymentData(events)
+        return paymentAdapter.toPaymentData(payment, events)
     }
 }

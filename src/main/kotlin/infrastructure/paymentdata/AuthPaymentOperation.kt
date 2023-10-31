@@ -10,6 +10,7 @@ data class AuthPaymentOperation
     val eci: String?,
     val exemption: Exemption,
     val authenticationStatus: AuthenticationStatus,
+    val transactionType: TransactionType,
 
     val status: Status
 )

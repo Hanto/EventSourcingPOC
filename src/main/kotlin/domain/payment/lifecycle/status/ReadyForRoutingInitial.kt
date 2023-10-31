@@ -2,10 +2,10 @@ package domain.payment.lifecycle.status
 
 import domain.events.*
 import domain.payment.Attempt
-import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.lifecycle.events.RoutingEvaluatedEvent
+import domain.payment.payload.PaymentPayload
 import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.routing.RoutingResult
 import java.util.logging.Logger

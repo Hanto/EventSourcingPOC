@@ -5,10 +5,10 @@ import domain.events.PaymentRejectedEvent
 import domain.events.SideEffectEvent
 import domain.events.SideEffectEventList
 import domain.payment.Attempt
-import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.lifecycle.events.RiskEvaluatedEvent
+import domain.payment.payload.PaymentPayload
 import domain.services.fraud.FraudAnalysisResult
 import java.util.logging.Logger
 

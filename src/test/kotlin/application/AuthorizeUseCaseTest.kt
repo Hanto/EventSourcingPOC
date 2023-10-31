@@ -1,9 +1,6 @@
 package application
 
-import domain.payment.PaymentPayload
-import domain.payment.payload.AuthorizationReference
-import domain.payment.payload.Customer
-import domain.payment.payload.PaymentId
+import domain.payment.payload.*
 import domain.payment.payload.paymentmethod.CreditCardPayment
 import domain.services.fraud.FraudAnalysisResult
 import domain.services.fraud.RiskAssessmentOutcome
@@ -47,7 +44,8 @@ class AuthorizeUseCaseTest
             paymentId = paymentId,
             authorizationReference = AuthorizationReference(value = "123456789_1"),
             customer = Customer("ivan", "delgado"),
-            paymentMethod = CreditCardPayment
+            paymentMethod = CreditCardPayment,
+            authorizationType = AuthorizationType.PRE_AUTHORIZATION
         )
 
         val threeDSStatus = ThreeDSStatus.NoThreeDS
@@ -77,7 +75,7 @@ class AuthorizeUseCaseTest
         println("\nPAYMENT DATA:\n")
         val paymentData = paymentDataRepository.save(payment)
         println("\nPAYMENT OPERATIONS:\n")
-        println(paymentData.riskAssessmentOutcome)
+        println(paymentData)
         paymentData.operations.forEach { println(it) }
     }
 
@@ -89,7 +87,8 @@ class AuthorizeUseCaseTest
             paymentId = paymentId,
             authorizationReference = AuthorizationReference(value = "123456789_1"),
             customer = Customer("ivan", "delgado"),
-            paymentMethod = CreditCardPayment
+            paymentMethod = CreditCardPayment,
+            authorizationType = AuthorizationType.PRE_AUTHORIZATION
         )
         val threeDSInformation = ThreeDSInformation(
             exemptionStatus = ExemptionStatus.ExemptionNotRequested,
@@ -123,7 +122,7 @@ class AuthorizeUseCaseTest
         println("\nPAYMENT DATA:\n")
         val paymentData = paymentDataRepository.save(payment)
         println("\nPAYMENT OPERATIONS:\n")
-        println(paymentData.riskAssessmentOutcome)
+        println(paymentData)
         paymentData.operations.forEach { println(it) }
     }
 
@@ -135,7 +134,8 @@ class AuthorizeUseCaseTest
             paymentId = paymentId,
             authorizationReference = AuthorizationReference(value = "123456789_1"),
             customer = Customer("ivan", "delgado"),
-            paymentMethod = CreditCardPayment
+            paymentMethod = CreditCardPayment,
+            authorizationType = AuthorizationType.FULL_AUTHORIZATION
         )
         val threeDSInformation = ThreeDSInformation(
             exemptionStatus = ExemptionStatus.ExemptionNotRequested,
@@ -172,7 +172,7 @@ class AuthorizeUseCaseTest
         println("\nPAYMENT DATA:\n")
         val paymentData = paymentDataRepository.save(payment)
         println("\nPAYMENT OPERATIONS:\n")
-        println(paymentData.riskAssessmentOutcome)
+        println(paymentData)
         paymentData.operations.forEach { println(it) }
     }
 }

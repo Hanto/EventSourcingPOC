@@ -1,8 +1,12 @@
 package domain.payment.lifecycle.status
 
 import domain.events.SideEffectEvent
-import domain.payment.*
+import domain.payment.Attempt
+import domain.payment.AttemptReference
+import domain.payment.Version
+import domain.payment.Versionable
 import domain.payment.lifecycle.events.PaymentEvent
+import domain.payment.payload.PaymentPayload
 
 sealed interface Payment : Versionable
 {

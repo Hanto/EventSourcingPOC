@@ -5,6 +5,7 @@ import domain.payment.lifecycle.events.*
 import domain.payment.lifecycle.status.Payment
 import domain.payment.lifecycle.status.ReadyForPaymentRequest
 import domain.payment.payload.PaymentId
+import domain.payment.payload.PaymentPayload
 import domain.services.fraud.FraudAnalysisResult
 import domain.services.gateway.AuthorizeResponse
 import domain.services.routing.RoutingResult

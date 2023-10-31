@@ -3,10 +3,10 @@ package domain.payment.lifecycle.status
 import domain.events.SideEffectEvent
 import domain.events.SideEffectEventList
 import domain.payment.Attempt
-import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.lifecycle.events.PaymentRequestedEvent
+import domain.payment.payload.PaymentPayload
 import java.util.logging.Logger.getLogger
 
 class ReadyForPaymentRequest : AbstractPayment(), Payment, AuthorizeInProgress
