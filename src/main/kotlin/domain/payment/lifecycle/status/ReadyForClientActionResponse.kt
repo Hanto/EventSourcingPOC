@@ -20,7 +20,7 @@ data class ReadyForClientActionResponse
     override val sideEffectEvents: List<SideEffectEvent>,
     override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemps: RetryAttemp,
+    val retryAttemp: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val clientAction: ClientAction,
     val threeDSStatus: ThreeDSStatus
@@ -62,7 +62,7 @@ data class ReadyForClientActionResponse
             sideEffectEvents = newSideEffectEvents.list,
             payload = payload,
             riskAssessmentOutcome = riskAssessmentOutcome,
-            retryAttemps = retryAttemps,
+            retryAttemp = retryAttemp,
             paymentAccount = paymentAccount,
             confirmParameters = event.confirmParameters
         )

@@ -32,6 +32,7 @@ class AuthorizeUseCase
     {
         return input.addRoutingResult(routingService.routeForPayment(input))
             .letIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
+            .letIf { it: RejectedByGateway -> it.prepareForRetry() }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
     }
 
@@ -40,6 +41,7 @@ class AuthorizeUseCase
         return paymentRepository.load(paymentId)!!
             .letIf { it: ReadyForClientActionResponse -> it.addConfirmParameters(confirmParams) }
             .letIf { it: ReadyForConfirm -> it.addConfirmResponse(authorizeService.confirm(it)) }
+            .letIf { it: RejectedByGateway -> it.prepareForRetry() }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
             .let { paymentRepository.save(it) }
             .also { sendSideEffectEvents(it) }

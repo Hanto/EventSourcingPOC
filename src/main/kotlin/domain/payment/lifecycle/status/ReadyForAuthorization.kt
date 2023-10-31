@@ -71,7 +71,7 @@ data class ReadyForAuthorization
                     sideEffectEvents = newSideEffectEvents.list,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemps = retryAttemp,
+                    retryAttemp = retryAttemp,
                     paymentAccount = paymentAccount,
                     threeDSStatus = event.authorizeResponse.threeDSStatus
                 )
@@ -88,7 +88,7 @@ data class ReadyForAuthorization
                     sideEffectEvents = newSideEffectEvents.list,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemps = retryAttemp,
+                    retryAttemp = retryAttemp,
                     paymentAccount = paymentAccount,
                     clientAction = event.authorizeResponse.clientAction,
                     threeDSStatus = event.authorizeResponse.threeDSStatus
@@ -99,35 +99,16 @@ data class ReadyForAuthorization
             {
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
 
-                return if (retryAttemp.canRetry())
-                {
-                    newSideEffectEvents.addIfNew(PaymentRetriedEvent, isNew)
-
-                    ReadyForRoutingRetry(
-                        version = newVersion,
-                        paymentEvents = newEvents,
-                        sideEffectEvents = newSideEffectEvents.list,
-                        payload = payload,
-                        riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemp.next(),
-                        paymentAccount = paymentAccount,
-                    )
-                }
-                else
-                {
-                    newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
-
-                    RejectedByGateway(
-                        version = newVersion,
-                        paymentEvents = newEvents,
-                        sideEffectEvents = newSideEffectEvents.list,
-                        payload = payload,
-                        riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemp,
-                        paymentAccount = paymentAccount,
-                        threeDSStatus = event.authorizeResponse.threeDSStatus
-                    )
-                }
+                return RejectedByGateway(
+                    version = newVersion,
+                    paymentEvents = newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    retryAttemp = retryAttemp,
+                    paymentAccount = paymentAccount,
+                    threeDSStatus = event.authorizeResponse.threeDSStatus
+                )
             }
 
             is AuthorizeResponse.Fail ->

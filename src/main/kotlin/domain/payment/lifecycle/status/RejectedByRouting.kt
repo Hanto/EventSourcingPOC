@@ -14,7 +14,7 @@ data class RejectedByRouting
     override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
 
-    ) : AbstractPayment(), Payment, Rejected
+    ) : AbstractPayment(), Payment, Rejected, AuthorizeEnded
 {
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
 }

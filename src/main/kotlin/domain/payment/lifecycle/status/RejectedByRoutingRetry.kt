@@ -18,7 +18,7 @@ data class RejectedByRoutingRetry
     val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
 
-) : AbstractPayment(), Payment, Rejected
+) : AbstractPayment(), Payment, Rejected, AuthorizeEnded
 {
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
 }

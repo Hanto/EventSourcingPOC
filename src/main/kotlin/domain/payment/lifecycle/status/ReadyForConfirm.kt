@@ -20,7 +20,7 @@ data class ReadyForConfirm
     override val sideEffectEvents: List<SideEffectEvent>,
     override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemps: RetryAttemp,
+    val retryAttemp: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val confirmParameters: Map<String, Any>
 
@@ -71,7 +71,7 @@ data class ReadyForConfirm
                     sideEffectEvents = newSideEffectEvents.list,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemps = retryAttemps,
+                    retryAttemp = retryAttemp,
                     paymentAccount = paymentAccount,
                     threeDSStatus = event.authorizeResponse.threeDSStatus
                 )
@@ -87,7 +87,7 @@ data class ReadyForConfirm
                     sideEffectEvents = newSideEffectEvents.list,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemps = retryAttemps,
+                    retryAttemp = retryAttemp,
                     paymentAccount = paymentAccount,
                     clientAction = event.authorizeResponse.clientAction,
                     threeDSStatus = event.authorizeResponse.threeDSStatus
@@ -99,35 +99,16 @@ data class ReadyForConfirm
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
 
-                if (retryAttemps.canRetry())
-                {
-                    newSideEffectEvents.addIfNew(PaymentRetriedEvent, isNew)
-
-                    ReadyForRoutingRetry(
-                        version = newVersion,
-                        paymentEvents = newEvents,
-                        sideEffectEvents = newSideEffectEvents.list,
-                        payload = payload,
-                        riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemps.next(),
-                        paymentAccount = paymentAccount,
-                    )
-                }
-                else
-                {
-                    newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
-
-                    RejectedByGateway(
-                        version = newVersion,
-                        paymentEvents = newEvents,
-                        sideEffectEvents = newSideEffectEvents.list,
-                        payload = payload,
-                        riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemps,
-                        paymentAccount = paymentAccount,
-                        threeDSStatus = event.authorizeResponse.threeDSStatus
-                    )
-                }
+                return RejectedByGateway(
+                    version = newVersion,
+                    paymentEvents = newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    retryAttemp = retryAttemp,
+                    paymentAccount = paymentAccount,
+                    threeDSStatus = event.authorizeResponse.threeDSStatus
+                )
             }
 
             is AuthorizeResponse.Fail ->

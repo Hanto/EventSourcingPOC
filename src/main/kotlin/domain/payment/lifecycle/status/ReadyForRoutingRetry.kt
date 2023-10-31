@@ -21,7 +21,7 @@ data class ReadyForRoutingRetry
     val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
 
-) : AbstractPayment(), Payment, ReadyForRouting
+) : AbstractPayment(), Payment, ReadyForRouting, AuthorizeInProgress
 {
     private val log = Logger.getLogger(ReadyForRoutingRetry::class.java.name)
 

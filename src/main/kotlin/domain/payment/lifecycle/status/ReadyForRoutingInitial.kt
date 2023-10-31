@@ -18,7 +18,7 @@ data class ReadyForRoutingInitial
     override val payload: PaymentPayload,
     override val riskAssessmentOutcome: RiskAssessmentOutcome,
 
-    ): AbstractPayment(), Payment, ReadyForRouting
+    ): AbstractPayment(), Payment, ReadyForRouting, AuthorizeInProgress
 {
     private val log = Logger.getLogger(ReadyForRoutingInitial::class.java.name)
 

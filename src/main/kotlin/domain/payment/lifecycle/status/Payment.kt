@@ -65,6 +65,11 @@ sealed interface Payment : Versionable
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
+            is RejectedByGatewayAndNotRetriable -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
             is RejectedByRisk -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
@@ -130,6 +135,11 @@ sealed interface Payment : Versionable
                 sideEffectEvents = emptyList()
             )
             is RejectedByGateway -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is RejectedByGatewayAndNotRetriable -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()

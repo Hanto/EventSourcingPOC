@@ -16,7 +16,7 @@ data class Authorized
     override val sideEffectEvents: List<SideEffectEvent>,
     override val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemps: RetryAttemp,
+    val retryAttemp: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val threeDSStatus: ThreeDSStatus
 
