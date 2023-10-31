@@ -3,6 +3,7 @@ package domain.services.gateway
 data class AuthorizeResponse
 (
     val status: AuthorizeStatus,
+    val threeDSInformation: ThreeDSInformation?
 )
 
 sealed class AuthorizeStatus {

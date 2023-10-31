@@ -46,6 +46,16 @@ class AuthorizeUseCaseTest
             paymentMethod = CreditCardPayment
         )
 
+        val threeDSInformation = ThreeDSInformation(
+            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
+            version = ThreeDSVersion("2.1"),
+            eci = ECI(5)
+        )
+
+        val authReject = AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED), threeDSInformation)
+        val authClientAction = AuthorizeResponse(AuthorizeStatus.ClientActionRequested(ClientAction(ActionType.CHALLENGE)), threeDSInformation )
+        val authSuccess = AuthorizeResponse(AuthorizeStatus.Success, threeDSInformation)
+
         every { riskService.assessRisk(any()) }.returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.FRICTIONLESS) )
         every { routingService.routeForPayment(any()) }
             .returns( RoutingResult.Proceed(PaymentAccount()) )
@@ -53,9 +63,9 @@ class AuthorizeUseCaseTest
             .andThen( RoutingResult.Proceed(PaymentAccount()) )
 
         every { authorizationGateway.authorize(any()) }
-            .returns( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED) ))
-            .andThen( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED) ))
-            .andThen( AuthorizeResponse(AuthorizeStatus.Success) )
+            .returns( authReject)
+            .andThen( authSuccess )
+            .andThen( authSuccess )
 
         underTest.authorize(paymentPayload)
 
@@ -75,6 +85,16 @@ class AuthorizeUseCaseTest
             customer = Customer("ivan", "delgado"),
             paymentMethod = CreditCardPayment
         )
+        val threeDSInformation = ThreeDSInformation(
+            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
+            version = ThreeDSVersion("2.1"),
+            eci = ECI(5)
+        )
+
+        val authReject = AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED), threeDSInformation)
+        val authClientAction = AuthorizeResponse(AuthorizeStatus.ClientActionRequested(ClientAction(ActionType.CHALLENGE)), threeDSInformation )
+        val authSuccess = AuthorizeResponse(AuthorizeStatus.Success, threeDSInformation)
+
 
         every { riskService.assessRisk(any()) }.returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.FRICTIONLESS) )
         every { routingService.routeForPayment(any()) }
@@ -83,11 +103,11 @@ class AuthorizeUseCaseTest
             .andThen( RoutingResult.Proceed(PaymentAccount()) )
 
         every { authorizationGateway.authorize(any()) }
-            .returns( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED) ))
-            .andThen( AuthorizeResponse(AuthorizeStatus.ClientActionRequested(ClientAction(ActionType.CHALLENGE)) ))
-            .andThen( AuthorizeResponse(AuthorizeStatus.Success) )
+            .returns( authClientAction )
+            .andThen( authSuccess )
+            .andThen( authSuccess )
 
-        every { authorizationGateway.confirm( any()) }.returns( AuthorizeResponse(AuthorizeStatus.Reject("errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)) )
+        every { authorizationGateway.confirm( any()) }.returns( authReject )
 
         underTest.authorize(paymentPayload)
         underTest.confirm(paymentId, mapOf("ECI" to "05"))

@@ -9,7 +9,6 @@ import domain.repositories.PaymentRepository
 import domain.services.fraud.RiskAssessmentService
 import domain.services.gateway.AuthorizationGateway
 import domain.services.routing.RoutingService
-import domain.utils.letIf
 
 class AuthorizeUseCase
 (
@@ -55,11 +54,13 @@ class AuthorizeUseCase
     // HELPER:
     //------------------------------------------------------------------------------------------------------------------
 
+    private inline fun <reified T, R>R.letIf(function: (T) -> R): R =
+
+        if (this is T) function.invoke(this as T) else this
+
     private inline fun <reified T> PaymentWrapper.letIf(function: (T, PaymentWrapper) -> PaymentWrapper): PaymentWrapper =
 
-        if (this.payment is T)
-            function.invoke(this as T, this)
-        else this
+        if (this.payment is T) function.invoke(this as T, this) else this
 
     // WITH WRAPPER:
     //------------------------------------------------------------------------------------------------------------------
