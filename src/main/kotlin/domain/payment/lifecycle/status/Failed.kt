@@ -5,6 +5,9 @@ import domain.payment.Attempt
 import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
+import domain.services.fraud.RiskAssessmentOutcome
+import domain.services.gateway.ThreeDSStatus
+import domain.services.routing.PaymentAccount
 
 data class Failed
 (
@@ -13,6 +16,9 @@ data class Failed
     override val sideEffectEvents: List<SideEffectEvent>,
     override val attempt: Attempt,
     val payload: PaymentPayload,
+    val riskAssessmentOutcome: RiskAssessmentOutcome? = null,
+    val paymentAccount: PaymentAccount? = null,
+    val threeDSStatus: ThreeDSStatus? = null,
     val reason: String,
 
     ): AbstractPayment(), Payment, AuthorizeEnded

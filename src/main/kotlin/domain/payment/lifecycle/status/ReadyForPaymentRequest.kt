@@ -15,6 +15,7 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment, AuthorizeInProgress
     override val paymentEvents: List<PaymentEvent> = emptyList()
     override val sideEffectEvents: List<SideEffectEvent> = emptyList()
     override val attempt: Attempt = Attempt.firstNormalAttemp()
+
     private val log = getLogger(ReadyForPaymentRequest::class.java.name)
 
     override fun payload(): PaymentPayload = throw RuntimeException("Request not inputed yet")

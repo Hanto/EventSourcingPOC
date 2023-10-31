@@ -1,5 +1,7 @@
 package domain.payment
 
+import domain.payment.lifecycle.status.Payment
+
 data class Attempt
 (
     private val value: Int
@@ -21,5 +23,11 @@ data class Attempt
         value < MAX_RETRIES
 
     fun didRetry(): Boolean =
-        value > 0;
+        value > 0
+
+    fun generateAttemptReference(payment: Payment): AttemptReference
+    {
+        val suffix = if (this.didRetry()) "R" else ""
+        return AttemptReference("${payment.payload().authorizationReference.value}$suffix")
+    }
 }

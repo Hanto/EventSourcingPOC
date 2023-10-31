@@ -67,6 +67,42 @@ class AuthorizeUseCase
     // WITH WRAPPER:
     //------------------------------------------------------------------------------------------------------------------
 
+    fun reAuthorize(paymentId: PaymentId): Payment
+    {
+        return paymentRepository.load(paymentId)!!.let { payment ->
+
+            when (payment)
+            {
+                is RejectedByGateway ->
+                    payment.prepareForRetry()
+                        .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
+
+                is ReadyForRisk ->
+                    payment.addFraudAnalysisResult(riskService.assessRisk(payment))
+                        .letIf { it: ReadyForRoutingInitial -> tryToAuthorize(it) }
+
+                is ReadyForAuthorization ->
+                    payment.addAuthorizeResponse(authorizeService.authorize(payment))
+                        .letIf { it: RejectedByGateway -> it.prepareForRetry() }
+                        .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
+
+                is ReadyForConfirm ->
+                    payment.addConfirmResponse(authorizeService.confirm(payment))
+                        .letIf { it: RejectedByGateway -> it.prepareForRetry() }
+                        .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
+
+                is ReadyForRoutingInitial -> tryToAuthorize(payment)
+                is ReadyForRoutingRetry -> tryToAuthorize(payment)
+
+                is ReadyForClientActionResponse -> payment
+                is ReadyForPaymentRequest -> payment
+                is AuthorizeEnded -> payment
+            }
+                .let { paymentRepository.save(it) }
+                .also { sendSideEffectEvents(it) }
+        }
+    }
+
     fun authorize2(paymentPayload: PaymentPayload): PaymentWrapper
     {
         return PaymentWrapper().addPaymentPayload(paymentPayload)

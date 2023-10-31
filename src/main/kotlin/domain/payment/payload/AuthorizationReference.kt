@@ -1,3 +1,3 @@
 package domain.payment.payload
 
-data class AuthorizationReference(val id: String)
+data class AuthorizationReference(val value: String)

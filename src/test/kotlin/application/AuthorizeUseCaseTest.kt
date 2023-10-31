@@ -15,6 +15,7 @@ import domain.services.routing.RoutingResult
 import domain.services.routing.RoutingService
 import infrastructure.EventPublisherMemory
 import infrastructure.PaymentRepositoryMemory
+import infrastructure.paymentdata.PaymentAdapter
 import infrastructure.paymentdata.PaymentDataRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -28,7 +29,7 @@ class AuthorizeUseCaseTest
     private val authorizationGateway = mockk<AuthorizationGateway>()
     private val eventPublisher = EventPublisherMemory()
     private val paymentRepository = PaymentRepositoryMemory()
-    private val paymentDataRepository = PaymentDataRepository(paymentRepository)
+    private val paymentDataRepository = PaymentDataRepository(paymentRepository, PaymentAdapter())
 
     private val underTest = AuthorizeUseCase(
         riskService = riskService,
@@ -44,7 +45,7 @@ class AuthorizeUseCaseTest
         val paymentId = PaymentId(UUID.randomUUID())
         val paymentPayload = PaymentPayload(
             paymentId = paymentId,
-            authorizationReference = AuthorizationReference(id = "123456789"),
+            authorizationReference = AuthorizationReference(value = "123456789_1"),
             customer = Customer("ivan", "delgado"),
             paymentMethod = CreditCardPayment
         )
@@ -86,7 +87,7 @@ class AuthorizeUseCaseTest
         val paymentId = PaymentId(UUID.randomUUID())
         val paymentPayload = PaymentPayload(
             paymentId = paymentId,
-            authorizationReference = AuthorizationReference(id = "123456789"),
+            authorizationReference = AuthorizationReference(value = "123456789_1"),
             customer = Customer("ivan", "delgado"),
             paymentMethod = CreditCardPayment
         )
@@ -132,7 +133,7 @@ class AuthorizeUseCaseTest
         val paymentId = PaymentId(UUID.randomUUID())
         val paymentPayload = PaymentPayload(
             paymentId = paymentId,
-            authorizationReference = AuthorizationReference(id = "123456789"),
+            authorizationReference = AuthorizationReference(value = "123456789_1"),
             customer = Customer("ivan", "delgado"),
             paymentMethod = CreditCardPayment
         )
