@@ -1,7 +1,8 @@
 package domain.services.routing
 
-class PaymentAccount
-{
+data class PaymentAccount
+(
+    val accountId: AccountId
+)
 
-}
 

@@ -2,8 +2,8 @@ package domain.payment.lifecycle.status
 
 import domain.events.SideEffectEvent
 import domain.events.SideEffectEventList
+import domain.payment.Attempt
 import domain.payment.PaymentPayload
-import domain.payment.RetryAttemp
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.lifecycle.events.ReturnedFromClientEvent
@@ -18,9 +18,9 @@ data class ReadyForClientActionResponse
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val payload: PaymentPayload,
+    override val attempt: Attempt,
+    val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemp: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val clientAction: ClientAction,
     val threeDSStatus: ThreeDSStatus
@@ -29,6 +29,7 @@ data class ReadyForClientActionResponse
 {
     private val log = Logger.getLogger(ReadyForClientActionResponse::class.java.name)
 
+    override fun payload(): PaymentPayload = payload
     fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
     {
         val event = ReturnedFromClientEvent(
@@ -62,7 +63,7 @@ data class ReadyForClientActionResponse
             sideEffectEvents = newSideEffectEvents.list,
             payload = payload,
             riskAssessmentOutcome = riskAssessmentOutcome,
-            retryAttemp = retryAttemp,
+            attempt = attempt,
             paymentAccount = paymentAccount,
             confirmParameters = event.confirmParameters
         )

@@ -1,6 +1,7 @@
 package domain.payment.lifecycle.status
 
 import domain.events.SideEffectEvent
+import domain.payment.Attempt
 import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.Versionable
@@ -11,7 +12,8 @@ sealed interface Payment : Versionable
     override val version: Version
     val paymentEvents: List<PaymentEvent>
     val sideEffectEvents: List<SideEffectEvent>
-    val payload: PaymentPayload?
+    val attempt: Attempt
+    fun payload(): PaymentPayload
     fun applyRecordedEvent(event: PaymentEvent): Payment
     fun apply(event: PaymentEvent, isNew: Boolean): Payment
     fun flushPaymentEvents(): Payment

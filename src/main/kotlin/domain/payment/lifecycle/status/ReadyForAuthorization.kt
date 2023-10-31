@@ -1,8 +1,8 @@
 package domain.payment.lifecycle.status
 
 import domain.events.*
+import domain.payment.Attempt
 import domain.payment.PaymentPayload
-import domain.payment.RetryAttemp
 import domain.payment.Version
 import domain.payment.lifecycle.events.AuthorizationRequestedEvent
 import domain.payment.lifecycle.events.PaymentEvent
@@ -18,13 +18,14 @@ data class ReadyForAuthorization
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val payload: PaymentPayload,
+    override val attempt: Attempt,
+    val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemp: RetryAttemp,
     val paymentAccount: PaymentAccount
 
 ): AbstractPayment(), Payment, AuthorizeInProgress
 {
+    override fun payload(): PaymentPayload = payload
     private val log = Logger.getLogger(ReadyForAuthorization::class.java.name)
 
     fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
@@ -69,9 +70,9 @@ data class ReadyForAuthorization
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemp = retryAttemp,
                     paymentAccount = paymentAccount,
                     threeDSStatus = event.authorizeResponse.threeDSStatus
                 )
@@ -86,9 +87,9 @@ data class ReadyForAuthorization
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemp = retryAttemp,
                     paymentAccount = paymentAccount,
                     clientAction = event.authorizeResponse.clientAction,
                     threeDSStatus = event.authorizeResponse.threeDSStatus
@@ -103,9 +104,9 @@ data class ReadyForAuthorization
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    retryAttemp = retryAttemp,
                     paymentAccount = paymentAccount,
                     threeDSStatus = event.authorizeResponse.threeDSStatus
                 )
@@ -119,6 +120,7 @@ data class ReadyForAuthorization
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
                     payload = payload,
                     reason = "exception on authorization"
                 )

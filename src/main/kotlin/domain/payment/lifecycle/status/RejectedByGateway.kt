@@ -4,8 +4,8 @@ import domain.events.PaymentRejectedEvent
 import domain.events.PaymentRetriedEvent
 import domain.events.SideEffectEvent
 import domain.events.SideEffectEventList
+import domain.payment.Attempt
 import domain.payment.PaymentPayload
-import domain.payment.RetryAttemp
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.lifecycle.events.TriedToRetryEvent
@@ -19,9 +19,9 @@ data class RejectedByGateway
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val payload: PaymentPayload,
+    override val attempt: Attempt,
+    val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemp: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val threeDSStatus: ThreeDSStatus
 
@@ -29,6 +29,7 @@ data class RejectedByGateway
 {
     private val log = Logger.getLogger(ReadyForRoutingRetry::class.java.name)
 
+    override fun payload(): PaymentPayload = payload
     fun prepareForRetry(): Payment
     {
         val event = TriedToRetryEvent(
@@ -56,7 +57,7 @@ data class RejectedByGateway
         val newEvents = addEventIfNew(event, isNew)
         val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
-        return if (retryAttemp.canRetry())
+        return if (attempt.canRetry())
         {
             newSideEffectEvents.addIfNew(PaymentRetriedEvent, isNew)
 
@@ -64,9 +65,9 @@ data class RejectedByGateway
                 version = newVersion,
                 paymentEvents = newEvents,
                 sideEffectEvents = newSideEffectEvents.list,
+                attempt = attempt.next(),
                 payload = payload,
                 riskAssessmentOutcome = riskAssessmentOutcome,
-                retryAttemps = retryAttemp.next(),
                 paymentAccount = paymentAccount,
             )
         }
@@ -78,9 +79,9 @@ data class RejectedByGateway
                 version = newVersion,
                 paymentEvents = newEvents,
                 sideEffectEvents = newSideEffectEvents.list,
+                attempt = attempt,
                 payload = payload,
                 riskAssessmentOutcome = riskAssessmentOutcome,
-                retryAttemps = retryAttemp,
                 paymentAccount = paymentAccount
             )
         }

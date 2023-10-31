@@ -116,8 +116,8 @@ data class PaymentWrapper
         payment.version
 
     fun getPaymentId(): PaymentId =
-        payment.payload?.paymentId!!
+        payment.payload().paymentId
 
     fun getPaymentPayload(): PaymentPayload =
-        payment.payload!!
+        payment.payload()
 }

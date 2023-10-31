@@ -2,6 +2,7 @@ package domain.payment.lifecycle.status
 
 import domain.events.SideEffectEvent
 import domain.events.SideEffectEventList
+import domain.payment.Attempt
 import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
@@ -13,9 +14,10 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment, AuthorizeInProgress
     override val version: Version = Version.firstVersion()
     override val paymentEvents: List<PaymentEvent> = emptyList()
     override val sideEffectEvents: List<SideEffectEvent> = emptyList()
-    override val payload: PaymentPayload? = null
+    override val attempt: Attempt = Attempt.firstNormalAttemp()
     private val log = getLogger(ReadyForPaymentRequest::class.java.name)
 
+    override fun payload(): PaymentPayload = throw RuntimeException("Request not inputed yet")
     fun addPaymentPayload(paymentPayload: PaymentPayload): Payment
     {
         val event = PaymentRequestedEvent(
@@ -47,6 +49,7 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment, AuthorizeInProgress
             version = newVersion,
             paymentEvents = newEvents,
             sideEffectEvents = newSideEffectEvents.list,
+            attempt = attempt,
             payload = event.paymentPayload
         )
     }

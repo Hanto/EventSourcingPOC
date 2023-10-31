@@ -1,8 +1,8 @@
 package domain.payment.lifecycle.status
 
 import domain.events.*
+import domain.payment.Attempt
 import domain.payment.PaymentPayload
-import domain.payment.RetryAttemp
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.lifecycle.events.RoutingEvaluatedEvent
@@ -16,15 +16,16 @@ data class ReadyForRoutingRetry
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val payload: PaymentPayload,
+    override val attempt: Attempt,
+    val payload: PaymentPayload,
     override val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemps: RetryAttemp,
     val paymentAccount: PaymentAccount,
 
-) : AbstractPayment(), Payment, ReadyForRouting, AuthorizeInProgress
+    ) : AbstractPayment(), Payment, ReadyForRouting, AuthorizeInProgress
 {
     private val log = Logger.getLogger(ReadyForRoutingRetry::class.java.name)
 
+    override fun payload(): PaymentPayload = payload
     override fun addRoutingResult(routingResult: RoutingResult): Payment
     {
         val event = RoutingEvaluatedEvent(
@@ -63,6 +64,7 @@ data class ReadyForRoutingRetry
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
                     payload = payload,
                     reason = createRoutingErrorReason(event.routingResult))
             }
@@ -76,6 +78,7 @@ data class ReadyForRoutingRetry
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                 )
@@ -93,9 +96,9 @@ data class ReadyForRoutingRetry
                         version = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,
+                        attempt = attempt,
                         payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemps = retryAttemps,
                         paymentAccount = event.routingResult.account,
                     )
                 }
@@ -105,9 +108,9 @@ data class ReadyForRoutingRetry
                         version = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,
+                        attempt = attempt,
                         payload = payload,
                         riskAssessmentOutcome = riskAssessmentOutcome,
-                        retryAttemp = retryAttemps,
                         paymentAccount = event.routingResult.account
                     )
             }

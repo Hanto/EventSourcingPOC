@@ -4,6 +4,7 @@ import domain.events.FraudEvaluationCompletedEvent
 import domain.events.PaymentRejectedEvent
 import domain.events.SideEffectEvent
 import domain.events.SideEffectEventList
+import domain.payment.Attempt
 import domain.payment.PaymentPayload
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
@@ -16,12 +17,14 @@ data class ReadyForRisk
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val payload: PaymentPayload
+    override val attempt: Attempt,
+    val payload: PaymentPayload
 
 ): AbstractPayment(), Payment, AuthorizeInProgress
 {
     private val log = Logger.getLogger(ReadyForRisk::class.java.name)
 
+    override fun payload(): PaymentPayload = payload
     fun addFraudAnalysisResult(fraudAnalysisResult: FraudAnalysisResult): Payment
     {
         val event = RiskEvaluatedEvent(
@@ -61,6 +64,7 @@ data class ReadyForRisk
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
                     payload = payload,
                 )
             }
@@ -72,6 +76,7 @@ data class ReadyForRisk
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
                     payload = payload,
+                    attempt = attempt,
                     riskAssessmentOutcome = event.fraudAnalysisResult.riskAssessmentOutcome
                 )
             }

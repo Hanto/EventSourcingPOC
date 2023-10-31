@@ -1,6 +1,6 @@
 package domain.payment
 
-data class RetryAttemp
+data class Attempt
 (
     private val value: Int
 )
@@ -11,12 +11,15 @@ data class RetryAttemp
 
         @JvmStatic
         fun firstNormalAttemp() =
-            RetryAttemp(0)
+            Attempt(0)
     }
 
-    fun next(): RetryAttemp =
-        RetryAttemp(value + 1)
+    fun next(): Attempt =
+        Attempt(value + 1)
 
     fun canRetry(): Boolean =
         value < MAX_RETRIES
+
+    fun didRetry(): Boolean =
+        value > 0;
 }

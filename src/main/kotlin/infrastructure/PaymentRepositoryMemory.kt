@@ -13,11 +13,11 @@ class PaymentRepositoryMemory: PaymentRepository
 
     override fun save(payment: Payment): Payment
     {
-        val savedVersion = map[payment.payload?.paymentId!!]?.last()?.version
+        val savedVersion = map[payment.payload().paymentId]?.last()?.version
 
         verifyDataConsistency(payment, savedVersion)
 
-        val events = map.getOrPut(payment.payload?.paymentId!!) { mutableListOf() }
+        val events = map.getOrPut(payment.payload().paymentId) { mutableListOf() }
         events.addAll(payment.paymentEvents)
 
         return payment.flushPaymentEvents()
@@ -25,10 +25,10 @@ class PaymentRepositoryMemory: PaymentRepository
 
     override fun load(paymentId: PaymentId): Payment?
     {
-        val events = map[paymentId]
-        val payment = ReadyForPaymentRequest()
+        val events = map[paymentId]?.sortedBy { it.version.value }
+        val payment: Payment = ReadyForPaymentRequest()
 
-        return payment.let { events?.fold(payment as Payment) { payment, event -> payment.applyRecordedEvent(event) } }
+        return payment.let { events?.fold(payment) { payment, event -> payment.applyRecordedEvent(event) } }
     }
 
     override fun loadEvents(paymentId: PaymentId): List<PaymentEvent> =

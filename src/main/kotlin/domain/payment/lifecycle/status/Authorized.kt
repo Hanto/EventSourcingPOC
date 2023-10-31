@@ -1,8 +1,8 @@
 package domain.payment.lifecycle.status
 
 import domain.events.SideEffectEvent
+import domain.payment.Attempt
 import domain.payment.PaymentPayload
-import domain.payment.RetryAttemp
 import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.services.fraud.RiskAssessmentOutcome
@@ -14,13 +14,14 @@ data class Authorized
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
-    override val payload: PaymentPayload,
+    override val attempt: Attempt,
+    val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
-    val retryAttemp: RetryAttemp,
     val paymentAccount: PaymentAccount,
     val threeDSStatus: ThreeDSStatus
 
 ): AbstractPayment(), Payment, AuthorizeEnded
 {
+    override fun payload(): PaymentPayload = payload
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
 }
