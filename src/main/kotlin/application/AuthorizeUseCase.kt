@@ -4,8 +4,8 @@ import domain.payment.data.paymentpayload.PaymentId
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.sideeffectevents.EventPublisher
 import domain.payment.state.*
-import domain.repositories.PaymentRepositoryNew
-import domain.repositories.PaymentRepositoryOld
+import domain.repositories.PaymentRepository
+import domain.repositories.PaymentRepositoryLegacy
 import domain.services.fraud.RiskAssessmentService
 import domain.services.gateway.AuthorizationGateway
 import domain.services.routing.RoutingService
@@ -15,8 +15,8 @@ class AuthorizeUseCase
     private val riskService: RiskAssessmentService,
     private val routingService: RoutingService,
     private val authorizeService: AuthorizationGateway,
-    private val paymentRepositoryNew: PaymentRepositoryNew,
-    private val paymentRepositoryOld: PaymentRepositoryOld,
+    private val paymentRepository: PaymentRepository,
+    private val paymentRepositoryLegacy: PaymentRepositoryLegacy,
     private val eventPublisher: EventPublisher
 )
 {
@@ -39,7 +39,7 @@ class AuthorizeUseCase
 
     fun confirm(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
     {
-        return paymentRepositoryNew.load(paymentId)!!
+        return paymentRepository.load(paymentId)!!
             .letIfAndSave { it: ReadyForClientActionResponse -> it.addConfirmParameters(confirmParams) }
             .letIfAndSave { it: ReadyForConfirm -> it.addConfirmResponse(authorizeService.confirm(it)) }
             .letIfAndSave { it: RejectedByGateway -> it.prepareForRetry() }
@@ -49,10 +49,10 @@ class AuthorizeUseCase
     private fun saveAndSendEvents(payment: Payment): Payment
     {
         payment.sideEffectEvents.forEach { eventPublisher.publish(it) }
-        return paymentRepositoryNew.save(payment)
+        return paymentRepository.save(payment)
             .flushSideEffectEvents()
             .flushPaymentEvents()
-            .also { paymentRepositoryOld.save(it) }
+            .also { paymentRepositoryLegacy.save(it) }
     }
 
     // HELPER:

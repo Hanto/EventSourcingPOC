@@ -16,9 +16,9 @@ import domain.services.gateway.*
 import domain.services.routing.RoutingResult
 import domain.services.routing.RoutingService
 import infrastructure.EventPublisherMemory
-import infrastructure.repositories.paymentrepositorynew.PaymentRepositoryNewInMemory
+import infrastructure.repositories.paymentrepositorynew.PaymentRepositoryInMemory
 import infrastructure.repositories.paymentrepositoryold.PaymentAdapter
-import infrastructure.repositories.paymentrepositoryold.PaymentRepositoryOldInMemory
+import infrastructure.repositories.paymentrepositoryold.PaymentRepositoryLegacyInMemory
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -30,16 +30,16 @@ class AuthorizeUseCaseTest
     private val routingService = mockk<RoutingService>()
     private val authorizationGateway = mockk<AuthorizationGateway>()
     private val eventPublisher = EventPublisherMemory()
-    private val paymentRepositoryNew = PaymentRepositoryNewInMemory()
-    private val paymentRepositoryOld = PaymentRepositoryOldInMemory(paymentRepositoryNew, PaymentAdapter())
+    private val paymentRepositoryNew = PaymentRepositoryInMemory()
+    private val paymentRepositoryOld = PaymentRepositoryLegacyInMemory(paymentRepositoryNew, PaymentAdapter())
 
     private val underTest = AuthorizeUseCase(
         riskService = riskService,
         routingService = routingService,
         authorizeService = authorizationGateway,
         eventPublisher = eventPublisher,
-        paymentRepositoryNew = paymentRepositoryNew,
-        paymentRepositoryOld = paymentRepositoryOld,
+        paymentRepository = paymentRepositoryNew,
+        paymentRepositoryLegacy = paymentRepositoryOld,
     )
 
     @Test

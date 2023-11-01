@@ -2,15 +2,15 @@ package infrastructure.repositories.paymentrepositoryold
 
 import domain.payment.data.paymentpayload.PaymentId
 import domain.payment.state.Payment
-import domain.repositories.PaymentRepositoryNew
-import domain.repositories.PaymentRepositoryOld
+import domain.repositories.PaymentRepository
+import domain.repositories.PaymentRepositoryLegacy
 
-class PaymentRepositoryOldInMemory
+class PaymentRepositoryLegacyInMemory
 (
-    private val paymentRepositoryNew: PaymentRepositoryNew,
+    private val paymentRepository: PaymentRepository,
     private val paymentAdapter: PaymentAdapter,
 
-): PaymentRepositoryOld
+    ): PaymentRepositoryLegacy
 {
     private val map: MutableMap<PaymentId, PaymentData> = mutableMapOf()
 
@@ -18,7 +18,7 @@ class PaymentRepositoryOldInMemory
     {
         println("saveOld: ${payment::class.java.simpleName}")
 
-        val events = paymentRepositoryNew.loadEvents(payment.payload().paymentId)
+        val events = paymentRepository.loadEvents(payment.payload().paymentId)
 
         val paymentData = paymentAdapter.toPaymentData(payment, events)
 

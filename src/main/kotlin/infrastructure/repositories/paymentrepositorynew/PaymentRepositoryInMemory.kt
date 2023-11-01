@@ -5,9 +5,9 @@ import domain.payment.data.paymentpayload.PaymentId
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.state.Payment
 import domain.payment.state.ReadyForPaymentRequest
-import domain.repositories.PaymentRepositoryNew
+import domain.repositories.PaymentRepository
 
-class PaymentRepositoryNewInMemory : PaymentRepositoryNew
+class PaymentRepositoryInMemory : PaymentRepository
 {
     private val map: MutableMap<PaymentId, MutableList<PaymentEvent>> = mutableMapOf()
 
