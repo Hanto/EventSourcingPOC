@@ -21,36 +21,36 @@ class AuthorizeUseCase
 {
     fun authorize(paymentPayload: PaymentPayload): Payment
     {
-        return ReadyForPaymentRequest().addPaymentPayload(paymentPayload)
-            .letIf { it: ReadyForRisk -> it.addFraudAnalysisResult(riskService.assessRisk(it)) }
+        return ReadyForPaymentRequest()
+            .letIfAndSave { it: ReadyForPaymentRequest -> it.addPaymentPayload(paymentPayload) }
+            .letIfAndSave { it: ReadyForRisk -> it.addFraudAnalysisResult(riskService.assessRisk(it)) }
             .letIf { it: ReadyForRoutingInitial -> tryToAuthorize(it) }
-            .let { paymentRepository.save(it) }
-            .also { sendSideEffectEvents(it) }
     }
 
     private fun tryToAuthorize(input: ReadyForRouting): Payment
     {
-        return input.addRoutingResult(routingService.routeForPayment(input))
-            .letIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
-            .letIf { it: RejectedByGateway -> it.prepareForRetry() }
+        return input
+            .letIfAndSave { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(input)) }
+            .letIfAndSave { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
+            .letIfAndSave { it: RejectedByGateway -> it.prepareForRetry() }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
     }
 
     fun confirm(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
     {
         return paymentRepository.load(paymentId)!!
-            .letIf { it: ReadyForClientActionResponse -> it.addConfirmParameters(confirmParams) }
-            .letIf { it: ReadyForConfirm -> it.addConfirmResponse(authorizeService.confirm(it)) }
-            .letIf { it: RejectedByGateway -> it.prepareForRetry() }
+            .letIfAndSave { it: ReadyForClientActionResponse -> it.addConfirmParameters(confirmParams) }
+            .letIfAndSave { it: ReadyForConfirm -> it.addConfirmResponse(authorizeService.confirm(it)) }
+            .letIfAndSave { it: RejectedByGateway -> it.prepareForRetry() }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
-            .let { paymentRepository.save(it) }
-            .also { sendSideEffectEvents(it) }
     }
 
-    private fun sendSideEffectEvents(payment: Payment)
+    private fun saveAndSendEvents(payment: Payment): Payment
     {
         payment.sideEffectEvents.forEach { eventPublisher.publish(it) }
-        payment.flushSideEffectEvents()
+        return paymentRepository.save(payment)
+            .flushSideEffectEvents()
+            .flushPaymentEvents()
     }
 
     // HELPER:
@@ -59,6 +59,10 @@ class AuthorizeUseCase
     private inline fun <reified T, R>R.letIf(function: (T) -> R): R =
 
         if (this is T) function.invoke(this as T) else this
+
+    private inline fun <reified T>Payment.letIfAndSave(function: (T) -> Payment): Payment =
+
+        if (this is T) saveAndSendEvents(function.invoke(this)) else this
 
     private inline fun <reified T> PaymentWrapper.letIf(function: (T, PaymentWrapper) -> PaymentWrapper): PaymentWrapper =
 
@@ -99,7 +103,7 @@ class AuthorizeUseCase
                 is AuthorizeEnded -> payment
             }
                 .let { paymentRepository.save(it) }
-                .also { sendSideEffectEvents(it) }
+                .also { saveAndSendEvents(it) }
         }
     }
 

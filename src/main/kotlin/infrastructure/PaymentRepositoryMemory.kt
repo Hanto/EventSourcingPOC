@@ -13,6 +13,7 @@ class PaymentRepositoryMemory: PaymentRepository
 
     override fun save(payment: Payment): Payment
     {
+        println("save: ${payment::class.java.simpleName}")
         val savedVersion = map[payment.payload().paymentId]?.last()?.version
 
         verifyDataConsistency(payment, savedVersion)

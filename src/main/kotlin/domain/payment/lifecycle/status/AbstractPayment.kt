@@ -95,67 +95,67 @@ sealed class AbstractPayment : Payment
             is ReadyForPaymentRequest -> this
 
             is Authorized -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is Failed -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is ReadyForAuthorization -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is ReadyForClientActionResponse -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is ReadyForConfirm -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is ReadyForRisk -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is ReadyForRoutingInitial -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is ReadyForRoutingRetry -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is RejectedByGateway -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is RejectedByGatewayAndNotRetriable -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is RejectedByRisk -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is RejectedByRouting -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
             is RejectedByRoutingRetry -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
+                version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
