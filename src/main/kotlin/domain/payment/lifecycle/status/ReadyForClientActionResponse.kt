@@ -25,7 +25,7 @@ data class ReadyForClientActionResponse
     val clientAction: ClientAction,
     val threeDSStatus: ThreeDSStatus
 
-    ): AbstractPayment(), Payment, AuthorizePending
+): AbstractPayment(), Payment, AuthorizePending
 {
     private val log = Logger.getLogger(ReadyForClientActionResponse::class.java.name)
 
