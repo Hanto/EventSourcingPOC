@@ -4,6 +4,7 @@ import domain.payment.data.paymentpayload.PaymentId
 import domain.payment.state.Payment
 import domain.repositories.PaymentRepository
 import domain.repositories.PaymentRepositoryLegacy
+import infrastructure.repositories.paymentrepositoryold.paymentdata.PaymentData
 
 class PaymentRepositoryLegacyInMemory
 (

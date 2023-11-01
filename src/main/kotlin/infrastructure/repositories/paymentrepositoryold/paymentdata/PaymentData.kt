@@ -1,4 +1,4 @@
-package infrastructure.repositories.paymentrepositoryold
+package infrastructure.repositories.paymentrepositoryold.paymentdata
 
 import domain.payment.data.RiskAssessmentOutcome
 import java.util.*

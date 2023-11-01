@@ -2,7 +2,7 @@ package domain.repositories
 
 import domain.payment.data.paymentpayload.PaymentId
 import domain.payment.state.Payment
-import infrastructure.repositories.paymentrepositoryold.PaymentData
+import infrastructure.repositories.paymentrepositoryold.paymentdata.PaymentData
 
 interface PaymentRepositoryLegacy
 {

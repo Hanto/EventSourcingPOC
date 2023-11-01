@@ -8,6 +8,8 @@ import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.RiskEvaluatedEvent
 import domain.payment.state.*
 import domain.services.fraud.FraudAnalysisResult
+import infrastructure.repositories.paymentrepositoryold.paymentdata.AuthPaymentOperation
+import infrastructure.repositories.paymentrepositoryold.paymentdata.PaymentData
 
 class PaymentAdapter
 {

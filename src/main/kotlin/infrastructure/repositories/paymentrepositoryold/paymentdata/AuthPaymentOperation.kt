@@ -1,6 +1,7 @@
-package infrastructure.repositories.paymentrepositoryold
+package infrastructure.repositories.paymentrepositoryold.paymentdata
 
 import domain.payment.data.paymentaccount.PaymentAccount
+import infrastructure.repositories.paymentrepositoryold.TransactionType
 
 data class AuthPaymentOperation
 (

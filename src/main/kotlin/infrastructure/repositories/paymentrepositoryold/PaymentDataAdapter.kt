@@ -11,6 +11,8 @@ import domain.payment.paymentevents.RoutingEvaluatedEvent
 import domain.services.fraud.FraudAnalysisResult
 import domain.services.gateway.AuthorizeResponse
 import domain.services.routing.RoutingResult
+import infrastructure.repositories.paymentrepositoryold.paymentdata.AuthPaymentOperation
+import infrastructure.repositories.paymentrepositoryold.paymentdata.PaymentData
 
 class PaymentDataAdapter
 {
