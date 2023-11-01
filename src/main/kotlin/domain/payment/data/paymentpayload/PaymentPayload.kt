@@ -5,7 +5,7 @@ import domain.payment.data.paymentpayload.paymentmethod.PaymentMethod
 
 data class PaymentPayload
 (
-    val paymentId: PaymentId,
+    val id: PaymentId,
     val authorizationReference: AuthorizationReference,
     val customer: Customer,
     val paymentMethod: PaymentMethod,

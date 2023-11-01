@@ -6,7 +6,7 @@ import domain.services.routing.RoutingResult
 
 data class RoutingEvaluatedEvent
 (
-    override val paymentEventId: PaymentEventId = PaymentEventId(),
+    override val id: PaymentEventId = PaymentEventId(),
     override val paymentId: PaymentId,
     override val version: Version,
     val routingResult: RoutingResult

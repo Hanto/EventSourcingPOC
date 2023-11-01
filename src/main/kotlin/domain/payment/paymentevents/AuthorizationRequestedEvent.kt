@@ -6,7 +6,7 @@ import domain.services.gateway.AuthorizeResponse
 
 data class AuthorizationRequestedEvent
 (
-    override val paymentEventId: PaymentEventId = PaymentEventId(),
+    override val id: PaymentEventId = PaymentEventId(),
     override val paymentId: PaymentId,
     override val version: Version,
     val authorizeResponse: AuthorizeResponse

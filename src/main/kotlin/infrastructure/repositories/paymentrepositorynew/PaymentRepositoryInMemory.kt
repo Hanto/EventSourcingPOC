@@ -15,7 +15,7 @@ class PaymentRepositoryInMemory : PaymentRepository
     {
         println("saveNew: ${payment::class.java.simpleName}")
 
-        val events = map.getOrPut(payment.payload().paymentId) { mutableListOf() }
+        val events = map.getOrPut(payment.payload().id) { mutableListOf() }
         val savedVersion = events.map { it.version }.maxByOrNull { it.value }
 
         verifyDataConsistency(payment, savedVersion)

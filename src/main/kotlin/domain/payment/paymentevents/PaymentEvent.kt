@@ -7,7 +7,7 @@ import domain.payment.sideeffectevents.DomainEvent
 
 sealed interface PaymentEvent : DomainEvent, Versionable
 {
-    val paymentEventId: PaymentEventId
+    val id: PaymentEventId
     val paymentId: PaymentId
     override val version: Version
 }

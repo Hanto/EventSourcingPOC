@@ -6,7 +6,7 @@ import domain.payment.data.paymentpayload.PaymentPayload
 
 data class PaymentRequestedEvent
 (
-    override val paymentEventId: PaymentEventId = PaymentEventId(),
+    override val id: PaymentEventId = PaymentEventId(),
     override val paymentId: PaymentId,
     override val version: Version,
     val paymentPayload: PaymentPayload

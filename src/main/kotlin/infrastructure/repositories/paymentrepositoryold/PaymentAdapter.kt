@@ -16,7 +16,7 @@ class PaymentAdapter
     fun toPaymentData(payment: Payment, events: List<PaymentEvent>): PaymentData
     {
         return PaymentData(
-            id = payment.payload().paymentId.value,
+            id = payment.payload().id.value,
             authorizationReference = payment.payload().authorizationReference.value,
             operations = retrieveOperations(events),
             riskAssessmentOutcome = retrieveRiskAssessment(events)

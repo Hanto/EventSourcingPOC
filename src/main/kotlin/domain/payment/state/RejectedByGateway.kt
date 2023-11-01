@@ -35,7 +35,7 @@ data class RejectedByGateway
     fun prepareForRetry(): Payment
     {
         val event = TriedToRetryEvent(
-            paymentId = payload.paymentId,
+            paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
         )
 

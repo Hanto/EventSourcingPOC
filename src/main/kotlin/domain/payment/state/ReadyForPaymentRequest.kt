@@ -22,7 +22,7 @@ class ReadyForPaymentRequest : AbstractPayment(), Payment, AuthorizeInProgress
     fun addPaymentPayload(paymentPayload: PaymentPayload): Payment
     {
         val event = PaymentRequestedEvent(
-            paymentId = paymentPayload.paymentId,
+            paymentId = paymentPayload.id,
             version = version.nextEventVersion(paymentEvents),
             paymentPayload = paymentPayload)
 

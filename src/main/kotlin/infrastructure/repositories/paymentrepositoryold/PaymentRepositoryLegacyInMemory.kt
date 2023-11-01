@@ -19,11 +19,11 @@ class PaymentRepositoryLegacyInMemory
     {
         println("saveOld: ${payment::class.java.simpleName}")
 
-        val events = paymentRepository.loadEvents(payment.payload().paymentId)
+        val events = paymentRepository.loadEvents(payment.payload().id)
 
         val paymentData = paymentAdapter.toPaymentData(payment, events)
 
-        map[payment.payload().paymentId] = paymentData
+        map[payment.payload().id] = paymentData
     }
 
     override fun loadPaymentData(paymentId: PaymentId): PaymentData?

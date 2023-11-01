@@ -35,7 +35,7 @@ data class ReadyForClientActionResponse
     fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
     {
         val event = ReturnedFromClientEvent(
-            paymentId = payload.paymentId,
+            paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
             confirmParameters = confirmParameters)
 
