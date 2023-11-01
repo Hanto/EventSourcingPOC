@@ -1,7 +1,7 @@
 package infrastructure
 
-import domain.events.DomainEvent
-import domain.events.EventPublisher
+import domain.payment.sideeffectevents.DomainEvent
+import domain.payment.sideeffectevents.EventPublisher
 
 class EventPublisherMemory : EventPublisher
 {

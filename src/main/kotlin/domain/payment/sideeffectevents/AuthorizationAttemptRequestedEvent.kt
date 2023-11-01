@@ -1,0 +1,3 @@
+package domain.payment.sideeffectevents
+
+data object AuthorizationAttemptRequestedEvent: SideEffectEvent

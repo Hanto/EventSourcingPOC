@@ -1,19 +1,24 @@
 package application
 
-import domain.payment.payload.*
-import domain.payment.payload.paymentmethod.CreditCardPayment
+import domain.payment.data.PSPReference
+import domain.payment.data.RiskAssessmentOutcome
+import domain.payment.data.paymentaccount.AccountId
+import domain.payment.data.paymentaccount.PaymentAccount
+import domain.payment.data.paymentpayload.*
+import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
+import domain.payment.data.threedsinformation.ECI
+import domain.payment.data.threedsinformation.ExemptionStatus
+import domain.payment.data.threedsinformation.ThreeDSInformation
+import domain.payment.data.threedsinformation.ThreeDSVersion
 import domain.services.fraud.FraudAnalysisResult
-import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.fraud.RiskAssessmentService
 import domain.services.gateway.*
-import domain.services.routing.AccountId
-import domain.services.routing.PaymentAccount
 import domain.services.routing.RoutingResult
 import domain.services.routing.RoutingService
 import infrastructure.EventPublisherMemory
-import infrastructure.PaymentRepositoryMemory
-import infrastructure.paymentdata.PaymentAdapter
-import infrastructure.paymentdata.PaymentDataRepository
+import infrastructure.repositories.paymentrepositorynew.PaymentRepositoryNewInMemory
+import infrastructure.repositories.paymentrepositoryold.PaymentAdapter
+import infrastructure.repositories.paymentrepositoryold.PaymentRepositoryOldInMemory
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -25,15 +30,16 @@ class AuthorizeUseCaseTest
     private val routingService = mockk<RoutingService>()
     private val authorizationGateway = mockk<AuthorizationGateway>()
     private val eventPublisher = EventPublisherMemory()
-    private val paymentRepository = PaymentRepositoryMemory()
-    private val paymentDataRepository = PaymentDataRepository(paymentRepository, PaymentAdapter())
+    private val paymentRepositoryNew = PaymentRepositoryNewInMemory()
+    private val paymentRepositoryOld = PaymentRepositoryOldInMemory(paymentRepositoryNew, PaymentAdapter())
 
     private val underTest = AuthorizeUseCase(
         riskService = riskService,
         routingService = routingService,
         authorizeService = authorizationGateway,
         eventPublisher = eventPublisher,
-        paymentRepository = paymentRepository
+        paymentRepositoryNew = paymentRepositoryNew,
+        paymentRepositoryOld = paymentRepositoryOld,
     )
 
     @Test
@@ -66,17 +72,9 @@ class AuthorizeUseCaseTest
             .andThen( authReject )
             .andThen( authSuccess )
 
-        val payment = underTest.authorize(paymentPayload)
+        underTest.authorize(paymentPayload)
 
-        println("\nPAYMENT EVENTS:\n")
-        paymentRepository.loadEvents(paymentId) .forEach { println(it) }
-        println("\nSIDE EFFECTS:\n")
-        eventPublisher.list.forEach { println(it) }
-        println("\nPAYMENT DATA:\n")
-        val paymentData = paymentDataRepository.save(payment)
-        println("\nPAYMENT OPERATIONS:\n")
-        println(paymentData)
-        paymentData.operations.forEach { println(it) }
+        printPaymentInfo(paymentId)
     }
 
     @Test
@@ -113,17 +111,9 @@ class AuthorizeUseCaseTest
             .andThen( authSuccess )
             .andThen( authSuccess )
 
-        val payment = underTest.authorize(paymentPayload)
+        underTest.authorize(paymentPayload)
 
-        println("\nPAYMENT EVENTS:\n")
-        paymentRepository.loadEvents(paymentId) .forEach { println(it) }
-        println("\nSIDE EFFECTS:\n")
-        eventPublisher.list.forEach { println(it) }
-        println("\nPAYMENT DATA:\n")
-        val paymentData = paymentDataRepository.save(payment)
-        println("\nPAYMENT OPERATIONS:\n")
-        println(paymentData)
-        paymentData.operations.forEach { println(it) }
+        printPaymentInfo(paymentId)
     }
 
     @Test
@@ -163,16 +153,25 @@ class AuthorizeUseCaseTest
         every { authorizationGateway.confirm( any()) }.returns( authReject )
 
         underTest.authorize(paymentPayload)
-        val payment = underTest.confirm(paymentId, mapOf("ECI" to "05"))
+        underTest.confirm(paymentId, mapOf("ECI" to "05"))
 
+        printPaymentInfo(paymentId)
+    }
+
+    private fun printPaymentInfo(paymentId: PaymentId)
+    {
         println("\nPAYMENT EVENTS:\n")
-        paymentRepository.loadEvents(paymentId) .forEach { println(it) }
+        paymentRepositoryNew.loadEvents(paymentId).forEach { println(it) }
+
         println("\nSIDE EFFECTS:\n")
         eventPublisher.list.forEach { println(it) }
+
         println("\nPAYMENT DATA:\n")
-        val paymentData = paymentDataRepository.save(payment)
-        println("\nPAYMENT OPERATIONS:\n")
+        val paymentData = paymentRepositoryOld.loadPaymentData(paymentId)
         println(paymentData)
-        paymentData.operations.forEach { println(it) }
+
+        println("\nPAYMENT OPERATIONS:\n")
+        paymentData?.operations?.forEach { println(it) }
+        println("\n")
     }
 }

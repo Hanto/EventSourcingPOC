@@ -1,6 +1,6 @@
 package domain.services.routing
 
-import domain.payment.lifecycle.status.ReadyForRouting
+import domain.payment.state.ReadyForRouting
 
 interface RoutingService
 {

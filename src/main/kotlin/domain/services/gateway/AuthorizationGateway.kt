@@ -1,7 +1,7 @@
 package domain.services.gateway
 
-import domain.payment.lifecycle.status.ReadyForAuthorization
-import domain.payment.lifecycle.status.ReadyForConfirm
+import domain.payment.state.ReadyForAuthorization
+import domain.payment.state.ReadyForConfirm
 
 interface AuthorizationGateway
 {

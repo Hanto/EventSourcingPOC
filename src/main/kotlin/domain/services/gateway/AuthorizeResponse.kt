@@ -1,5 +1,8 @@
 package domain.services.gateway
 
+import domain.payment.data.PSPReference
+import domain.payment.data.threedsinformation.ThreeDSInformation
+
 sealed interface AuthorizeResponse
 {
     val threeDSStatus: ThreeDSStatus

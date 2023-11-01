@@ -1,5 +1,7 @@
 package domain.services.routing
 
+import domain.payment.data.paymentaccount.PaymentAccount
+
 sealed class RoutingResult
 {
     data class Proceed(val account: PaymentAccount) : RoutingResult()

@@ -1,6 +1,6 @@
 package domain.services.fraud
 
-import domain.payment.lifecycle.status.ReadyForRisk
+import domain.payment.state.ReadyForRisk
 
 interface RiskAssessmentService
 {

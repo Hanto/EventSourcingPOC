@@ -1,10 +1,11 @@
 package application
 
-import domain.events.EventPublisher
-import domain.payment.lifecycle.status.*
-import domain.payment.payload.PaymentId
-import domain.payment.payload.PaymentPayload
-import domain.repositories.PaymentRepository
+import domain.payment.data.paymentpayload.PaymentId
+import domain.payment.data.paymentpayload.PaymentPayload
+import domain.payment.sideeffectevents.EventPublisher
+import domain.payment.state.*
+import domain.repositories.PaymentRepositoryNew
+import domain.repositories.PaymentRepositoryOld
 import domain.services.fraud.RiskAssessmentService
 import domain.services.gateway.AuthorizationGateway
 import domain.services.routing.RoutingService
@@ -14,7 +15,8 @@ class AuthorizeUseCase
     private val riskService: RiskAssessmentService,
     private val routingService: RoutingService,
     private val authorizeService: AuthorizationGateway,
-    private val paymentRepository: PaymentRepository,
+    private val paymentRepositoryNew: PaymentRepositoryNew,
+    private val paymentRepositoryOld: PaymentRepositoryOld,
     private val eventPublisher: EventPublisher
 )
 {
@@ -37,7 +39,7 @@ class AuthorizeUseCase
 
     fun confirm(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
     {
-        return paymentRepository.load(paymentId)!!
+        return paymentRepositoryNew.load(paymentId)!!
             .letIfAndSave { it: ReadyForClientActionResponse -> it.addConfirmParameters(confirmParams) }
             .letIfAndSave { it: ReadyForConfirm -> it.addConfirmResponse(authorizeService.confirm(it)) }
             .letIfAndSave { it: RejectedByGateway -> it.prepareForRetry() }
@@ -47,9 +49,10 @@ class AuthorizeUseCase
     private fun saveAndSendEvents(payment: Payment): Payment
     {
         payment.sideEffectEvents.forEach { eventPublisher.publish(it) }
-        return paymentRepository.save(payment)
+        return paymentRepositoryNew.save(payment)
             .flushSideEffectEvents()
             .flushPaymentEvents()
+            .also { paymentRepositoryOld.save(it) }
     }
 
     // HELPER:
@@ -59,7 +62,7 @@ class AuthorizeUseCase
 
         if (this is T) function.invoke(this as T) else this
 
-    private inline fun <reified T>Payment.letIfAndSave(function: (T) -> Payment): Payment =
+    private inline fun <reified T> Payment.letIfAndSave(function: (T) -> Payment): Payment =
 
         if (this is T) saveAndSendEvents(function.invoke(this)) else this
 }
