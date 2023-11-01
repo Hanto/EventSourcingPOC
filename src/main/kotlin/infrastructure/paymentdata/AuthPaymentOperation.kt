@@ -12,8 +12,8 @@ data class AuthPaymentOperation
     val exemption: Exemption,
     val authenticationStatus: AuthenticationStatus,
     val transactionType: TransactionType,
-
-    val status: Status
+    val status: Status,
+    val paymentClassName: String,
 )
 {
     enum class Status

@@ -73,8 +73,9 @@ class PaymentAdapter
                 eci = null,
                 exemption = AuthPaymentOperation.Exemption.NotRequested,
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.NOT_APPLICABLE,
+                transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
-                transactionType = payment.payload.authorizationType.toTransactionType()
+                paymentClassName = payment.toPaymentClassName()
             ) else null
 
             // PENDING STATES:
@@ -88,8 +89,9 @@ class PaymentAdapter
                 eci = payment.threeDSStatus.toECI(),
                 exemption = payment.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.PENDING,
+                transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
-                transactionType = payment.payload.authorizationType.toTransactionType()
+                paymentClassName = payment.toPaymentClassName()
             ) else null
 
             // FINAL STATES:
@@ -105,8 +107,9 @@ class PaymentAdapter
                 eci = payment.threeDSStatus.toECI(),
                 exemption = payment.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
-                status = AuthPaymentOperation.Status.OK,
-                transactionType = payment.payload.authorizationType.toTransactionType()
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.PENDING,
+                paymentClassName = payment.toPaymentClassName()
             )
             is Failed -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
@@ -116,8 +119,9 @@ class PaymentAdapter
                 eci = payment.threeDSStatus.toECI(),
                 exemption = payment.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
-                status = AuthPaymentOperation.Status.KO,
-                transactionType = payment.payload.authorizationType.toTransactionType()
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.PENDING,
+                paymentClassName = payment.toPaymentClassName()
             )
             is RejectedByGateway -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
@@ -127,8 +131,9 @@ class PaymentAdapter
                 eci = payment.threeDSStatus.toECI(),
                 exemption = payment.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
-                status = AuthPaymentOperation.Status.KO,
-                transactionType = payment.payload.authorizationType.toTransactionType()
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.PENDING,
+                paymentClassName = payment.toPaymentClassName()
             )
             is RejectedByRisk -> AuthPaymentOperation(
                 paymentAccount = null,
@@ -138,8 +143,9 @@ class PaymentAdapter
                 eci = null,
                 exemption = AuthPaymentOperation.Exemption.NotRequested,
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
-                status = AuthPaymentOperation.Status.KO,
-                transactionType = payment.payload.authorizationType.toTransactionType()
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.PENDING,
+                paymentClassName = payment.toPaymentClassName()
             )
             is RejectedByRouting -> AuthPaymentOperation(
                 paymentAccount = null,
@@ -149,8 +155,9 @@ class PaymentAdapter
                 eci = null,
                 exemption = AuthPaymentOperation.Exemption.NotRequested,
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
-                status = AuthPaymentOperation.Status.KO,
-                transactionType = payment.payload.authorizationType.toTransactionType()
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.PENDING,
+                paymentClassName = payment.toPaymentClassName()
             )
             is RejectedByRoutingSameAccount -> null
 
@@ -200,6 +207,9 @@ class PaymentAdapter
             AuthorizationType.FULL_AUTHORIZATION -> TransactionType.AUTHORIZE_AND_SETTLE
             AuthorizationType.PRE_AUTHORIZATION -> TransactionType.AUTHORIZE
         }
+
+    private fun Payment.toPaymentClassName() =
+        this::class.java.simpleName
 
     private fun print(currentState: Payment) =
         println("${if (currentState is AuthorizeEnded) "END: " else ""}${currentState::class.java.simpleName}")
