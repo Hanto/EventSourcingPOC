@@ -6,6 +6,7 @@ import domain.payment.Version
 import domain.payment.lifecycle.events.PaymentEvent
 import domain.payment.payload.PaymentPayload
 import domain.services.fraud.RiskAssessmentOutcome
+import domain.services.gateway.PSPReference
 import domain.services.gateway.ThreeDSStatus
 import domain.services.routing.PaymentAccount
 
@@ -16,9 +17,10 @@ data class Failed
     override val sideEffectEvents: List<SideEffectEvent>,
     override val attempt: Attempt,
     val payload: PaymentPayload,
-    val riskAssessmentOutcome: RiskAssessmentOutcome? = null,
-    val paymentAccount: PaymentAccount? = null,
-    val threeDSStatus: ThreeDSStatus? = null,
+    val riskAssessmentOutcome: RiskAssessmentOutcome?,
+    val paymentAccount: PaymentAccount?,
+    val threeDSStatus: ThreeDSStatus?,
+    val pspReference: PSPReference?,
     val reason: String,
 
     ): AbstractPayment(), Payment, AuthorizeEnded

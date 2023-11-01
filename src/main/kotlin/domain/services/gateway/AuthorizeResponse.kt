@@ -3,16 +3,19 @@ package domain.services.gateway
 sealed interface AuthorizeResponse
 {
     val threeDSStatus: ThreeDSStatus
+    val pspReference: PSPReference
 
     data class Success(
 
         override val threeDSStatus: ThreeDSStatus,
+        override val pspReference: PSPReference
 
     ) : AuthorizeResponse
 
     data class Reject(
 
         override val threeDSStatus: ThreeDSStatus,
+        override val pspReference: PSPReference,
         val errorDescription: String,
         val errorCode: String,
         val errorReason: ErrorReason,
@@ -23,6 +26,7 @@ sealed interface AuthorizeResponse
     data class Fail(
 
         override val threeDSStatus: ThreeDSStatus,
+        override val pspReference: PSPReference,
         val errorDescription: String,
         val timeout: Boolean,
         val exception: Exception
@@ -32,6 +36,7 @@ sealed interface AuthorizeResponse
     data class ClientActionRequested(
 
         override val threeDSStatus: ThreeDSStatus,
+        override val pspReference: PSPReference,
         val clientAction: ClientAction
 
     ) : AuthorizeResponse

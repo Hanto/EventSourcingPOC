@@ -10,6 +10,8 @@ import domain.payment.payload.paymentmethod.KlarnaPayment
 import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.gateway.ActionType
 import domain.services.gateway.AuthorizeResponse
+import domain.services.gateway.PSPReference
+import domain.services.gateway.ThreeDSStatus
 import domain.services.routing.PaymentAccount
 import java.util.logging.Logger
 
@@ -22,6 +24,8 @@ data class ReadyForConfirm
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
+    val threeDSStatus: ThreeDSStatus,
+    val pspReference: PSPReference,
     val confirmParameters: Map<String, Any>
 
 ): AbstractPayment(), Payment, AuthorizeInProgress
@@ -74,7 +78,8 @@ data class ReadyForConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    threeDSStatus = event.authorizeResponse.threeDSStatus
+                    threeDSStatus = event.authorizeResponse.threeDSStatus,
+                    pspReference = event.authorizeResponse.pspReference
                 )
             }
 
@@ -91,7 +96,8 @@ data class ReadyForConfirm
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
                     clientAction = event.authorizeResponse.clientAction,
-                    threeDSStatus = event.authorizeResponse.threeDSStatus
+                    threeDSStatus = event.authorizeResponse.threeDSStatus,
+                    pspReference = event.authorizeResponse.pspReference
                 )
             }
 
@@ -108,7 +114,8 @@ data class ReadyForConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    threeDSStatus = event.authorizeResponse.threeDSStatus
+                    threeDSStatus = event.authorizeResponse.threeDSStatus,
+                    pspReference = event.authorizeResponse.pspReference
                 )
             }
 
@@ -123,6 +130,10 @@ data class ReadyForConfirm
                     sideEffectEvents = newSideEffectEvents.list,
                     attempt = attempt,
                     payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    threeDSStatus = event.authorizeResponse.threeDSStatus,
+                    pspReference = event.authorizeResponse.pspReference,
                     reason = "exception on authorization"
                 )
             }

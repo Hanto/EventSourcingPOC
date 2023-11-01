@@ -8,7 +8,7 @@ import domain.payment.payload.PaymentPayload
 import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.routing.PaymentAccount
 
-data class RejectedByRoutingRetry
+data class RejectedByRoutingSameAccount
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,

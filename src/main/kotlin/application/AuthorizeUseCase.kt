@@ -1,7 +1,6 @@
 package application
 
 import domain.events.EventPublisher
-import domain.payment.PaymentWrapper
 import domain.payment.lifecycle.status.*
 import domain.payment.payload.PaymentId
 import domain.payment.payload.PaymentPayload
@@ -27,10 +26,10 @@ class AuthorizeUseCase
             .letIf { it: ReadyForRoutingInitial -> tryToAuthorize(it) }
     }
 
-    private fun tryToAuthorize(input: ReadyForRouting): Payment
+    private fun tryToAuthorize(payment: ReadyForRouting): Payment
     {
-        return input
-            .letIfAndSave { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(input)) }
+        return payment
+            .letIfAndSave { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(payment)) }
             .letIfAndSave { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letIfAndSave { it: RejectedByGateway -> it.prepareForRetry() }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
@@ -63,62 +62,4 @@ class AuthorizeUseCase
     private inline fun <reified T>Payment.letIfAndSave(function: (T) -> Payment): Payment =
 
         if (this is T) saveAndSendEvents(function.invoke(this)) else this
-
-    private inline fun <reified T> PaymentWrapper.letIf(function: (T, PaymentWrapper) -> PaymentWrapper): PaymentWrapper =
-
-        if (this.payment is T) function.invoke(this as T, this) else this
-
-    // WITH WRAPPER:
-    //------------------------------------------------------------------------------------------------------------------
-
-    fun reAuthorize(paymentId: PaymentId): Payment
-    {
-        return paymentRepository.load(paymentId)!!.let { payment ->
-
-            when (payment)
-            {
-                is RejectedByGateway ->
-                    payment.prepareForRetry()
-                        .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
-
-                is ReadyForRisk ->
-                    payment.addFraudAnalysisResult(riskService.assessRisk(payment))
-                        .letIf { it: ReadyForRoutingInitial -> tryToAuthorize(it) }
-
-                is ReadyForAuthorization ->
-                    payment.addAuthorizeResponse(authorizeService.authorize(payment))
-                        .letIf { it: RejectedByGateway -> it.prepareForRetry() }
-                        .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
-
-                is ReadyForConfirm ->
-                    payment.addConfirmResponse(authorizeService.confirm(payment))
-                        .letIf { it: RejectedByGateway -> it.prepareForRetry() }
-                        .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
-
-                is ReadyForRoutingInitial -> tryToAuthorize(payment)
-                is ReadyForRoutingRetry -> tryToAuthorize(payment)
-
-                is ReadyForClientActionResponse -> payment
-                is ReadyForPaymentRequest -> payment
-                is AuthorizeEnded -> payment
-            }
-                .let { paymentRepository.save(it) }
-                .also { saveAndSendEvents(it) }
-        }
-    }
-
-    fun authorize2(paymentPayload: PaymentPayload): PaymentWrapper
-    {
-        return PaymentWrapper().addPaymentPayload(paymentPayload)
-            .letIf { it: ReadyForRisk, p -> p.addFraudAnalysisResult(riskService.assessRisk(it)) }
-            .letIf { _: ReadyForRoutingInitial, p -> tryToAuthorize2(p) }
-    }
-
-    private fun tryToAuthorize2(input: PaymentWrapper): PaymentWrapper
-    {
-        return input
-            .letIf { it: ReadyForRouting, p -> p.addRoutingResult(routingService.routeForPayment(it)) }
-            .letIf { it: ReadyForAuthorization, p -> p.addAuthorizeResponse(authorizeService.authorize(it)) }
-            .letIf { _: ReadyForRoutingRetry, p -> tryToAuthorize2(p) }
-    }
 }

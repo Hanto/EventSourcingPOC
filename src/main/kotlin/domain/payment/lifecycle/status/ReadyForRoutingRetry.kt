@@ -66,6 +66,10 @@ data class ReadyForRoutingRetry
                     sideEffectEvents = newSideEffectEvents.list,
                     attempt = attempt,
                     payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = null,
+                    threeDSStatus = null,
+                    pspReference = null,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 
@@ -92,7 +96,7 @@ data class ReadyForRoutingRetry
                 {
                     newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
 
-                    RejectedByRoutingRetry(
+                    RejectedByRoutingSameAccount(
                         version = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,

@@ -61,8 +61,12 @@ data class ReadyForRoutingInitial
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
-                    payload = payload,
                     attempt = attempt,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = null,
+                    threeDSStatus = null,
+                    pspReference = null,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 

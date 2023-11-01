@@ -24,13 +24,6 @@ class PaymentAdapter
     // FIELDS:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun retrieveRiskAssessment(events: List<PaymentEvent>): RiskAssessmentOutcome? =
-
-        events
-            .filterIsInstance<RiskEvaluatedEvent>()
-            .map { it.fraudAnalysisResult.toRiskAssessmentOutcome() }
-            .firstOrNull()
-
     private fun retrieveOperations(events: List<PaymentEvent>): List<AuthPaymentOperation>
     {
         val operations: MutableList<AuthPaymentOperation> = mutableListOf()
@@ -38,35 +31,43 @@ class PaymentAdapter
         events.foldIndexed(ReadyForPaymentRequest() as Payment) { index, previousState, event ->
 
             val currentState = previousState.apply(event, false)
-
-            when (currentState)
-            {
-                is AuthorizeInProgress -> if (isLastEvent(index, events)) addOperation(currentState, operations)
-                is AuthorizePending -> if (isLastEvent(index, events)) addOperation(currentState, operations)
-                is AuthorizeEnded -> addOperation(currentState, operations)
-            }
+            val isLastEvent = isLastEvent(index, events)
             print(currentState)
+
+            addOperation(currentState, operations, isLastEvent)
+
             currentState
         }
         return operations
     }
+
+    private fun retrieveRiskAssessment(events: List<PaymentEvent>): RiskAssessmentOutcome? =
+
+        events
+            .filterIsInstance<RiskEvaluatedEvent>()
+            .map { it.fraudAnalysisResult.toRiskAssessmentOutcome() }
+            .firstOrNull()
 
     private fun isLastEvent(index: Int, events: List<PaymentEvent>) = index == events.size - 1
 
     // OPERATIONS:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun addOperation(payment: AuthorizeInProgress, operations: MutableList<AuthPaymentOperation>)
+    private fun addOperation(payment: Payment, operations: MutableList<AuthPaymentOperation>, isLastEvent: Boolean)
     {
         when (payment)
         {
+            // IN PROGRESS STATES:
+            //----------------------------------------------------------------------------------------------------------
+
             is ReadyForPaymentRequest -> null
             is ReadyForRisk -> null
             is ReadyForRoutingInitial -> null
             is ReadyForConfirm -> null
             is ReadyForRoutingRetry -> null
-            is ReadyForAuthorization -> AuthPaymentOperation(
+            is ReadyForAuthorization -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
+                pspReference = null,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = null,
@@ -74,17 +75,14 @@ class PaymentAdapter
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.NOT_APPLICABLE,
                 status = AuthPaymentOperation.Status.PENDING,
                 transactionType = payment.payload.authorizationType.toTransactionType()
-            )
+            ) else null
 
-        }?.let { operations.add(it) }
-    }
+            // PENDING STATES:
+            //----------------------------------------------------------------------------------------------------------
 
-    private fun addOperation(payment: AuthorizePending, operations: MutableList<AuthPaymentOperation>)
-    {
-        when (payment)
-        {
-            is ReadyForClientActionResponse -> AuthPaymentOperation(
+            is ReadyForClientActionResponse -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
+                pspReference = payment.pspReference.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = payment.threeDSStatus.toECI(),
@@ -92,19 +90,16 @@ class PaymentAdapter
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.PENDING,
                 status = AuthPaymentOperation.Status.PENDING,
                 transactionType = payment.payload.authorizationType.toTransactionType()
-            )
+            ) else null
 
-        }.let { operations.add(it) }
-    }
+            // FINAL STATES:
+            //----------------------------------------------------------------------------------------------------------
 
-    private fun addOperation(payment: AuthorizeEnded, operations: MutableList<AuthPaymentOperation>)
-    {
-        when (payment)
-        {
             is RejectedByGatewayAndNotRetriable -> null
 
             is Authorized -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
+                pspReference = payment.pspReference.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = payment.threeDSStatus.toECI(),
@@ -115,7 +110,8 @@ class PaymentAdapter
             )
             is Failed -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                reference =payment.attemptReference().value,
+                pspReference = payment.pspReference?.value,
+                reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = payment.threeDSStatus.toECI(),
                 exemption = payment.threeDSStatus.toExemption(),
@@ -125,6 +121,7 @@ class PaymentAdapter
             )
             is RejectedByGateway -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
+                pspReference = payment.pspReference.value,
                 reference =payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = payment.threeDSStatus.toECI(),
@@ -135,6 +132,7 @@ class PaymentAdapter
             )
             is RejectedByRisk -> AuthPaymentOperation(
                 paymentAccount = null,
+                pspReference = null,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = null,
@@ -145,6 +143,7 @@ class PaymentAdapter
             )
             is RejectedByRouting -> AuthPaymentOperation(
                 paymentAccount = null,
+                pspReference = null,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = null,
@@ -153,16 +152,7 @@ class PaymentAdapter
                 status = AuthPaymentOperation.Status.KO,
                 transactionType = payment.payload.authorizationType.toTransactionType()
             )
-            is RejectedByRoutingRetry -> AuthPaymentOperation(
-                paymentAccount = payment.paymentAccount,
-                reference = payment.attemptReference().value,
-                retry = payment.attempt.didRetry(),
-                eci = null,
-                exemption = AuthPaymentOperation.Exemption.NotRequested,
-                authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
-                status = AuthPaymentOperation.Status.KO,
-                transactionType = payment.payload.authorizationType.toTransactionType()
-            )
+            is RejectedByRoutingSameAccount -> null
 
         }?.let { operations.add(it) }
     }

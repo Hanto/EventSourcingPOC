@@ -5,6 +5,7 @@ import domain.services.routing.PaymentAccount
 data class AuthPaymentOperation
 (
     val paymentAccount: PaymentAccount?,
+    val pspReference: String?,
     val reference: String,
     val retry: Boolean,
     val eci: String?,

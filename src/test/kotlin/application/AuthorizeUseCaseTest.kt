@@ -50,15 +50,15 @@ class AuthorizeUseCaseTest
 
         val threeDSStatus = ThreeDSStatus.NoThreeDS
 
-        val authReject = AuthorizeResponse.Reject(threeDSStatus,"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
-        val authSuccess = AuthorizeResponse.Success(threeDSStatus)
+        val authReject = AuthorizeResponse.Reject(threeDSStatus, PSPReference("pspReference"),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
+        val authSuccess = AuthorizeResponse.Success(threeDSStatus, PSPReference("pspReference"))
 
         every { riskService.assessRisk(any()) }
             .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.FRICTIONLESS) )
 
         every { routingService.routeForPayment(any()) }
             .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
             .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id3"))) )
 
         every { authorizationGateway.authorize(any()) }
@@ -96,9 +96,9 @@ class AuthorizeUseCaseTest
             eci = ECI(5)
         )
 
-        val authReject = AuthorizeResponse.Reject(ThreeDSStatus.ThreeDS(threeDSInformation),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
-        val authClientAction = AuthorizeResponse.ClientActionRequested(ThreeDSStatus.PendingThreeDS, ClientAction(ActionType.CHALLENGE))
-        val authSuccess = AuthorizeResponse.Success(ThreeDSStatus.ThreeDS(threeDSInformation))
+        val authReject = AuthorizeResponse.Reject(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
+        val authClientAction = AuthorizeResponse.ClientActionRequested(ThreeDSStatus.PendingThreeDS, PSPReference("pspReference"), ClientAction(ActionType.CHALLENGE))
+        val authSuccess = AuthorizeResponse.Success(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"), )
 
         every { riskService.assessRisk(any()) }
             .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
@@ -143,9 +143,9 @@ class AuthorizeUseCaseTest
             eci = ECI(5)
         )
 
-        val authReject = AuthorizeResponse.Reject(ThreeDSStatus.ThreeDS(threeDSInformation),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
-        val authClientAction = AuthorizeResponse.ClientActionRequested(ThreeDSStatus.PendingThreeDS, ClientAction(ActionType.CHALLENGE))
-        val authSuccess = AuthorizeResponse.Success(ThreeDSStatus.ThreeDS(threeDSInformation))
+        val authReject = AuthorizeResponse.Reject(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"), "errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
+        val authClientAction = AuthorizeResponse.ClientActionRequested(ThreeDSStatus.PendingThreeDS, PSPReference("pspReference"), ClientAction(ActionType.CHALLENGE))
+        val authSuccess = AuthorizeResponse.Success(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"), )
 
         every { riskService.assessRisk(any()) }
             .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )

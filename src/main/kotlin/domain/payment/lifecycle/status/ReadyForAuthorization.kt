@@ -74,7 +74,8 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    threeDSStatus = event.authorizeResponse.threeDSStatus
+                    threeDSStatus = event.authorizeResponse.threeDSStatus,
+                    pspReference = event.authorizeResponse.pspReference,
                 )
             }
 
@@ -92,7 +93,8 @@ data class ReadyForAuthorization
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
                     clientAction = event.authorizeResponse.clientAction,
-                    threeDSStatus = event.authorizeResponse.threeDSStatus
+                    threeDSStatus = event.authorizeResponse.threeDSStatus,
+                    pspReference = event.authorizeResponse.pspReference,
                 )
             }
 
@@ -108,7 +110,8 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    threeDSStatus = event.authorizeResponse.threeDSStatus
+                    threeDSStatus = event.authorizeResponse.threeDSStatus,
+                    pspReference = event.authorizeResponse.pspReference,
                 )
             }
 
@@ -122,6 +125,10 @@ data class ReadyForAuthorization
                     sideEffectEvents = newSideEffectEvents.list,
                     attempt = attempt,
                     payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    threeDSStatus = event.authorizeResponse.threeDSStatus,
+                    pspReference = event.authorizeResponse.pspReference,
                     reason = "exception on authorization"
                 )
             }

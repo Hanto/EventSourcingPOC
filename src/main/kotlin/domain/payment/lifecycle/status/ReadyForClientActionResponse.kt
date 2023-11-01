@@ -9,6 +9,7 @@ import domain.payment.lifecycle.events.ReturnedFromClientEvent
 import domain.payment.payload.PaymentPayload
 import domain.services.fraud.RiskAssessmentOutcome
 import domain.services.gateway.ClientAction
+import domain.services.gateway.PSPReference
 import domain.services.gateway.ThreeDSStatus
 import domain.services.routing.PaymentAccount
 import java.util.logging.Logger
@@ -23,7 +24,8 @@ data class ReadyForClientActionResponse
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
     val clientAction: ClientAction,
-    val threeDSStatus: ThreeDSStatus
+    val threeDSStatus: ThreeDSStatus,
+    val pspReference: PSPReference,
 
 ): AbstractPayment(), Payment, AuthorizePending
 {
@@ -65,6 +67,8 @@ data class ReadyForClientActionResponse
             riskAssessmentOutcome = riskAssessmentOutcome,
             attempt = attempt,
             paymentAccount = paymentAccount,
+            threeDSStatus = threeDSStatus,
+            pspReference = pspReference,
             confirmParameters = event.confirmParameters
         )
     }
