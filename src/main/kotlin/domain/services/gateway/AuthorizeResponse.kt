@@ -1,7 +1,7 @@
 package domain.services.gateway
 
 import domain.payment.data.PSPReference
-import domain.payment.data.threedsinformation.ThreeDSInformation
+import domain.payment.data.threedstatus.ThreeDSStatus
 
 sealed interface AuthorizeResponse
 {
@@ -43,13 +43,6 @@ sealed interface AuthorizeResponse
         val clientAction: ClientAction
 
     ) : AuthorizeResponse
-}
-
-sealed class ThreeDSStatus
-{
-    data object PendingThreeDS: ThreeDSStatus()
-    data object NoThreeDS: ThreeDSStatus()
-    data class ThreeDS(val info: ThreeDSInformation): ThreeDSStatus()
 }
 
 data class ClientAction

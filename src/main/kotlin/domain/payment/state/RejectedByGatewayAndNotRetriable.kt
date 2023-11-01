@@ -18,7 +18,7 @@ data class RejectedByGatewayAndNotRetriable
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
 
-    ) : AbstractPayment(), Payment, Rejected, AuthorizeEnded
+) : AbstractPayment(), Payment, Rejected, AuthorizeEnded
 {
     override fun payload(): PaymentPayload = payload
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this

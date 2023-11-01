@@ -6,13 +6,11 @@ import domain.payment.data.paymentaccount.AccountId
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
-import domain.payment.data.threedsinformation.ECI
-import domain.payment.data.threedsinformation.ExemptionStatus
-import domain.payment.data.threedsinformation.ThreeDSInformation
-import domain.payment.data.threedsinformation.ThreeDSVersion
+import domain.payment.data.threedstatus.*
 import domain.services.fraud.FraudAnalysisResult
 import domain.services.fraud.RiskAssessmentService
 import domain.services.gateway.*
+import domain.services.gateway.AuthorizeResponse.*
 import domain.services.routing.RoutingResult
 import domain.services.routing.RoutingService
 import infrastructure.EventPublisherMemory
@@ -56,8 +54,8 @@ class AuthorizeUseCaseTest
 
         val threeDSStatus = ThreeDSStatus.NoThreeDS
 
-        val authReject = AuthorizeResponse.Reject(threeDSStatus, PSPReference("pspReference"),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
-        val authSuccess = AuthorizeResponse.Success(threeDSStatus, PSPReference("pspReference"))
+        val authReject = Reject(threeDSStatus, PSPReference("pspReference"),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
+        val authSuccess = Success(threeDSStatus, PSPReference("pspReference"))
 
         every { riskService.assessRisk(any()) }
             .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.FRICTIONLESS) )
@@ -94,9 +92,9 @@ class AuthorizeUseCaseTest
             eci = ECI(5)
         )
 
-        val authReject = AuthorizeResponse.Reject(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
-        val authClientAction = AuthorizeResponse.ClientActionRequested(ThreeDSStatus.PendingThreeDS, PSPReference("pspReference"), ClientAction(ActionType.CHALLENGE))
-        val authSuccess = AuthorizeResponse.Success(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"), )
+        val authReject = Reject(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
+        val authClientAction = ClientActionRequested(ThreeDSStatus.PendingThreeDS, PSPReference("pspReference"), ClientAction(ActionType.CHALLENGE))
+        val authSuccess = Success(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"), )
 
         every { riskService.assessRisk(any()) }
             .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
@@ -133,9 +131,9 @@ class AuthorizeUseCaseTest
             eci = ECI(5)
         )
 
-        val authReject = AuthorizeResponse.Reject(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"), "errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
-        val authClientAction = AuthorizeResponse.ClientActionRequested(ThreeDSStatus.PendingThreeDS, PSPReference("pspReference"), ClientAction(ActionType.CHALLENGE))
-        val authSuccess = AuthorizeResponse.Success(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"), )
+        val authReject = Reject(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference"), "errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
+        val authClientAction = ClientActionRequested(ThreeDSStatus.PendingThreeDS, PSPReference("pspReference"), ClientAction(ActionType.CHALLENGE))
+        val authSuccess = Success(ThreeDSStatus.ThreeDS(threeDSInformation), PSPReference("pspReference") )
 
         every { riskService.assessRisk(any()) }
             .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )

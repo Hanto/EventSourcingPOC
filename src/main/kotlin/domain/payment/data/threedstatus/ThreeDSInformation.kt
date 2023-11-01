@@ -1,4 +1,4 @@
-package domain.payment.data.threedsinformation
+package domain.payment.data.threedstatus
 
 data class ThreeDSInformation
 (

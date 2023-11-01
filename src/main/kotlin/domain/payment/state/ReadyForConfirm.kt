@@ -7,12 +7,12 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
+import domain.payment.data.threedstatus.ThreeDSStatus
 import domain.payment.paymentevents.ConfirmationRequestedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
 import domain.services.gateway.AuthorizeResponse
-import domain.services.gateway.ThreeDSStatus
 import java.util.logging.Logger
 
 data class ReadyForConfirm

@@ -25,9 +25,9 @@ data class ReadyForAuthorization
 
 ): AbstractPayment(), Payment, AuthorizeInProgress
 {
-    override fun payload(): PaymentPayload = payload
     private val log = Logger.getLogger(ReadyForAuthorization::class.java.name)
 
+    override fun payload(): PaymentPayload = payload
     fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
     {
         val event = AuthorizationRequestedEvent(

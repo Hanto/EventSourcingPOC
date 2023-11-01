@@ -2,12 +2,12 @@ package infrastructure.repositories.paymentrepositoryold
 
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.paymentpayload.AuthorizationType
-import domain.payment.data.threedsinformation.ExemptionStatus
+import domain.payment.data.threedstatus.ExemptionStatus
+import domain.payment.data.threedstatus.ThreeDSStatus
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.RiskEvaluatedEvent
 import domain.payment.state.*
 import domain.services.fraud.FraudAnalysisResult
-import domain.services.gateway.ThreeDSStatus
 
 class PaymentAdapter
 {
