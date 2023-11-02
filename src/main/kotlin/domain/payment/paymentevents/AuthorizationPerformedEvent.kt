@@ -4,7 +4,7 @@ import domain.payment.data.Version
 import domain.payment.data.paymentpayload.PaymentId
 import domain.services.gateway.AuthorizeResponse
 
-data class ConfirmationRequestedEvent
+data class AuthorizationPerformedEvent
 (
     override val id: PaymentEventId = PaymentEventId(),
     override val paymentId: PaymentId,
@@ -12,3 +12,5 @@ data class ConfirmationRequestedEvent
     val authorizeResponse: AuthorizeResponse
 
 ): PaymentEvent
+{
+}

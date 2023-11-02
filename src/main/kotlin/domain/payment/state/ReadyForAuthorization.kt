@@ -6,7 +6,7 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
-import domain.payment.paymentevents.AuthorizationRequestedEvent
+import domain.payment.paymentevents.AuthorizationPerformedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
@@ -30,7 +30,7 @@ data class ReadyForAuthorization
     override fun payload(): PaymentPayload = payload
     fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
     {
-        val event = AuthorizationRequestedEvent(
+        val event = AuthorizationPerformedEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
@@ -42,14 +42,14 @@ data class ReadyForAuthorization
 
         when (event)
         {
-            is AuthorizationRequestedEvent -> apply(event, isNew)
+            is AuthorizationPerformedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: AuthorizationRequestedEvent, isNew: Boolean): Payment
+    private fun apply(event: AuthorizationPerformedEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)

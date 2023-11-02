@@ -6,7 +6,7 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
-import domain.payment.paymentevents.ConfirmationRequestedEvent
+import domain.payment.paymentevents.ConfirmationPerformedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
@@ -32,7 +32,7 @@ data class ReadyForConfirm
     override fun payload(): PaymentPayload = payload
     fun addConfirmResponse(authorizeResponse: AuthorizeResponse): Payment
     {
-        val event = ConfirmationRequestedEvent(
+        val event = ConfirmationPerformedEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
@@ -44,14 +44,14 @@ data class ReadyForConfirm
 
         when (event)
         {
-            is ConfirmationRequestedEvent -> apply(event, isNew)
+            is ConfirmationPerformedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: ConfirmationRequestedEvent, isNew: Boolean): Payment
+    private fun apply(event: ConfirmationPerformedEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)

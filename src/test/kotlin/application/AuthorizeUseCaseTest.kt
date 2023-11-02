@@ -57,7 +57,6 @@ class AuthorizeUseCaseTest
         {
             val threeDSStatus = ThreeDSStatus.NoThreeDS
 
-            val authReject = Reject(threeDSStatus, PSPReference("pspReference"),"errorDescription", "errorCode", ErrorReason.AUTHORIZATION_ERROR, RejectionUseCase.UNDEFINED)
             val authSuccess = Success(threeDSStatus, PSPReference("pspReference"))
 
             every { riskService.assessRisk(any()) }
@@ -193,13 +192,53 @@ class AuthorizeUseCaseTest
                     @Test
                     fun whenRetryButSameAccount()
                     {
+                        val authClientAction = ClientActionRequested(
+                            threeDSStatus = ThreeDSStatus.PendingThreeDS,
+                            pspReference = PSPReference("pspReference"),
+                            clientAction = ClientAction(ActionType.CHALLENGE)
+                        )
+                        val authReject = Reject(
+                            threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
+                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
+                                version = ThreeDSVersion("2.1"),
+                                eci = ECI(5))),
+                            pspReference = PSPReference("pspReference"),
+                            errorDescription = "errorDescription",
+                            errorCode = "errorCode",
+                            errorReason = ErrorReason.AUTHORIZATION_ERROR,
+                            rejectionUseCase =  RejectionUseCase.UNDEFINED
+                        )
+                        val authSuccess = Success(
+                            threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
+                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
+                                version = ThreeDSVersion("2.1"),
+                                eci = ECI(2))),
+                            pspReference = PSPReference("pspReference")
+                        )
 
+                        every { riskService.assessRisk(any()) }
+                            .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
+
+                        every { routingService.routeForPayment(any()) }
+                            .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+                            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+
+                        every { authorizationGateway.authorize(any()) }
+                            .returns( authClientAction )
+                            .andThen( authSuccess )
+
+                        every { authorizationGateway.confirm( any()) }
+                            .returns( authReject )
+
+                        underTest.authorize(paymentPayload)
+                        underTest.confirm(paymentId, mapOf("ECI" to "05"))
+
+                        printPaymentInfo(paymentId)
                     }
 
                     @Test
                     fun whenRetryAndDifferentAccount()
                     {
-
                         val authClientAction = ClientActionRequested(
                             threeDSStatus = ThreeDSStatus.PendingThreeDS,
                             pspReference = PSPReference("pspReference"),
@@ -230,7 +269,6 @@ class AuthorizeUseCaseTest
                         every { routingService.routeForPayment(any()) }
                             .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
                             .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
-                            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id3"))) )
 
                         every { authorizationGateway.authorize(any()) }
                             .returns( authClientAction )
@@ -249,7 +287,41 @@ class AuthorizeUseCaseTest
                 @Test
                 fun whenSecondRetry()
                 {
+                    val authClientAction = ClientActionRequested(
+                        threeDSStatus = ThreeDSStatus.PendingThreeDS,
+                        pspReference = PSPReference("pspReference"),
+                        clientAction = ClientAction(ActionType.CHALLENGE)
+                    )
+                    val authReject = Reject(
+                        threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
+                            exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
+                            version = ThreeDSVersion("2.1"),
+                            eci = ECI(5))),
+                        pspReference = PSPReference("pspReference"),
+                        errorDescription = "errorDescription",
+                        errorCode = "errorCode",
+                        errorReason = ErrorReason.AUTHORIZATION_ERROR,
+                        rejectionUseCase =  RejectionUseCase.UNDEFINED
+                    )
 
+                    every { riskService.assessRisk(any()) }
+                        .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
+
+                    every { routingService.routeForPayment(any()) }
+                        .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+                        .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+
+                    every { authorizationGateway.authorize(any()) }
+                        .returns( authClientAction )
+                        .andThen( authReject )
+
+                    every { authorizationGateway.confirm( any()) }
+                        .returns( authReject )
+
+                    underTest.authorize(paymentPayload)
+                    underTest.confirm(paymentId, mapOf("ECI" to "05"))
+
+                    printPaymentInfo(paymentId)
                 }
             }
         }
