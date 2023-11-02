@@ -1,17 +1,15 @@
 package domain.payment.state
 
 import domain.payment.data.Attempt
-import domain.payment.data.PSPReference
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
-import domain.payment.data.threedstatus.ThreeDSStatus
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.ReturnedFromClientEvent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
-import domain.services.gateway.ClientAction
+import domain.services.gateway.AuthorizeResponse
 import java.util.logging.Logger
 
 data class ReadyForClientActionResponse
@@ -23,11 +21,9 @@ data class ReadyForClientActionResponse
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val clientAction: ClientAction,
-    val threeDSStatus: ThreeDSStatus,
-    val pspReference: PSPReference,
+    val authorizeResponse: AuthorizeResponse,
 
-    ): AbstractPayment(), Payment, AuthorizePending
+): AbstractPayment(), Payment, AuthorizePending
 {
     private val log = Logger.getLogger(ReadyForClientActionResponse::class.java.name)
 
@@ -67,8 +63,7 @@ data class ReadyForClientActionResponse
             riskAssessmentOutcome = riskAssessmentOutcome,
             attempt = attempt,
             paymentAccount = paymentAccount,
-            threeDSStatus = threeDSStatus,
-            pspReference = pspReference,
+            authorizeResponse = authorizeResponse,
             confirmParameters = event.confirmParameters
         )
     }

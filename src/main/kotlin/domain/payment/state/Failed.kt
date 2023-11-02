@@ -1,14 +1,13 @@
 package domain.payment.state
 
 import domain.payment.data.Attempt
-import domain.payment.data.PSPReference
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
-import domain.payment.data.threedstatus.ThreeDSStatus
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.SideEffectEvent
+import domain.services.gateway.AuthorizeResponse
 
 data class Failed
 (
@@ -19,11 +18,10 @@ data class Failed
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome?,
     val paymentAccount: PaymentAccount?,
-    val threeDSStatus: ThreeDSStatus?,
-    val pspReference: PSPReference?,
+    val authorizeResponse: AuthorizeResponse?,
     val reason: String,
 
-    ): AbstractPayment(), Payment, AuthorizeEnded
+): AbstractPayment(), Payment, AuthorizeEnded
 {
     override fun payload(): PaymentPayload = payload
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this

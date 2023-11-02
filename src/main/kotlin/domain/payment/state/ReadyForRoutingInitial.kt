@@ -19,7 +19,7 @@ data class ReadyForRoutingInitial
     val payload: PaymentPayload,
     override val riskAssessmentOutcome: RiskAssessmentOutcome,
 
-    ): AbstractPayment(), Payment, ReadyForRouting, AuthorizeInProgress
+): AbstractPayment(), Payment, ReadyForRouting, AuthorizeInProgress
 {
     private val log = Logger.getLogger(ReadyForRoutingInitial::class.java.name)
 
@@ -65,8 +65,7 @@ data class ReadyForRoutingInitial
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = null,
-                    threeDSStatus = null,
-                    pspReference = null,
+                    authorizeResponse = null,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 

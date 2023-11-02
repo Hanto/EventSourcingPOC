@@ -1,18 +1,17 @@
 package domain.payment.state
 
 import domain.payment.data.Attempt
-import domain.payment.data.PSPReference
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
-import domain.payment.data.threedstatus.ThreeDSStatus
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.TriedToRetryEvent
 import domain.payment.sideeffectevents.PaymentRejectedEvent
 import domain.payment.sideeffectevents.PaymentRetriedEvent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
+import domain.services.gateway.AuthorizeResponse
 import java.util.logging.Logger
 
 data class RejectedByGateway
@@ -24,10 +23,9 @@ data class RejectedByGateway
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val threeDSStatus: ThreeDSStatus,
-    val pspReference: PSPReference
+    val authorizeResponse: AuthorizeResponse,
 
-) : AbstractPayment(), Payment, Rejected, AuthorizeEnded
+    ) : AbstractPayment(), Payment, Rejected, AuthorizeEnded
 {
     private val log = Logger.getLogger(ReadyForRoutingRetry::class.java.name)
 

@@ -9,6 +9,7 @@ import domain.payment.paymentevents.RiskEvaluatedEvent
 import domain.payment.state.*
 import domain.services.fraud.FraudAnalysisResult
 import infrastructure.repositories.paymentrepositoryold.paymentdata.AuthPaymentOperation
+import infrastructure.repositories.paymentrepositoryold.paymentdata.AuthPaymentOperation.Exemption
 import infrastructure.repositories.paymentrepositoryold.paymentdata.PaymentData
 
 class PaymentAdapter
@@ -72,7 +73,7 @@ class PaymentAdapter
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = null,
-                exemption = AuthPaymentOperation.Exemption.NotRequested,
+                exemption = Exemption.NotRequested,
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.NOT_APPLICABLE,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -84,11 +85,11 @@ class PaymentAdapter
 
             is ReadyForClientActionResponse -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.pspReference.value,
+                pspReference = payment.authorizeResponse.pspReference.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.threeDSStatus.toECI(),
-                exemption = payment.threeDSStatus.toExemption(),
+                eci = payment.authorizeResponse.threeDSStatus.toECI(),
+                exemption = payment.authorizeResponse.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.PENDING,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -102,11 +103,11 @@ class PaymentAdapter
 
             is Authorized -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.pspReference.value,
+                pspReference = payment.authorizeResponse.pspReference.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.threeDSStatus.toECI(),
-                exemption = payment.threeDSStatus.toExemption(),
+                eci = payment.authorizeResponse.threeDSStatus.toECI(),
+                exemption = payment.authorizeResponse.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -114,11 +115,11 @@ class PaymentAdapter
             )
             is Failed -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.pspReference?.value,
+                pspReference = payment.authorizeResponse?.pspReference?.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.threeDSStatus.toECI(),
-                exemption = payment.threeDSStatus.toExemption(),
+                eci = payment.authorizeResponse?.threeDSStatus?.toECI(),
+                exemption = payment.authorizeResponse?.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -126,11 +127,11 @@ class PaymentAdapter
             )
             is RejectedByGateway -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.pspReference.value,
+                pspReference = payment.authorizeResponse.pspReference.value,
                 reference =payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.threeDSStatus.toECI(),
-                exemption = payment.threeDSStatus.toExemption(),
+                eci = payment.authorizeResponse.threeDSStatus.toECI(),
+                exemption = payment.authorizeResponse.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -142,7 +143,7 @@ class PaymentAdapter
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = null,
-                exemption = AuthPaymentOperation.Exemption.NotRequested,
+                exemption = Exemption.NotRequested,
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -154,7 +155,7 @@ class PaymentAdapter
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
                 eci = null,
-                exemption = AuthPaymentOperation.Exemption.NotRequested,
+                exemption = Exemption.NotRequested,
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -180,22 +181,21 @@ class PaymentAdapter
 
         when (this)
         {
-            null -> AuthPaymentOperation.Exemption.NotRequested
-            is ThreeDSStatus.NoThreeDS -> AuthPaymentOperation.Exemption.NotRequested
-            is ThreeDSStatus.PendingThreeDS -> AuthPaymentOperation.Exemption.NotRequested
+            null -> Exemption.NotRequested
+            is ThreeDSStatus.NoThreeDS -> Exemption.NotRequested
+            is ThreeDSStatus.PendingThreeDS -> Exemption.NotRequested
             is ThreeDSStatus.ThreeDS -> when (this.info.exemptionStatus)
             {
-                is ExemptionStatus.ExemptionNotRequested -> AuthPaymentOperation.Exemption.NotRequested
-                is ExemptionStatus.ExemptionAccepted -> AuthPaymentOperation.Exemption.Accepted
-                is ExemptionStatus.ExemptionNotAccepted -> AuthPaymentOperation.Exemption.NotAccepted
+                is ExemptionStatus.ExemptionNotRequested -> Exemption.NotRequested
+                is ExemptionStatus.ExemptionAccepted -> Exemption.Accepted
+                is ExemptionStatus.ExemptionNotAccepted -> Exemption.NotAccepted
             }
         }
 
-    private fun ThreeDSStatus?.toECI() =
+    private fun ThreeDSStatus.toECI() =
 
         when (this)
         {
-            null -> null
             is ThreeDSStatus.NoThreeDS -> null
             is ThreeDSStatus.PendingThreeDS -> null
             is ThreeDSStatus.ThreeDS -> this.info.eci.value.toString()

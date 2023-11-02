@@ -68,8 +68,7 @@ data class ReadyForRoutingRetry
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = null,
-                    threeDSStatus = null,
-                    pspReference = null,
+                    authorizeResponse = null,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 
