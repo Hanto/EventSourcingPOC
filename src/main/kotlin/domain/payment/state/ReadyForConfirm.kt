@@ -83,7 +83,7 @@ data class ReadyForConfirm
             {
                 newSideEffectEvents.addIfNew(getClientActionEvent(event.authorizeResponse), isNew)
 
-                ReadyForClientActionResponse(
+                ReadyForClientAction(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,

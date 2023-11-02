@@ -12,7 +12,7 @@ import domain.payment.sideeffectevents.SideEffectEventList
 import domain.services.gateway.AuthorizeResponse
 import java.util.logging.Logger
 
-data class ReadyForClientActionResponse
+data class ReadyForClientAction
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -25,7 +25,7 @@ data class ReadyForClientActionResponse
 
 ): AbstractPayment(), Payment, AuthorizePending
 {
-    private val log = Logger.getLogger(ReadyForClientActionResponse::class.java.name)
+    private val log = Logger.getLogger(ReadyForClientAction::class.java.name)
 
     override fun payload(): PaymentPayload = payload
     fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment

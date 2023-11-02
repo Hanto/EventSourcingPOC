@@ -83,7 +83,7 @@ class PaymentAdapter
             // PENDING STATES:
             //----------------------------------------------------------------------------------------------------------
 
-            is ReadyForClientActionResponse -> if (isLastEvent) AuthPaymentOperation(
+            is ReadyForClientAction -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = payment.authorizeResponse.pspReference.value,
                 reference = payment.attemptReference().value,
@@ -110,7 +110,7 @@ class PaymentAdapter
                 exemption = payment.authorizeResponse.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
-                status = AuthPaymentOperation.Status.PENDING,
+                status = AuthPaymentOperation.Status.OK,
                 paymentClassName = payment.toPaymentClassName()
             )
             is Failed -> AuthPaymentOperation(
@@ -122,7 +122,7 @@ class PaymentAdapter
                 exemption = payment.authorizeResponse?.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
-                status = AuthPaymentOperation.Status.PENDING,
+                status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
             is RejectedByGateway -> AuthPaymentOperation(
@@ -134,7 +134,7 @@ class PaymentAdapter
                 exemption = payment.authorizeResponse.threeDSStatus.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
-                status = AuthPaymentOperation.Status.PENDING,
+                status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
             is RejectedByRisk -> AuthPaymentOperation(
@@ -146,7 +146,7 @@ class PaymentAdapter
                 exemption = Exemption.NotRequested,
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
-                status = AuthPaymentOperation.Status.PENDING,
+                status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
             is RejectedByRouting -> AuthPaymentOperation(
@@ -158,7 +158,7 @@ class PaymentAdapter
                 exemption = Exemption.NotRequested,
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
-                status = AuthPaymentOperation.Status.PENDING,
+                status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
             is RejectedByRoutingSameAccount -> null

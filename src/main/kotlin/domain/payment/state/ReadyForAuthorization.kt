@@ -83,7 +83,7 @@ data class ReadyForAuthorization
                 newSideEffectEvents.addIfNew(PaymentAuthenticationStartedEvent, isNew)
                 newSideEffectEvents.addIfNew(getClientActionEvent(event.authorizeResponse), isNew)
 
-                ReadyForClientActionResponse(
+                ReadyForClientAction(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,

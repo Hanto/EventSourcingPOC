@@ -35,7 +35,7 @@ sealed class AbstractPayment : Payment
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
-            is ReadyForClientActionResponse -> this.copy(
+            is ReadyForClientAction -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
@@ -109,7 +109,7 @@ sealed class AbstractPayment : Payment
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
-            is ReadyForClientActionResponse -> this.copy(
+            is ReadyForClientAction -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()

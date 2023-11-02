@@ -40,7 +40,7 @@ class AuthorizeUseCase
     fun confirm(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
     {
         return paymentRepository.load(paymentId)!!
-            .letAndSaveIf { it: ReadyForClientActionResponse -> it.addConfirmParameters(confirmParams) }
+            .letAndSaveIf { it: ReadyForClientAction -> it.addConfirmParameters(confirmParams) }
             .letAndSaveIf { it: ReadyForConfirm -> it.addConfirmResponse(authorizeService.confirm(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry() }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
