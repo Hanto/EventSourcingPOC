@@ -6,8 +6,8 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
+import domain.payment.paymentevents.AuthenticationAndAuthorizationPerformedEvent
 import domain.payment.paymentevents.AuthenticationPerformedEvent
-import domain.payment.paymentevents.AuthorizationPerformedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
@@ -40,12 +40,22 @@ data class ReadyForAuthentication
         return apply(event, isNew = true)
     }
 
+    fun addAuthenticationAndAuthorizationResponse(authenticateResponse: AuthenticateResponse): Payment
+    {
+        val event = AuthenticationAndAuthorizationPerformedEvent(
+            paymentId = payload.id,
+            version = version.nextEventVersion(paymentEvents),
+            authenticateResponse = authenticateResponse)
+
+        return apply(event, isNew = true)
+    }
+
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment =
 
         when (event)
         {
             is AuthenticationPerformedEvent -> apply(event, isNew)
-            is AuthorizationPerformedEvent -> apply(event, isNew)
+            is AuthenticationAndAuthorizationPerformedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
@@ -113,7 +123,90 @@ data class ReadyForAuthentication
                 )
             }
 
-            is AuthenticateResponse.AuthenticateAndAuthorizeClientAction ->
+            is AuthenticateResponse.AuthenticateReject ->
+            {
+                newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
+
+                RejectedByAuthentication(
+                    version = newVersion,
+                    paymentEvents= newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    authenticateResponse = event.authenticateResponse
+                )
+            }
+
+            is AuthenticateResponse.AuthenticateFail ->
+            {
+                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
+
+                Failed(
+                    version = newVersion,
+                    paymentEvents= newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    authenticateResponse = event.authenticateResponse,
+                    authorizeResponse = null,
+                    reason = "Authentication failed"
+                )
+            }
+        }
+    }
+
+    // APPLY EVENT: (AUTHENTICATION AND AUTHORIZATION)
+    //------------------------------------------------------------------------------------------------------------------
+
+    private fun apply(event: AuthenticationAndAuthorizationPerformedEvent, isNew: Boolean): Payment
+    {
+        val newVersion = version.updateToEventVersionIfReplay(event, isNew)
+        val newEvents = addEventIfNew(event, isNew)
+        val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
+
+        newSideEffectEvents.addIfNew(AuthorizationAttemptRequestedEvent, isNew)
+
+        return when (event.authenticateResponse)
+        {
+            is AuthenticateResponse.AuthenticateSuccess ->
+            {
+                ReadyForAuthorization(
+                    version = newVersion,
+                    paymentEvents= newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    authenticateResponse = event.authenticateResponse
+                )
+            }
+
+            is AuthenticateResponse.AuthenticateAndAuthorizeSuccess ->
+            {
+                newSideEffectEvents.addIfNew(PaymentAuthorizedEvent, isNew)
+
+                if (payload.paymentMethod is KlarnaPayment)
+                    newSideEffectEvents.addIfNew(KlarnaOrderPlacedEvent, isNew)
+
+                Authorized(
+                    version = newVersion,
+                    paymentEvents= newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    authenticateResponse = event.authenticateResponse,
+                    authorizeResponse = AuthorizeResponse.AuthorizeSuccess(event.authenticateResponse.pspReference)
+                )
+            }
+
+            is AuthenticateResponse.AuthenticateClientAction ->
             {
                 newSideEffectEvents.addIfNew(PaymentAuthenticationStartedEvent, isNew)
                 newSideEffectEvents.addIfNew(getClientActionEvent(event.authenticateResponse), isNew)
@@ -167,14 +260,6 @@ data class ReadyForAuthentication
     }
 
     private fun getClientActionEvent(authorizeStatus: AuthenticateResponse.AuthenticateClientAction): SideEffectEvent =
-
-        when(authorizeStatus.clientAction.type)
-        {
-            ActionType.FINGERPRINT -> BrowserFingerprintRequestedEvent
-            ActionType.REDIRECT, ActionType.CHALLENGE -> UserApprovalRequestedEvent
-        }
-
-    private fun getClientActionEvent(authorizeStatus: AuthenticateResponse.AuthenticateAndAuthorizeClientAction): SideEffectEvent =
 
         when(authorizeStatus.clientAction.type)
         {

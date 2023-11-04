@@ -9,7 +9,6 @@ import domain.repositories.PaymentRepositoryLegacy
 import domain.services.featureflag.FeatureFlag
 import domain.services.featureflag.FeatureFlag.Feature.DECOUPLED_AUTH
 import domain.services.fraud.RiskAssessmentService
-import domain.services.gateway.AuthenticateResponse
 import domain.services.gateway.AuthorizationGateway
 import domain.services.routing.RoutingService
 
@@ -39,7 +38,7 @@ class AuthorizeUseCase
     {
         return payment
             .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(it)) }
-            .letAndSaveIf { it: ReadyForAuthentication -> it.addAuthenticationResponse(authenticate(it)) }
+            .letAndSaveIf { it: ReadyForAuthentication -> authenticate(it) }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
@@ -60,12 +59,12 @@ class AuthorizeUseCase
     // PERSISTENCE:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun authenticate(readyForAuthentication: ReadyForAuthentication): AuthenticateResponse =
+    private fun authenticate(payment: ReadyForAuthentication): Payment =
 
         when (featureFlag.isFeatureEnabledFor(DECOUPLED_AUTH))
         {
-            true -> authorizeService.authenticate(readyForAuthentication)
-            false -> authorizeService.authenticateAndAuthorize(readyForAuthentication)
+            true -> payment.addAuthenticationResponse(authorizeService.authenticate(payment))
+            false -> payment.addAuthenticationAndAuthorizationResponse(authorizeService.authenticateAndAuthorize(payment))
         }
 
 

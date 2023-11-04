@@ -110,25 +110,6 @@ data class ReadyForAuthenticationConfirm
                 )
             }
 
-            is AuthenticateResponse.AuthenticateAndAuthorizeClientAction ->
-            {
-                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
-                newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
-
-                Failed(
-                    version = newVersion,
-                    paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents.list,
-                    attempt = attempt,
-                    payload = payload,
-                    riskAssessmentOutcome = riskAssessmentOutcome,
-                    paymentAccount = paymentAccount,
-                    authenticateResponse = event.authenticateResponse,
-                    authorizeResponse = null,
-                    reason = "Response not valid for decoupled Authenticate flow"
-                )
-            }
-
             is AuthenticateResponse.AuthenticateReject ->
             {
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)

@@ -12,8 +12,7 @@ import domain.services.featureflag.FeatureFlag.Feature.DECOUPLED_AUTH
 import domain.services.fraud.FraudAnalysisResult
 import domain.services.fraud.RiskAssessmentService
 import domain.services.gateway.*
-import domain.services.gateway.AuthenticateResponse.AuthenticateAndAuthorizeClientAction
-import domain.services.gateway.AuthenticateResponse.AuthenticateReject
+import domain.services.gateway.AuthenticateResponse.*
 import domain.services.routing.RoutingResult
 import domain.services.routing.RoutingService
 import infrastructure.EventPublisherMemory
@@ -69,7 +68,7 @@ class AuthorizeUseCaseTest
         {
             val threeDSStatus = ThreeDSStatus.NoThreeDS
 
-            val authSuccess = AuthenticateResponse.AuthenticateAndAuthorizeSuccess(
+            val authSuccess = AuthenticateAndAuthorizeSuccess(
                 threeDSStatus = threeDSStatus,
                 pspReference = PSPReference("pspReference"))
 
@@ -106,7 +105,7 @@ class AuthorizeUseCaseTest
                         errorReason = ErrorReason.AUTHORIZATION_ERROR,
                         rejectionUseCase =  RejectionUseCase.UNDEFINED
                     )
-                    val authSuccess = AuthenticateResponse.AuthenticateAndAuthorizeSuccess(
+                    val authSuccess = AuthenticateAndAuthorizeSuccess(
                         threeDSStatus = threeDSStatus,
                         pspReference = PSPReference("pspReference")
                     )
@@ -140,7 +139,7 @@ class AuthorizeUseCaseTest
                         errorReason = ErrorReason.AUTHORIZATION_ERROR,
                         rejectionUseCase =  RejectionUseCase.UNDEFINED
                     )
-                    val authSuccess = AuthenticateResponse.AuthenticateAndAuthorizeSuccess(
+                    val authSuccess = AuthenticateAndAuthorizeSuccess(
                         threeDSStatus = threeDSStatus,
                         pspReference = PSPReference("pspReference")
                     )
@@ -175,7 +174,7 @@ class AuthorizeUseCaseTest
                     errorReason = ErrorReason.AUTHORIZATION_ERROR,
                     rejectionUseCase =  RejectionUseCase.UNDEFINED
                 )
-                val authSuccess = AuthenticateResponse.AuthenticateAndAuthorizeSuccess(
+                val authSuccess = AuthenticateAndAuthorizeSuccess(
                     threeDSStatus = threeDSStatus,
                     pspReference = PSPReference("pspReference")
                 )
@@ -208,7 +207,7 @@ class AuthorizeUseCaseTest
         {
             val threeDSStatus =  ThreeDSStatus.PendingThreeDS
 
-            val authClientAction = AuthenticateAndAuthorizeClientAction(
+            val authClientAction = AuthenticateClientAction(
                 threeDSStatus = threeDSStatus,
                 pspReference = PSPReference("pspReference"),
                 clientAction = ClientAction(ActionType.CHALLENGE))
@@ -239,7 +238,7 @@ class AuthorizeUseCaseTest
                     @Test
                     fun whenRetryButSameAccount()
                     {
-                        val authClientAction = AuthenticateAndAuthorizeClientAction(
+                        val authClientAction = AuthenticateClientAction(
                             threeDSStatus = ThreeDSStatus.PendingThreeDS,
                             pspReference = PSPReference("pspReference"),
                             clientAction = ClientAction(ActionType.CHALLENGE)
@@ -255,7 +254,7 @@ class AuthorizeUseCaseTest
                             errorReason = ErrorReason.AUTHORIZATION_ERROR,
                             rejectionUseCase =  RejectionUseCase.UNDEFINED
                         )
-                        val authSuccess = AuthenticateResponse.AuthenticateAndAuthorizeSuccess(
+                        val authSuccess = AuthenticateAndAuthorizeSuccess(
                             threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
                                 exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
@@ -286,7 +285,7 @@ class AuthorizeUseCaseTest
                     @Test
                     fun whenRetryAndDifferentAccount()
                     {
-                        val authClientAction = AuthenticateAndAuthorizeClientAction(
+                        val authClientAction = AuthenticateClientAction(
                             threeDSStatus = ThreeDSStatus.PendingThreeDS,
                             pspReference = PSPReference("pspReference"),
                             clientAction = ClientAction(ActionType.CHALLENGE)
@@ -302,7 +301,7 @@ class AuthorizeUseCaseTest
                             errorReason = ErrorReason.AUTHORIZATION_ERROR,
                             rejectionUseCase =  RejectionUseCase.UNDEFINED
                         )
-                        val authSuccess = AuthenticateResponse.AuthenticateAndAuthorizeSuccess(
+                        val authSuccess = AuthenticateAndAuthorizeSuccess(
                             threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
                                 exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
@@ -334,7 +333,7 @@ class AuthorizeUseCaseTest
                 @Test
                 fun whenSecondRetry()
                 {
-                    val authClientAction = AuthenticateAndAuthorizeClientAction(
+                    val authClientAction = AuthenticateClientAction(
                         threeDSStatus = ThreeDSStatus.PendingThreeDS,
                         pspReference = PSPReference("pspReference"),
                         clientAction = ClientAction(ActionType.CHALLENGE)

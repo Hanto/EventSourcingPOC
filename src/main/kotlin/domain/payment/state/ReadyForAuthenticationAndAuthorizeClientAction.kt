@@ -20,7 +20,7 @@ data class ReadyForAuthenticationAndAuthorizeClientAction
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateResponse.AuthenticateAndAuthorizeClientAction,
+    val authenticateResponse: AuthenticateResponse.AuthenticateClientAction,
 
 ): AbstractPayment(), Payment, AuthorizeInProgress
 {

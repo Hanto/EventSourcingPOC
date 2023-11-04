@@ -22,7 +22,7 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateResponse.AuthenticateAndAuthorizeClientAction,
+    val authenticateResponse: AuthenticateResponse.AuthenticateClientAction,
 
 ): AbstractPayment(), Payment, AuthorizeInProgress
 {
@@ -94,25 +94,6 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
 
             is AuthenticateResponse.AuthenticateClientAction ->
             {
-                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
-                newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
-
-                Failed(
-                    version = newVersion,
-                    paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents.list,
-                    attempt = attempt,
-                    payload = payload,
-                    riskAssessmentOutcome = riskAssessmentOutcome,
-                    paymentAccount = paymentAccount,
-                    authenticateResponse = event.authenticateResponse,
-                    authorizeResponse = null,
-                    reason = "Response not valid for decoupled Authenticate flow"
-                )
-            }
-
-            is AuthenticateResponse.AuthenticateAndAuthorizeClientAction ->
-            {
                 newSideEffectEvents.addIfNew(getClientActionEvent(event.authenticateResponse), isNew)
 
                 ReadyForAuthenticationAndAuthorizeClientAction(
@@ -166,14 +147,6 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
     }
 
     private fun getClientActionEvent(authorizeStatus: AuthenticateResponse.AuthenticateClientAction): SideEffectEvent =
-
-        when(authorizeStatus.clientAction.type)
-        {
-            ActionType.FINGERPRINT -> BrowserFingerprintRequestedEvent
-            ActionType.REDIRECT, ActionType.CHALLENGE -> UserApprovalRequestedEvent
-        }
-
-    private fun getClientActionEvent(authorizeStatus: AuthenticateResponse.AuthenticateAndAuthorizeClientAction): SideEffectEvent =
 
         when(authorizeStatus.clientAction.type)
         {
