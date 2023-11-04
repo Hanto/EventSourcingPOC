@@ -78,9 +78,15 @@ data class ReadyForAuthenticationConfirm
                     authenticateResponse = event.authenticateResponse,
                 )
             }
+            // OPTIONAL FLOW: (TBD)
 
             is AuthenticateResponse.AuthenticateAndAuthorizeSuccess ->
             {
+                newSideEffectEvents.addIfNew(PaymentAuthorizedEvent, isNew)
+
+                if (payload.paymentMethod is KlarnaPayment)
+                    newSideEffectEvents.addIfNew(KlarnaOrderPlacedEvent, isNew)
+
                 Authorized(
                     version = newVersion,
                     paymentEvents= newEvents,

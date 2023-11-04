@@ -85,6 +85,7 @@ data class ReadyForAuthentication
                     authenticateResponse = event.authenticateResponse
                 )
             }
+            // OPTIONAL FLOW: (TBD)
 
             is AuthenticateResponse.AuthenticateAndAuthorizeSuccess ->
             {
@@ -172,9 +173,11 @@ data class ReadyForAuthentication
 
         return when (event.authenticateResponse)
         {
+            // INVALID RESPONSE: (TBD)
+
             is AuthenticateResponse.AuthenticateSuccess ->
             {
-                ReadyForAuthorization(
+                Failed(
                     version = newVersion,
                     paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -182,7 +185,9 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = event.authenticateResponse
+                    authenticateResponse = event.authenticateResponse,
+                    authorizeResponse = null,
+                    reason = "Response not valid for not-decoupled Authenticate flow"
                 )
             }
 
