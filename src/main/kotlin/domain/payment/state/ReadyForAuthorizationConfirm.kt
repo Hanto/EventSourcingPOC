@@ -6,14 +6,15 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
-import domain.payment.paymentevents.ConfirmationPerformedEvent
+import domain.payment.paymentevents.AuthenticationAndAuthorizationConfirmedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
 import domain.services.gateway.AuthorizeResponse
+import domain.services.gateway.GatewayResponse
 import java.util.logging.Logger
 
-data class ReadyForConfirm
+data class ReadyForAuthorizationConfirm
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -27,12 +28,12 @@ data class ReadyForConfirm
 
 ): AbstractPayment(), Payment, AuthorizeInProgress
 {
-    private val log = Logger.getLogger(ReadyForConfirm::class.java.name)
+    private val log = Logger.getLogger(ReadyForAuthorizationConfirm::class.java.name)
 
     override fun payload(): PaymentPayload = payload
     fun addConfirmResponse(authorizeResponse: AuthorizeResponse): Payment
     {
-        val event = ConfirmationPerformedEvent(
+        val event = AuthenticationAndAuthorizationConfirmedEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
@@ -44,14 +45,14 @@ data class ReadyForConfirm
 
         when (event)
         {
-            is ConfirmationPerformedEvent -> apply(event, isNew)
+            is AuthenticationAndAuthorizationConfirmedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: ConfirmationPerformedEvent, isNew: Boolean): Payment
+    private fun apply(event: AuthenticationAndAuthorizationConfirmedEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
@@ -59,7 +60,7 @@ data class ReadyForConfirm
 
         return when (event.authorizeResponse)
         {
-            is AuthorizeResponse.Success ->
+            is AuthorizeResponse.AuthorizeSuccess ->
             {
                 newSideEffectEvents.addIfNew(PaymentAuthorizedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
@@ -79,11 +80,11 @@ data class ReadyForConfirm
                 )
             }
 
-            is AuthorizeResponse.ClientActionRequested ->
+            is AuthorizeResponse.AuthorizeClientAction ->
             {
                 newSideEffectEvents.addIfNew(getClientActionEvent(event.authorizeResponse), isNew)
 
-                ReadyForClientAction(
+                ReadyForAuthorizationClientAction(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -95,7 +96,7 @@ data class ReadyForConfirm
                 )
             }
 
-            is AuthorizeResponse.Reject ->
+            is AuthorizeResponse.AuthorizeReject ->
             {
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
@@ -108,11 +109,11 @@ data class ReadyForConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authorizeResponse = event.authorizeResponse,
+                    gatewayResponse = event.authorizeResponse,
                 )
             }
 
-            is AuthorizeResponse.Fail ->
+            is AuthorizeResponse.AuthorizeFail ->
             {
                 newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
@@ -125,14 +126,14 @@ data class ReadyForConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authorizeResponse = event.authorizeResponse,
+                    gatewayResponse = event.authorizeResponse,
                     reason = "exception on authorization"
                 )
             }
         }
     }
 
-    private fun getClientActionEvent(authorizeStatus: AuthorizeResponse.ClientActionRequested): SideEffectEvent =
+    private fun getClientActionEvent(authorizeStatus: GatewayResponse.ClientActionRequested): SideEffectEvent =
 
         when(authorizeStatus.clientAction.type)
         {

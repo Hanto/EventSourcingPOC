@@ -11,10 +11,11 @@ import domain.payment.sideeffectevents.PaymentRejectedEvent
 import domain.payment.sideeffectevents.PaymentRetriedEvent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
-import domain.services.gateway.GatewayResponse
+import domain.services.gateway.AuthenticateResponse
+import domain.services.gateway.AuthorizeResponse
 import java.util.logging.Logger
 
-data class RejectedByGateway
+class RejectedByAuthorization
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -23,11 +24,12 @@ data class RejectedByGateway
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val gatewayResponse: GatewayResponse.Reject
+    val authenticationResponse: AuthenticateResponse,
+    val authorizeResponse: AuthorizeResponse,
 
 ): AbstractPayment(), Payment, Rejected, AuthorizeEnded
 {
-    private val log = Logger.getLogger(RejectedByGateway::class.java.name)
+    private val log = Logger.getLogger(RejectedByAuthentication::class.java.name)
 
     override fun payload(): PaymentPayload = payload
     fun prepareForRetry(): Payment
@@ -87,4 +89,3 @@ data class RejectedByGateway
         }
     }
 }
-

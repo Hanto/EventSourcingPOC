@@ -30,17 +30,17 @@ sealed class AbstractPayment : Payment
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
-            is ReadyForAuthorization -> this.copy(
+            is ReadyForAuthentication -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
-            is ReadyForClientAction -> this.copy(
+            is ReadyForAuthorizationClientAction -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
-            is ReadyForConfirm -> this.copy(
+            is ReadyForAuthorizationConfirm -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
@@ -56,6 +56,11 @@ sealed class AbstractPayment : Payment
                 sideEffectEvents = sideEffectEvents
             )
             is ReadyForRoutingRetry -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
+            is ReadyForAuthorization -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
@@ -81,6 +86,16 @@ sealed class AbstractPayment : Payment
                 sideEffectEvents = sideEffectEvents
             )
             is RejectedByRoutingSameAccount -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
+            is ReadyForAuthenticationClientAction ->  this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
+            is ReadyForAuthenticationConfirm ->  this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
@@ -104,17 +119,17 @@ sealed class AbstractPayment : Payment
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
-            is ReadyForAuthorization -> this.copy(
+            is ReadyForAuthentication -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
-            is ReadyForClientAction -> this.copy(
+            is ReadyForAuthorizationClientAction -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
-            is ReadyForConfirm -> this.copy(
+            is ReadyForAuthorizationConfirm -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
@@ -130,6 +145,11 @@ sealed class AbstractPayment : Payment
                 sideEffectEvents = emptyList()
             )
             is ReadyForRoutingRetry -> this.copy(
+                version = version,
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is ReadyForAuthorization -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
@@ -155,6 +175,16 @@ sealed class AbstractPayment : Payment
                 sideEffectEvents = emptyList()
             )
             is RejectedByRoutingSameAccount -> this.copy(
+                version = version,
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is ReadyForAuthenticationClientAction -> this.copy(
+                version = version,
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is ReadyForAuthenticationConfirm -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()

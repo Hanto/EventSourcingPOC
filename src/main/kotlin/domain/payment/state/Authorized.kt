@@ -18,7 +18,7 @@ data class Authorized
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authorizeResponse: AuthorizeResponse,
+    val authorizeResponse: AuthorizeResponse.AuthorizeSuccess,
 
 ): AbstractPayment(), Payment, AuthorizeEnded
 {

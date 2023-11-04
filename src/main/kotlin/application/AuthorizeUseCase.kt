@@ -32,7 +32,7 @@ class AuthorizeUseCase
     {
         return payment
             .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(payment)) }
-            .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
+            .letAndSaveIf { it: ReadyForAuthentication -> it.addAuthorizeResponse(authorizeService.authenticateAndAuthorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry() }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
     }
@@ -40,11 +40,45 @@ class AuthorizeUseCase
     fun confirm(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
     {
         return paymentRepository.load(paymentId)!!
-            .letAndSaveIf { it: ReadyForClientAction -> it.addConfirmParameters(confirmParams) }
-            .letAndSaveIf { it: ReadyForConfirm -> it.addConfirmResponse(authorizeService.confirm(it)) }
+            .letAndSaveIf { it: ReadyForAuthorizationClientAction -> it.addConfirmParameters(confirmParams) }
+            .letAndSaveIf { it: ReadyForAuthorizationConfirm -> it.addConfirmResponse(authorizeService.confirmAuthorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry() }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
     }
+
+    // DECOUPLED:
+    //------------------------------------------------------------------------------------------------------------------
+
+    fun authorizeDecoupled(paymentPayload: PaymentPayload): Payment
+    {
+        return ReadyForPaymentRequest()
+            .letAndSaveIf { it: ReadyForPaymentRequest -> it.addPaymentPayload(paymentPayload) }
+            .letAndSaveIf { it: ReadyForRisk -> it.addFraudAnalysisResult(riskService.assessRisk(it)) }
+            .letIf { it: ReadyForRoutingInitial -> tryToAuthorizeDecoupled(it) }
+    }
+
+    private fun tryToAuthorizeDecoupled(payment: ReadyForRouting): Payment
+    {
+        return payment
+            .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(payment)) }
+            .letAndSaveIf { it: ReadyForAuthentication -> it.addAuthenticationResponse(authorizeService.authenticate(it)) }
+            .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
+            .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
+            .letIf { it: ReadyForRoutingRetry -> tryToAuthorizeDecoupled(it) }
+    }
+
+    fun confirmDecoupled(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
+    {
+        return paymentRepository.load(paymentId)!!
+            .letAndSaveIf { it: ReadyForAuthenticationClientAction -> it.addConfirmParameters(confirmParams) }
+            .letAndSaveIf { it: ReadyForAuthenticationConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticate(it) )  }
+            .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
+            .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry() }
+            .letIf { it: ReadyForRoutingRetry -> tryToAuthorizeDecoupled(it) }
+    }
+
+    // PERSISTENCE:
+    //------------------------------------------------------------------------------------------------------------------
 
     private fun saveAndSendEvents(payment: Payment): Payment
     {

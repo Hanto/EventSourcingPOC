@@ -7,7 +7,7 @@ import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.SideEffectEvent
-import domain.services.gateway.AuthorizeResponse
+import domain.services.gateway.GatewayResponse
 
 data class Failed
 (
@@ -18,10 +18,10 @@ data class Failed
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome?,
     val paymentAccount: PaymentAccount?,
-    val authorizeResponse: AuthorizeResponse?,
+    val gatewayResponse: GatewayResponse?,
     val reason: String,
 
-): AbstractPayment(), Payment, AuthorizeEnded
+    ): AbstractPayment(), Payment, AuthorizeEnded
 {
     override fun payload(): PaymentPayload = payload
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this

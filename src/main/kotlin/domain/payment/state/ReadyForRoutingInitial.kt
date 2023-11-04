@@ -65,7 +65,7 @@ data class ReadyForRoutingInitial
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = null,
-                    authorizeResponse = null,
+                    gatewayResponse = null,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 
@@ -88,7 +88,7 @@ data class ReadyForRoutingInitial
             {
                 newSideEffectEvents.addIfNew(RoutingCompletedEvent, isNew)
 
-                ReadyForAuthorization(
+                ReadyForAuthentication(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,

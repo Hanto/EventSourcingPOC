@@ -9,10 +9,9 @@ import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.ReturnedFromClientEvent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
-import domain.services.gateway.AuthorizeResponse
-import java.util.logging.Logger
+import domain.services.gateway.AuthenticateResponse
 
-data class ReadyForClientAction
+data class ReadyForAuthenticationClientAction
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -21,13 +20,12 @@ data class ReadyForClientAction
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authorizeResponse: AuthorizeResponse,
+    val authenticateResponse: AuthenticateResponse.AuthenticateClientAction,
 
-): AbstractPayment(), Payment, AuthorizePending
+): AbstractPayment(), Payment, AuthorizeInProgress
 {
-    private val log = Logger.getLogger(ReadyForClientAction::class.java.name)
-
     override fun payload(): PaymentPayload = payload
+
     fun addConfirmParameters(confirmParameters: Map<String, Any>): Payment
     {
         val event = ReturnedFromClientEvent(
@@ -38,24 +36,13 @@ data class ReadyForClientAction
         return apply(event, isNew = true)
     }
 
-    override fun apply(event: PaymentEvent, isNew: Boolean): Payment =
-
-        when (event)
-        {
-            is ReturnedFromClientEvent -> apply(event, isNew)
-            else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
-        }
-
-    // APPLY EVENT:
-    //------------------------------------------------------------------------------------------------------------------
-
-    private fun apply(event: ReturnedFromClientEvent, isNew: Boolean): Payment
+    override fun apply(event: PaymentEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
         val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
-        return ReadyForConfirm(
+        return ReadyForAuthenticationConfirm(
             version = newVersion,
             paymentEvents = newEvents,
             sideEffectEvents = newSideEffectEvents.list,
@@ -63,8 +50,7 @@ data class ReadyForClientAction
             riskAssessmentOutcome = riskAssessmentOutcome,
             attempt = attempt,
             paymentAccount = paymentAccount,
-            authorizeResponse = authorizeResponse,
-            confirmParameters = event.confirmParameters
+            authenticateResponse = authenticateResponse,
         )
     }
 }
