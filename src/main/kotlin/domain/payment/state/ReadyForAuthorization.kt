@@ -9,7 +9,6 @@ import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
 import domain.payment.paymentevents.AuthorizationPerformedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
-import domain.services.gateway.ActionType
 import domain.services.gateway.AuthenticateResponse
 import domain.services.gateway.AuthorizeResponse
 import java.util.logging.Logger
@@ -74,24 +73,8 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
+                    authenticateResponse = authenticateResponse,
                     authorizeResponse = event.authorizeResponse,
-                )
-            }
-
-            is AuthorizeResponse.AuthorizeClientAction ->
-            {
-                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
-
-                Failed(
-                    version = newVersion,
-                    paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents.list,
-                    attempt = attempt,
-                    payload = payload,
-                    riskAssessmentOutcome = riskAssessmentOutcome,
-                    paymentAccount = paymentAccount,
-                    gatewayResponse = event.authorizeResponse,
-                    reason = "Client action not accepted"
                 )
             }
 
@@ -99,7 +82,7 @@ data class ReadyForAuthorization
             {
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
 
-                return RejectedByGateway(
+                return RejectedByAuthorization(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -107,7 +90,8 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    gatewayResponse = event.authorizeResponse,
+                    authenticateResponse = authenticateResponse,
+                    authorizeResponse = event.authorizeResponse,
                 )
             }
 
@@ -123,18 +107,11 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    gatewayResponse = event.authorizeResponse,
+                    authenticateResponse = authenticateResponse,
+                    authorizeResponse = event.authorizeResponse,
                     reason = "exception on authorization"
                 )
             }
         }
     }
-
-    private fun getClientActionEvent(authorizeStatus: AuthorizeResponse.AuthorizeClientAction): SideEffectEvent =
-
-        when(authorizeStatus.clientAction.type)
-        {
-            ActionType.FINGERPRINT -> BrowserFingerprintRequestedEvent
-            ActionType.REDIRECT, ActionType.CHALLENGE -> UserApprovalRequestedEvent
-        }
 }

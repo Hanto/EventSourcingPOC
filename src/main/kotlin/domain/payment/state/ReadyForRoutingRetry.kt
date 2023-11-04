@@ -68,7 +68,8 @@ data class ReadyForRoutingRetry
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = null,
-                    gatewayResponse = null,
+                    authenticateResponse = null,
+                    authorizeResponse = null,
                     reason = createRoutingErrorReason(event.routingResult))
             }
 

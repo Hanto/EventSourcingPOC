@@ -1,11 +1,9 @@
 package domain.services.gateway
 
 import domain.payment.data.PSPReference
-import domain.payment.data.threedstatus.ThreeDSStatus
 
 sealed interface GatewayResponse
 {
-    val threeDSStatus: ThreeDSStatus
     val pspReference: PSPReference
 
     sealed interface Success: GatewayResponse

@@ -11,7 +11,6 @@ import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
 import domain.services.gateway.AuthenticateResponse
-import domain.services.gateway.GatewayResponse
 import java.util.logging.Logger
 
 data class ReadyForAuthenticationConfirm
@@ -100,7 +99,7 @@ data class ReadyForAuthenticationConfirm
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
                 newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
 
-                return RejectedByGateway(
+                return RejectedByAuthentication(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -108,7 +107,7 @@ data class ReadyForAuthenticationConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    gatewayResponse = event.authenticateResponse,
+                    authenticateResponse = event.authenticateResponse,
                 )
             }
 
@@ -125,14 +124,15 @@ data class ReadyForAuthenticationConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    gatewayResponse = event.authenticateResponse,
+                    authenticateResponse = event.authenticateResponse,
+                    authorizeResponse = null,
                     reason = "exception on authorization"
                 )
             }
         }
     }
 
-    private fun getClientActionEvent(authorizeStatus: GatewayResponse.ClientActionRequested): SideEffectEvent =
+    private fun getClientActionEvent(authorizeStatus: AuthenticateResponse.AuthenticateClientAction): SideEffectEvent =
 
         when(authorizeStatus.clientAction.type)
         {

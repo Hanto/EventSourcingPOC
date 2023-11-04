@@ -3,44 +3,44 @@ package domain.services.gateway
 import domain.payment.data.PSPReference
 import domain.payment.data.threedstatus.ThreeDSStatus
 
-sealed interface AuthenticateResponse : GatewayResponse
+sealed interface AuthenticateResponse
 {
-    override val threeDSStatus: ThreeDSStatus
-    override val pspReference: PSPReference
+    val threeDSStatus: ThreeDSStatus
+    val pspReference: PSPReference
 
     data class AuthenticateSuccess(
 
         override val threeDSStatus: ThreeDSStatus,
         override val pspReference: PSPReference
 
-    ) : AuthenticateResponse, GatewayResponse.Success
+    ) : AuthenticateResponse
 
     data class AuthenticateReject(
 
         override val threeDSStatus: ThreeDSStatus,
         override val pspReference: PSPReference,
-        override val errorDescription: String,
-        override val errorCode: String,
-        override val errorReason: ErrorReason = ErrorReason.AUTHENTICATION_ERROR,
-        override val rejectionUseCase: RejectionUseCase = RejectionUseCase.UNDEFINED
+        val errorDescription: String,
+        val errorCode: String,
+        val errorReason: ErrorReason = ErrorReason.AUTHENTICATION_ERROR,
+        val rejectionUseCase: RejectionUseCase = RejectionUseCase.UNDEFINED
 
-    ) : AuthenticateResponse, GatewayResponse.Reject
+    ) : AuthenticateResponse
 
     data class AuthenticateFail(
 
         override val threeDSStatus: ThreeDSStatus,
         override val pspReference: PSPReference,
-        override val errorDescription: String,
-        override val timeout: Boolean,
-        override val exception: Exception
+        val errorDescription: String,
+        val timeout: Boolean,
+        val exception: Exception
 
-    ) : AuthenticateResponse, GatewayResponse.Fail
+    ) : AuthenticateResponse
 
     data class AuthenticateClientAction(
 
         override val threeDSStatus: ThreeDSStatus,
         override val pspReference: PSPReference,
-        override val clientAction: ClientAction
+        val clientAction: ClientAction
 
-    ) : AuthenticateResponse, GatewayResponse.ClientActionRequested
+    ) : AuthenticateResponse
 }

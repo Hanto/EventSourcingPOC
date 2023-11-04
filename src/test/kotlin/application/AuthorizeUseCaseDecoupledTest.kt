@@ -57,7 +57,7 @@ class AuthorizeUseCaseDecoupledTest
             val threeDSStatus = ThreeDSStatus.NoThreeDS
 
             val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(threeDSStatus, PSPReference("pspReference"))
-            val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(threeDSStatus, PSPReference("pspReference"))
+            val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(PSPReference("pspReference"))
 
             every { riskService.assessRisk(any()) }
                 .returns(FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS))
@@ -83,87 +83,91 @@ class AuthorizeUseCaseDecoupledTest
             @Nested
             inner class WhenFirstRetry
             {
-                @Test
-                fun whenRetryDueToAuthenticationAndDifferentAccount()
+                @Nested
+                inner class WhenDueToAuthenticationReject
                 {
-                    val threeDSStatus = ThreeDSStatus.NoThreeDS
+                    @Test
+                    fun whenDifferentAccount()
+                    {
+                        val threeDSStatus = ThreeDSStatus.NoThreeDS
 
-                    val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
-                        threeDSStatus,
-                        PSPReference("pspReference"),
-                    )
-                    val authenticateReject = AuthenticateResponse.AuthenticateReject(
-                        threeDSStatus,
-                        PSPReference("pspReference"),
-                        "errorDescription",
-                        "errorCode",
-                        ErrorReason.AUTHORIZATION_ERROR,
-                        RejectionUseCase.UNDEFINED
-                    )
-                    val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
-                        threeDSStatus,
-                        PSPReference("pspReference")
-                    )
+                        val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
+                            threeDSStatus = threeDSStatus,
+                            pspReference = PSPReference("pspReference"),
+                        )
+                        val authenticateReject = AuthenticateResponse.AuthenticateReject(
+                            threeDSStatus = threeDSStatus,
+                            pspReference = PSPReference("pspReference"),
+                            errorDescription = "errorDescription",
+                            errorCode = "errorCode",
+                            errorReason = ErrorReason.AUTHORIZATION_ERROR,
+                            rejectionUseCase = RejectionUseCase.UNDEFINED
+                        )
+                        val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
+                            pspReference = PSPReference("pspReference"))
 
-                    every { riskService.assessRisk(any()) }
-                        .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
+                        every { riskService.assessRisk(any()) }
+                            .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
 
-                    every { routingService.routeForPayment(any()) }
-                        .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                        .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+                        every { routingService.routeForPayment(any()) }
+                            .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+                            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
 
-                    every { authorizationGateway.authenticate(any()) }
-                        .returns( authenticateReject)
-                        .andThen( authenticateSuccess )
+                        every { authorizationGateway.authenticate(any()) }
+                            .returns( authenticateReject)
+                            .andThen( authenticateSuccess )
 
-                    every { authorizationGateway.authorize(any()) }
-                        .returns( authorizeSuccess )
+                        every { authorizationGateway.authorize(any()) }
+                            .returns( authorizeSuccess )
 
-                    underTest.authorizeDecoupled(paymentPayload)
+                        underTest.authorizeDecoupled(paymentPayload)
 
-                    printPaymentInfo(paymentId)
+                        printPaymentInfo(paymentId)
+                    }
                 }
 
-                @Test
-                fun whenRetryDueToAuthorizationAndDifferentAccount()
+                @Nested
+                inner class WhenDueToAuthorizationReject
                 {
-                    val threeDSStatus = ThreeDSStatus.NoThreeDS
+                    @Test
+                    fun whenDifferentAccount()
+                    {
+                        val threeDSStatus = ThreeDSStatus.NoThreeDS
 
-                    val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
-                        threeDSStatus,
-                        PSPReference("pspReference"),
-                    )
-                    val authorizeReject = AuthorizeResponse.AuthorizeReject(
-                        threeDSStatus,
-                        PSPReference("pspReference"),
-                        "errorDescription",
-                        "errorCode",
-                        ErrorReason.AUTHORIZATION_ERROR,
-                        RejectionUseCase.UNDEFINED
-                    )
-                    val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
-                        threeDSStatus,
-                        PSPReference("pspReference")
-                    )
+                        val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
+                            threeDSStatus = threeDSStatus,
+                            pspReference = PSPReference("pspReference"),
+                        )
+                        val authorizeReject = AuthorizeResponse.AuthorizeReject(
+                            pspReference = PSPReference("pspReference"),
+                            errorDescription = "errorDescription",
+                            errorCode = "errorCode",
+                            errorReason = ErrorReason.AUTHORIZATION_ERROR,
+                            rejectionUseCase = RejectionUseCase.UNDEFINED
+                        )
+                        val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
+                            pspReference = PSPReference("pspReference")
+                        )
 
-                    every { riskService.assessRisk(any()) }
-                        .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
+                        every { riskService.assessRisk(any()) }
+                            .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
 
-                    every { routingService.routeForPayment(any()) }
-                        .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                        .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+                        every { routingService.routeForPayment(any()) }
+                            .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+                            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
 
-                    every { authorizationGateway.authenticate(any()) }
-                        .returns( authenticateSuccess)
-                        .andThen( authenticateSuccess )
+                        every { authorizationGateway.authenticate(any()) }
+                            .returns( authenticateSuccess)
+                            .andThen( authenticateSuccess )
 
-                    every { authorizationGateway.authorize(any()) }
-                        .returns( authorizeReject )
-                        .andThen( authorizeSuccess )
+                        every { authorizationGateway.authorize(any()) }
+                            .returns( authorizeReject )
+                            .andThen( authorizeSuccess )
 
-                    underTest.authorizeDecoupled(paymentPayload)
+                        underTest.authorizeDecoupled(paymentPayload)
 
-                    printPaymentInfo(paymentId)
+                        printPaymentInfo(paymentId)
+                    }
                 }
             }
         }
@@ -179,7 +183,7 @@ class AuthorizeUseCaseDecoupledTest
             inner class WhenRetry
             {
                 @Test
-                fun whenRetryAndDifferentAccount()
+                fun whenDifferentAccount()
                 {
                     val authenticateClientActionFingerprint = AuthenticateResponse.AuthenticateClientAction(
                         threeDSStatus = ThreeDSStatus.PendingThreeDS,
@@ -216,13 +220,6 @@ class AuthorizeUseCaseDecoupledTest
                         pspReference = PSPReference("pspReference")
                     )
                     val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
-                        threeDSStatus = ThreeDSStatus.ThreeDS(
-                            ThreeDSInformation(
-                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
-                                version = ThreeDSVersion("2.1"),
-                                eci = ECI(2)
-                            )
-                        ),
                         pspReference = PSPReference("pspReference")
                     )
 

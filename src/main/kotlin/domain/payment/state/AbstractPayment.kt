@@ -35,16 +35,6 @@ sealed class AbstractPayment : Payment
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
-            is ReadyForAuthorizationClientAction -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
-                paymentEvents = emptyList(),
-                sideEffectEvents = sideEffectEvents
-            )
-            is ReadyForAuthorizationConfirm -> this.copy(
-                version = version.updateToLatestEventVersion(paymentEvents),
-                paymentEvents = emptyList(),
-                sideEffectEvents = sideEffectEvents
-            )
             is ReadyForRisk -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
@@ -65,7 +55,12 @@ sealed class AbstractPayment : Payment
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
-            is RejectedByGateway -> this.copy(
+            is RejectedByAuthentication -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
+            is RejectedByAuthorization -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
@@ -124,16 +119,6 @@ sealed class AbstractPayment : Payment
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
-            is ReadyForAuthorizationClientAction -> this.copy(
-                version = version,
-                paymentEvents = paymentEvents,
-                sideEffectEvents = emptyList()
-            )
-            is ReadyForAuthorizationConfirm -> this.copy(
-                version = version,
-                paymentEvents = paymentEvents,
-                sideEffectEvents = emptyList()
-            )
             is ReadyForRisk -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
@@ -154,7 +139,12 @@ sealed class AbstractPayment : Payment
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
-            is RejectedByGateway -> this.copy(
+            is RejectedByAuthentication -> this.copy(
+                version = version,
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is RejectedByAuthorization -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()

@@ -1,30 +1,8 @@
 package application
 
-import domain.payment.data.PSPReference
-import domain.payment.data.RiskAssessmentOutcome
-import domain.payment.data.paymentaccount.AccountId
-import domain.payment.data.paymentaccount.PaymentAccount
-import domain.payment.data.paymentpayload.*
-import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
-import domain.payment.data.threedstatus.*
-import domain.services.fraud.FraudAnalysisResult
-import domain.services.fraud.RiskAssessmentService
-import domain.services.gateway.*
-import domain.services.gateway.AuthorizeResponse.*
-import domain.services.routing.RoutingResult
-import domain.services.routing.RoutingService
-import infrastructure.EventPublisherMemory
-import infrastructure.repositories.paymentrepositorynew.PaymentRepositoryInMemory
-import infrastructure.repositories.paymentrepositoryold.PaymentAdapter
-import infrastructure.repositories.paymentrepositoryold.PaymentRepositoryLegacyInMemory
-import io.mockk.every
-import io.mockk.mockk
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import java.util.*
-
 class AuthorizeUseCaseTest
 {
+    /*
     private val riskService = mockk<RiskAssessmentService>()
     private val routingService = mockk<RoutingService>()
     private val authorizationGateway = mockk<AuthorizationGateway>()
@@ -345,5 +323,5 @@ class AuthorizeUseCaseTest
         println("\nPAYMENT OPERATIONS:\n")
         paymentData?.operations?.forEach { println(it) }
         println("\n")
-    }
+    }*/
 }

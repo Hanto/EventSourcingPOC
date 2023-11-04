@@ -20,32 +20,6 @@ class AuthorizeUseCase
     private val eventPublisher: EventPublisher
 )
 {
-    fun authorize(paymentPayload: PaymentPayload): Payment
-    {
-        return ReadyForPaymentRequest()
-            .letAndSaveIf { it: ReadyForPaymentRequest -> it.addPaymentPayload(paymentPayload) }
-            .letAndSaveIf { it: ReadyForRisk -> it.addFraudAnalysisResult(riskService.assessRisk(it)) }
-            .letIf { it: ReadyForRoutingInitial -> tryToAuthorize(it) }
-    }
-
-    private fun tryToAuthorize(payment: ReadyForRouting): Payment
-    {
-        return payment
-            .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(payment)) }
-            .letAndSaveIf { it: ReadyForAuthentication -> it.addAuthorizeResponse(authorizeService.authenticateAndAuthorize(it)) }
-            .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry() }
-            .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
-    }
-
-    fun confirm(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
-    {
-        return paymentRepository.load(paymentId)!!
-            .letAndSaveIf { it: ReadyForAuthorizationClientAction -> it.addConfirmParameters(confirmParams) }
-            .letAndSaveIf { it: ReadyForAuthorizationConfirm -> it.addConfirmResponse(authorizeService.confirmAuthorize(it)) }
-            .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry() }
-            .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
-    }
-
     // DECOUPLED:
     //------------------------------------------------------------------------------------------------------------------
 
@@ -73,7 +47,7 @@ class AuthorizeUseCase
             .letAndSaveIf { it: ReadyForAuthenticationClientAction -> it.addConfirmParameters(confirmParams) }
             .letAndSaveIf { it: ReadyForAuthenticationConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticate(it) )  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
-            .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry() }
+            .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorizeDecoupled(it) }
     }
 

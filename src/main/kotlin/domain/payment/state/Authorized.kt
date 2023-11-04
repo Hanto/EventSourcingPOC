@@ -7,6 +7,7 @@ import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.SideEffectEvent
+import domain.services.gateway.AuthenticateResponse
 import domain.services.gateway.AuthorizeResponse
 
 data class Authorized
@@ -18,6 +19,7 @@ data class Authorized
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
+    val authenticateResponse: AuthenticateResponse.AuthenticateSuccess,
     val authorizeResponse: AuthorizeResponse.AuthorizeSuccess,
 
 ): AbstractPayment(), Payment, AuthorizeEnded
