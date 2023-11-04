@@ -11,5 +11,5 @@ interface AuthorizationGateway
     fun confirmAuthenticate(payment: ReadyForAuthenticationConfirm): AuthenticateResponse
     fun authorize(payment: ReadyForAuthorization): AuthorizeResponse
     fun confirmAuthorize(payment: ReadyForAuthorizationConfirm): AuthorizeResponse
-    fun authenticateAndAuthorize(payment: ReadyForAuthentication): AuthenticateAndAuthorizeResponse
+    fun authenticateAndAuthorize(payment: ReadyForAuthentication): AuthorizeResponse
 }

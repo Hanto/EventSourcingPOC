@@ -99,7 +99,7 @@ data class ReadyForAuthorization
             {
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
 
-                return RejectedByAuthorization(
+                return RejectedByGateway(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -107,8 +107,7 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticationResponse = authenticateResponse,
-                    authorizeResponse = event.authorizeResponse,
+                    gatewayResponse = event.authorizeResponse,
                 )
             }
 

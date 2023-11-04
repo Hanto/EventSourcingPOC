@@ -106,7 +106,7 @@ data class ReadyForAuthentication
             {
                 newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
 
-                RejectedByAuthentication(
+                RejectedByGateway(
                     version = newVersion,
                     paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -114,7 +114,7 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticationResponse = event.authenticateResponse
+                    gatewayResponse = event.authenticateResponse
                 )
             }
             is AuthenticateResponse.AuthenticateFail ->
