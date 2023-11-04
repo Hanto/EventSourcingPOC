@@ -66,6 +66,7 @@ class PaymentAdapter
             is ReadyForRisk -> null
             is ReadyForRoutingInitial -> null
             is ReadyForAuthenticationConfirm -> null
+            is ReadyForAuthenticationAndAuthorizeConfirm -> null
             is ReadyForRoutingRetry -> null
             is ReadyForAuthorization -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
@@ -96,6 +97,19 @@ class PaymentAdapter
             //----------------------------------------------------------------------------------------------------------
 
             is ReadyForAuthenticationClientAction -> if (isLastEvent) AuthPaymentOperation(
+                paymentAccount = payment.paymentAccount,
+                pspReference = payment.authenticateResponse.pspReference.value,
+                reference = payment.attemptReference().value,
+                retry = payment.attempt.didRetry(),
+                eci = payment.authenticateResponse.threeDSStatus.toECI(),
+                exemption = payment.authenticateResponse.threeDSStatus.toExemption(),
+                authenticationStatus = AuthPaymentOperation.AuthenticationStatus.PENDING,
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.PENDING,
+                paymentClassName = payment.toPaymentClassName()
+            ) else null
+
+            is ReadyForAuthenticationAndAuthorizeClientAction -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = payment.authenticateResponse.pspReference.value,
                 reference = payment.attemptReference().value,

@@ -15,6 +15,29 @@ sealed interface AuthenticateResponse
 
     ) : AuthenticateResponse
 
+    data class AuthenticateAndAuthorizeSuccess(
+
+        override val threeDSStatus: ThreeDSStatus,
+        override val pspReference: PSPReference
+
+    ) : AuthenticateResponse
+
+    data class AuthenticateClientAction(
+
+        override val threeDSStatus: ThreeDSStatus,
+        override val pspReference: PSPReference,
+        val clientAction: ClientAction
+
+    ) : AuthenticateResponse
+
+    data class AuthenticateAndAuthorizeClientAction(
+
+        override val threeDSStatus: ThreeDSStatus,
+        override val pspReference: PSPReference,
+        val clientAction: ClientAction
+
+    ): AuthenticateResponse
+
     data class AuthenticateReject(
 
         override val threeDSStatus: ThreeDSStatus,
@@ -33,14 +56,6 @@ sealed interface AuthenticateResponse
         val errorDescription: String,
         val timeout: Boolean,
         val exception: Exception
-
-    ) : AuthenticateResponse
-
-    data class AuthenticateClientAction(
-
-        override val threeDSStatus: ThreeDSStatus,
-        override val pspReference: PSPReference,
-        val clientAction: ClientAction
 
     ) : AuthenticateResponse
 }

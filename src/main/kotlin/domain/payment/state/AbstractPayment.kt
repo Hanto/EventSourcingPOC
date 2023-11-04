@@ -90,7 +90,17 @@ sealed class AbstractPayment : Payment
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
-            is ReadyForAuthenticationConfirm ->  this.copy(
+            is ReadyForAuthenticationConfirm -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
+            is ReadyForAuthenticationAndAuthorizeClientAction -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
+            is ReadyForAuthenticationAndAuthorizeConfirm -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
@@ -175,6 +185,16 @@ sealed class AbstractPayment : Payment
                 sideEffectEvents = emptyList()
             )
             is ReadyForAuthenticationConfirm -> this.copy(
+                version = version,
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is ReadyForAuthenticationAndAuthorizeClientAction -> this.copy(
+                version = version,
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is ReadyForAuthenticationAndAuthorizeConfirm -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()

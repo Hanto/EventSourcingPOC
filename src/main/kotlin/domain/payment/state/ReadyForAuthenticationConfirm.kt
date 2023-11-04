@@ -11,6 +11,7 @@ import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
 import domain.services.gateway.AuthenticateResponse
+import domain.services.gateway.AuthorizeResponse
 import java.util.logging.Logger
 
 data class ReadyForAuthenticationConfirm
@@ -78,6 +79,21 @@ data class ReadyForAuthenticationConfirm
                 )
             }
 
+            is AuthenticateResponse.AuthenticateAndAuthorizeSuccess ->
+            {
+                Authorized(
+                    version = newVersion,
+                    paymentEvents= newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    authenticateResponse = event.authenticateResponse,
+                    authorizeResponse = AuthorizeResponse.AuthorizeSuccess(event.authenticateResponse.pspReference)
+                )
+            }
+
             is AuthenticateResponse.AuthenticateClientAction ->
             {
                 newSideEffectEvents.addIfNew(getClientActionEvent(event.authenticateResponse), isNew)
@@ -91,6 +107,25 @@ data class ReadyForAuthenticationConfirm
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
                     authenticateResponse = event.authenticateResponse,
+                )
+            }
+
+            is AuthenticateResponse.AuthenticateAndAuthorizeClientAction ->
+            {
+                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
+                newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
+
+                Failed(
+                    version = newVersion,
+                    paymentEvents = newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    authenticateResponse = event.authenticateResponse,
+                    authorizeResponse = null,
+                    reason = "Response not valid for decoupled Authenticate flow"
                 )
             }
 

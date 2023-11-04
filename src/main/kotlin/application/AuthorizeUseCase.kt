@@ -6,7 +6,10 @@ import domain.payment.sideeffectevents.EventPublisher
 import domain.payment.state.*
 import domain.repositories.PaymentRepository
 import domain.repositories.PaymentRepositoryLegacy
+import domain.services.featureflag.FeatureFlag
+import domain.services.featureflag.FeatureFlag.Feature.DECOUPLED_AUTH
 import domain.services.fraud.RiskAssessmentService
+import domain.services.gateway.AuthenticateResponse
 import domain.services.gateway.AuthorizationGateway
 import domain.services.routing.RoutingService
 
@@ -17,39 +20,54 @@ class AuthorizeUseCase
     private val authorizeService: AuthorizationGateway,
     private val paymentRepository: PaymentRepository,
     private val paymentRepositoryLegacy: PaymentRepositoryLegacy,
-    private val eventPublisher: EventPublisher
+    private val eventPublisher: EventPublisher,
+    private val featureFlag: FeatureFlag
 )
 {
     // DECOUPLED:
     //------------------------------------------------------------------------------------------------------------------
 
-    fun authorizeDecoupled(paymentPayload: PaymentPayload): Payment
+    fun authorize(paymentPayload: PaymentPayload): Payment
     {
         return ReadyForPaymentRequest()
             .letAndSaveIf { it: ReadyForPaymentRequest -> it.addPaymentPayload(paymentPayload) }
             .letAndSaveIf { it: ReadyForRisk -> it.addFraudAnalysisResult(riskService.assessRisk(it)) }
-            .letIf { it: ReadyForRoutingInitial -> tryToAuthorizeDecoupled(it) }
+            .letIf { it: ReadyForRoutingInitial -> tryToAuthorize(it) }
     }
 
-    private fun tryToAuthorizeDecoupled(payment: ReadyForRouting): Payment
+    private fun tryToAuthorize(payment: ReadyForRouting): Payment
     {
         return payment
-            .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(payment)) }
-            .letAndSaveIf { it: ReadyForAuthentication -> it.addAuthenticationResponse(authorizeService.authenticate(it)) }
+            .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(it)) }
+            .letAndSaveIf { it: ReadyForAuthentication -> it.addAuthenticationResponse(authenticate(it)) }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
-            .letIf { it: ReadyForRoutingRetry -> tryToAuthorizeDecoupled(it) }
+            .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
     }
 
-    fun confirmDecoupled(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
+    fun confirm(paymentId: PaymentId, confirmParams: Map<String, Any>): Payment
     {
         return paymentRepository.load(paymentId)!!
+            .letAndSaveIf { it: ReadyForAuthenticationAndAuthorizeClientAction -> it.addConfirmParameters(confirmParams)  }
+            .letAndSaveIf { it: ReadyForAuthenticationAndAuthorizeConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticateAndAuthorize(it) ) }
             .letAndSaveIf { it: ReadyForAuthenticationClientAction -> it.addConfirmParameters(confirmParams) }
-            .letAndSaveIf { it: ReadyForAuthenticationConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticate(it) )  }
+            .letAndSaveIf { it: ReadyForAuthenticationConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticate(it) ) }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
-            .letIf { it: ReadyForRoutingRetry -> tryToAuthorizeDecoupled(it) }
+            .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
     }
+
+    // PERSISTENCE:
+    //------------------------------------------------------------------------------------------------------------------
+
+    private fun authenticate(readyForAuthentication: ReadyForAuthentication): AuthenticateResponse =
+
+        when (featureFlag.isFeatureEnabledFor(DECOUPLED_AUTH))
+        {
+            true -> authorizeService.authenticate(readyForAuthentication)
+            false -> authorizeService.authenticateAndAuthorize(readyForAuthentication)
+        }
+
 
     // PERSISTENCE:
     //------------------------------------------------------------------------------------------------------------------

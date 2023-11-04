@@ -7,6 +7,7 @@ import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
 import domain.payment.data.threedstatus.*
+import domain.services.featureflag.FeatureFlag
 import domain.services.fraud.FraudAnalysisResult
 import domain.services.fraud.RiskAssessmentService
 import domain.services.gateway.*
@@ -18,6 +19,7 @@ import infrastructure.repositories.paymentrepositoryold.PaymentAdapter
 import infrastructure.repositories.paymentrepositoryold.PaymentRepositoryLegacyInMemory
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -27,6 +29,7 @@ class AuthorizeUseCaseDecoupledTest
     private val riskService = mockk<RiskAssessmentService>()
     private val routingService = mockk<RoutingService>()
     private val authorizationGateway = mockk<AuthorizationGateway>()
+    private val featureFlag = mockk<FeatureFlag>()
     private val eventPublisher = EventPublisherMemory()
     private val paymentRepositoryNew = PaymentRepositoryInMemory()
     private val paymentRepositoryOld = PaymentRepositoryLegacyInMemory(paymentRepositoryNew, PaymentAdapter())
@@ -38,6 +41,7 @@ class AuthorizeUseCaseDecoupledTest
         eventPublisher = eventPublisher,
         paymentRepository = paymentRepositoryNew,
         paymentRepositoryLegacy = paymentRepositoryOld,
+        featureFlag = featureFlag
     )
 
     private val paymentId = PaymentId(UUID.randomUUID())
@@ -47,6 +51,13 @@ class AuthorizeUseCaseDecoupledTest
         customer = Customer("ivan", "delgado"),
         paymentMethod = CreditCardPayment,
         authorizationType = AuthorizationType.PRE_AUTHORIZATION)
+
+    @BeforeEach
+    fun beforeEach()
+    {
+        every { featureFlag.isFeatureEnabledFor(FeatureFlag.Feature.DECOUPLED_AUTH) }.returns(true)
+    }
+
 
     @Nested
     inner class No3DS
@@ -71,7 +82,7 @@ class AuthorizeUseCaseDecoupledTest
             every { authorizationGateway.authorize(any()) }
                 .returns(authorizeSuccess)
 
-            underTest.authorizeDecoupled(paymentPayload)
+            underTest.authorize(paymentPayload)
 
             printPaymentInfo(paymentId)
         }
@@ -120,7 +131,7 @@ class AuthorizeUseCaseDecoupledTest
                         every { authorizationGateway.authorize(any()) }
                             .returns( authorizeSuccess )
 
-                        underTest.authorizeDecoupled(paymentPayload)
+                        underTest.authorize(paymentPayload)
 
                         printPaymentInfo(paymentId)
                     }
@@ -164,7 +175,7 @@ class AuthorizeUseCaseDecoupledTest
                             .returns( authorizeReject )
                             .andThen( authorizeSuccess )
 
-                        underTest.authorizeDecoupled(paymentPayload)
+                        underTest.authorize(paymentPayload)
 
                         printPaymentInfo(paymentId)
                     }
@@ -245,10 +256,10 @@ class AuthorizeUseCaseDecoupledTest
                     every { authorizationGateway.authorize( any() ) }
                         .returns(authorizeSuccess)
 
-                    underTest.authorizeDecoupled(paymentPayload)
-                    underTest.confirmDecoupled(paymentId, mapOf())
-                    underTest.confirmDecoupled(paymentId, mapOf("ECI" to "05"))
-                    underTest.confirmDecoupled(paymentId, mapOf("ECI" to "02"))
+                    underTest.authorize(paymentPayload)
+                    underTest.confirm(paymentId, mapOf())
+                    underTest.confirm(paymentId, mapOf("ECI" to "05"))
+                    underTest.confirm(paymentId, mapOf("ECI" to "02"))
 
                     printPaymentInfo(paymentId)
                 }
