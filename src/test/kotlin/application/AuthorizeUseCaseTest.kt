@@ -252,7 +252,8 @@ class AuthorizeUseCaseTest
                                 version = ThreeDSVersion("2.1"),
                                 eci = ECI(5),
                                 transactionId = ThreeDSTransactionId("transactionId"),
-                                cavv = CAVV("cavv")
+                                cavv = CAVV("cavv"),
+                                xid = XID("xid")
                             ),
                             pspReference = PSPReference("pspReference"),
                             errorDescription = "errorDescription",
@@ -266,7 +267,8 @@ class AuthorizeUseCaseTest
                                 version = ThreeDSVersion("2.1"),
                                 eci = ECI(2),
                                 transactionId = ThreeDSTransactionId("transactionId"),
-                                cavv = CAVV("cavv")
+                                cavv = CAVV("cavv"),
+                                xid = XID("xid")
                             ),
                             pspReference = PSPReference("pspReference")
                         )
@@ -307,7 +309,8 @@ class AuthorizeUseCaseTest
                                 version = ThreeDSVersion("2.1"),
                                 eci = ECI(5),
                                 transactionId = ThreeDSTransactionId("transactionId"),
-                                cavv = CAVV("cavv")
+                                cavv = CAVV("cavv"),
+                                xid = XID("xid")
                             ),
                             pspReference = PSPReference("pspReference"),
                             errorDescription = "errorDescription",
@@ -321,7 +324,8 @@ class AuthorizeUseCaseTest
                                 version = ThreeDSVersion("2.1"),
                                 eci = ECI(2),
                                 transactionId = ThreeDSTransactionId("transactionId"),
-                                cavv = CAVV("cavv")
+                                cavv = CAVV("cavv"),
+                                xid = XID("xid")
                             ),
                             pspReference = PSPReference("pspReference")
                         )
@@ -363,7 +367,8 @@ class AuthorizeUseCaseTest
                             version = ThreeDSVersion("2.1"),
                             eci = ECI(5),
                             transactionId = ThreeDSTransactionId("transactionId"),
-                            cavv = CAVV("cavv")
+                            cavv = CAVV("cavv"),
+                            xid = XID("xid")
                         ),
                         pspReference = PSPReference("pspReference"),
                         errorDescription = "errorDescription",

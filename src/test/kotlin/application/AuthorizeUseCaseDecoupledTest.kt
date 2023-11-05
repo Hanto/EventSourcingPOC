@@ -7,6 +7,7 @@ import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
 import domain.payment.data.threedstatus.*
+import domain.payment.state.Authorized
 import domain.services.featureflag.FeatureFlag
 import domain.services.fraud.FraudAnalysisResult
 import domain.services.fraud.RiskAssessmentService
@@ -19,6 +20,7 @@ import infrastructure.repositories.paymentrepositoryold.PaymentAdapter
 import infrastructure.repositories.paymentrepositoryold.PaymentRepositoryLegacyInMemory
 import io.mockk.every
 import io.mockk.mockk
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -133,6 +135,10 @@ class AuthorizeUseCaseDecoupledTest
 
                         underTest.authorize(paymentPayload)
 
+                        val result = paymentRepositoryNew.load(paymentId)
+
+                        assertThat(result).isInstanceOf(Authorized::class.java)
+
                         printPaymentInfo(paymentId)
                     }
                 }
@@ -177,6 +183,10 @@ class AuthorizeUseCaseDecoupledTest
 
                         underTest.authorize(paymentPayload)
 
+                        val result = paymentRepositoryNew.load(paymentId)
+
+                        assertThat(result).isInstanceOf(Authorized::class.java)
+
                         printPaymentInfo(paymentId)
                     }
                 }
@@ -217,6 +227,7 @@ class AuthorizeUseCaseDecoupledTest
                             eci = ECI(5),
                             transactionId = ThreeDSTransactionId("transactionId"),
                             cavv = CAVV("cavv"),
+                            xid = XID("xid"),
                         ),
                         pspReference = PSPReference("pspReference"),
                         errorDescription = "errorDescription",
@@ -230,7 +241,8 @@ class AuthorizeUseCaseDecoupledTest
                             version = ThreeDSVersion("2.1"),
                             eci = ECI(2),
                             transactionId = ThreeDSTransactionId("transactionId"),
-                            cavv = CAVV("cavv")
+                            cavv = CAVV("cavv"),
+                            xid = XID("xid")
                         ),
                         pspReference = PSPReference("pspReference")
                     )
@@ -264,6 +276,10 @@ class AuthorizeUseCaseDecoupledTest
                     underTest.confirm(paymentId, mapOf())
                     underTest.confirm(paymentId, mapOf("ECI" to "05"))
                     underTest.confirm(paymentId, mapOf("ECI" to "02"))
+
+                    val result = paymentRepositoryNew.load(paymentId)
+
+                    assertThat(result).isInstanceOf(Authorized::class.java)
 
                     printPaymentInfo(paymentId)
                 }

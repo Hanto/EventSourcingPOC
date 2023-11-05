@@ -17,6 +17,7 @@ sealed class ThreeDSStatus
         val eci: ECI,
         val transactionId: ThreeDSTransactionId,
         val cavv: CAVV,
+        val xid: XID,
 
-        ): ThreeDSStatus()
+    ): ThreeDSStatus()
 }
