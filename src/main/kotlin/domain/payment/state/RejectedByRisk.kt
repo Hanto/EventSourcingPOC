@@ -14,7 +14,7 @@ data class RejectedByRisk
     override val attempt: Attempt,
     val payload: PaymentPayload
 
-) : AbstractPayment(), Payment, Rejected, AuthorizeEnded
+) : AbstractPayment(), Payment, Rejected
 {
     override fun payload(): PaymentPayload = payload
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this

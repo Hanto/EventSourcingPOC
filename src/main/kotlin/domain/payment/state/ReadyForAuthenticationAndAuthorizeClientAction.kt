@@ -22,7 +22,7 @@ data class ReadyForAuthenticationAndAuthorizeClientAction
     val paymentAccount: PaymentAccount,
     val authenticateResponse: AuthenticateResponse.AuthenticateClientAction,
 
-): AbstractPayment(), Payment, AuthorizeInProgress
+): AbstractPayment(), Payment
 {
     override fun payload(): PaymentPayload = payload
 

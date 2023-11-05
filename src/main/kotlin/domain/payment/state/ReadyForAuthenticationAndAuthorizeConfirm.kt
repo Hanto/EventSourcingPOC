@@ -24,7 +24,7 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
     val paymentAccount: PaymentAccount,
     val authenticateResponse: AuthenticateResponse.AuthenticateClientAction,
 
-): AbstractPayment(), Payment, AuthorizeInProgress
+): AbstractPayment(), Payment
 {
     private val log = Logger.getLogger(ReadyForAuthenticationConfirm::class.java.name)
 

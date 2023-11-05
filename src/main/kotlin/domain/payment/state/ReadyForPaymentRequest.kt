@@ -9,7 +9,7 @@ import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
 import java.util.logging.Logger.getLogger
 
-class ReadyForPaymentRequest : AbstractPayment(), Payment, AuthorizeInProgress
+class ReadyForPaymentRequest : AbstractPayment(), Payment
 {
     override val version: Version = Version.firstVersion()
     override val paymentEvents: List<PaymentEvent> = emptyList()

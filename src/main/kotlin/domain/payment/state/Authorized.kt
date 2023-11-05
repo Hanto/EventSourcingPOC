@@ -22,7 +22,7 @@ data class Authorized
     val authenticateResponse: AuthenticateResponse,
     val authorizeResponse: AuthorizeResponse.AuthorizeSuccess,
 
-): AbstractPayment(), Payment, AuthorizeEnded
+): AbstractPayment(), Payment
 {
     override fun payload(): PaymentPayload = payload
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this

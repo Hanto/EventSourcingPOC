@@ -21,7 +21,7 @@ data class ReadyForRoutingRetry
     override val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
 
-) : AbstractPayment(), Payment, ReadyForRouting, AuthorizeInProgress
+) : AbstractPayment(), Payment, ReadyForRouting
 {
     private val log = Logger.getLogger(ReadyForRoutingRetry::class.java.name)
 

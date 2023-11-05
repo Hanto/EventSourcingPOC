@@ -23,7 +23,7 @@ data class Failed
     val authorizeResponse: AuthorizeResponse?,
     val reason: String,
 
-    ): AbstractPayment(), Payment, AuthorizeEnded
+): AbstractPayment(), Payment
 {
     override fun payload(): PaymentPayload = payload
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this

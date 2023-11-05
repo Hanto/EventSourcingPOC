@@ -20,7 +20,7 @@ data class ReadyForRisk
     override val attempt: Attempt,
     val payload: PaymentPayload
 
-): AbstractPayment(), Payment, AuthorizeInProgress
+): AbstractPayment(), Payment
 {
     private val log = Logger.getLogger(ReadyForRisk::class.java.name)
 

@@ -249,7 +249,4 @@ class PaymentAdapter
 
     private fun Payment.toPaymentClassName() =
         this::class.java.simpleName
-
-    private fun print(currentState: Payment) =
-        println("${if (currentState is AuthorizeEnded) "END: " else ""}${currentState::class.java.simpleName}")
 }

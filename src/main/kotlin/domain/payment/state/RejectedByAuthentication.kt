@@ -25,7 +25,7 @@ data class RejectedByAuthentication
     val paymentAccount: PaymentAccount,
     val authenticateResponse: AuthenticateResponse.AuthenticateReject
 
-): AbstractPayment(), Payment, Rejected, RejectedByGateway, AuthorizeEnded
+): AbstractPayment(), Payment, Rejected, RejectedByGateway
 {
     private val log = Logger.getLogger(RejectedByAuthentication::class.java.name)
 

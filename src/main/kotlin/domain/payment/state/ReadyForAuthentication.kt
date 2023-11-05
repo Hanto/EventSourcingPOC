@@ -25,7 +25,7 @@ data class ReadyForAuthentication
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount
 
-): AbstractPayment(), Payment, AuthorizeInProgress
+): AbstractPayment(), Payment
 {
     private val log = Logger.getLogger(ReadyForAuthentication::class.java.name)
 
