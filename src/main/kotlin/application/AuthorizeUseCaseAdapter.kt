@@ -9,7 +9,7 @@ class AuthorizeUseCaseAdapter
 
         when (payment)
         {
-            is ReadyForPaymentRequest -> TODO()
+            is ReadyForPaymentRequest -> AuthorizeUseCaseResponse.Failed(reason = "Impossible state: ReadyForPaymentRequest", false, null)
 
             is Authorized -> AuthorizeUseCaseResponse.Authorized(payment.payload.id)
             is Captured -> AuthorizeUseCaseResponse.Authorized(payment.payload.id)
@@ -35,7 +35,6 @@ class AuthorizeUseCaseAdapter
             is RejectedByRoutingSameAccount -> AuthorizeUseCaseResponse.RejectedByGatewayAndNoMoreRetries(payment)
             is RejectedByGatewayAndNotRetriable -> AuthorizeUseCaseResponse.RejectedByGatewayAndNoMoreRetries(payment)
         }
-
 
     fun toPayment(paymentPayload: PaymentPayload): Payment =
 
