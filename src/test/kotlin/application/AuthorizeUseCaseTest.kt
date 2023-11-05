@@ -7,6 +7,7 @@ import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
 import domain.payment.data.threedstatus.*
+import domain.services.authorize.AuthorizeService
 import domain.services.featureflag.FeatureFlag
 import domain.services.featureflag.FeatureFlag.Feature.DECOUPLED_AUTH
 import domain.services.fraud.FraudAnalysisResult
@@ -36,7 +37,7 @@ class AuthorizeUseCaseTest
     private val paymentRepositoryNew = PaymentRepositoryInMemory()
     private val paymentRepositoryOld = PaymentRepositoryLegacyInMemory(paymentRepositoryNew, PaymentAdapter())
 
-    private val underTest = AuthorizeUseCase(
+    private val authorizeService = AuthorizeService(
         riskService = riskService,
         routingService = routingService,
         authorizeService = authorizationGateway,
@@ -44,6 +45,11 @@ class AuthorizeUseCaseTest
         paymentRepository = paymentRepositoryNew,
         paymentRepositoryLegacy = paymentRepositoryOld,
         featureFlag = featureFlag
+    )
+    private val underTest = AuthorizeUseCase(
+        authorizeService = authorizeService,
+        paymentRepository = paymentRepositoryNew,
+        authorizeUseCaseAdapter = AuthorizeUseCaseAdapter()
     )
 
     private val paymentId = PaymentId(UUID.randomUUID())

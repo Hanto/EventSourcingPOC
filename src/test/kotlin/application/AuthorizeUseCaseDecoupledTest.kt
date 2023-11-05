@@ -7,7 +7,8 @@ import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
 import domain.payment.data.threedstatus.*
-import domain.payment.state.Authorized
+import domain.payment.state.Captured
+import domain.services.authorize.AuthorizeService
 import domain.services.featureflag.FeatureFlag
 import domain.services.fraud.FraudAnalysisResult
 import domain.services.fraud.RiskAssessmentService
@@ -36,7 +37,7 @@ class AuthorizeUseCaseDecoupledTest
     private val paymentRepositoryNew = PaymentRepositoryInMemory()
     private val paymentRepositoryOld = PaymentRepositoryLegacyInMemory(paymentRepositoryNew, PaymentAdapter())
 
-    private val underTest = AuthorizeUseCase(
+    private val authorizeService = AuthorizeService(
         riskService = riskService,
         routingService = routingService,
         authorizeService = authorizationGateway,
@@ -45,6 +46,11 @@ class AuthorizeUseCaseDecoupledTest
         paymentRepositoryLegacy = paymentRepositoryOld,
         featureFlag = featureFlag
     )
+    private val underTest = AuthorizeUseCase(
+        authorizeService = authorizeService,
+        paymentRepository = paymentRepositoryNew,
+        authorizeUseCaseAdapter = AuthorizeUseCaseAdapter()
+    )
 
     private val paymentId = PaymentId(UUID.randomUUID())
     private val paymentPayload = PaymentPayload(
@@ -52,7 +58,7 @@ class AuthorizeUseCaseDecoupledTest
         authorizationReference = AuthorizationReference(value = "123456789_1"),
         customer = Customer("ivan", "delgado"),
         paymentMethod = CreditCardPayment,
-        authorizationType = AuthorizationType.PRE_AUTHORIZATION)
+        authorizationType = AuthorizationType.FULL_AUTHORIZATION)
 
     @BeforeEach
     fun beforeEach()
@@ -102,14 +108,12 @@ class AuthorizeUseCaseDecoupledTest
                     @Test
                     fun whenDifferentAccount()
                     {
-                        val threeDSStatus = ThreeDSStatus.NoThreeDS
-
                         val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
-                            threeDSStatus = threeDSStatus,
+                            threeDSStatus = ThreeDSStatus.NoThreeDS,
                             pspReference = PSPReference("pspReference"),
                         )
                         val authenticateReject = AuthenticateResponse.AuthenticateReject(
-                            threeDSStatus = threeDSStatus,
+                            threeDSStatus = ThreeDSStatus.NoThreeDS,
                             pspReference = PSPReference("pspReference"),
                             errorDescription = "errorDescription",
                             errorCode = "errorCode",
@@ -137,7 +141,7 @@ class AuthorizeUseCaseDecoupledTest
 
                         val result = paymentRepositoryNew.load(paymentId)
 
-                        assertThat(result).isInstanceOf(Authorized::class.java)
+                        assertThat(result).isInstanceOf(Captured::class.java)
 
                         printPaymentInfo(paymentId)
                     }
@@ -149,10 +153,8 @@ class AuthorizeUseCaseDecoupledTest
                     @Test
                     fun whenDifferentAccount()
                     {
-                        val threeDSStatus = ThreeDSStatus.NoThreeDS
-
                         val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
-                            threeDSStatus = threeDSStatus,
+                            threeDSStatus = ThreeDSStatus.NoThreeDS,
                             pspReference = PSPReference("pspReference"),
                         )
                         val authorizeReject = AuthorizeResponse.AuthorizeReject(
@@ -185,7 +187,7 @@ class AuthorizeUseCaseDecoupledTest
 
                         val result = paymentRepositoryNew.load(paymentId)
 
-                        assertThat(result).isInstanceOf(Authorized::class.java)
+                        assertThat(result).isInstanceOf(Captured::class.java)
 
                         printPaymentInfo(paymentId)
                     }
@@ -279,7 +281,7 @@ class AuthorizeUseCaseDecoupledTest
 
                     val result = paymentRepositoryNew.load(paymentId)
 
-                    assertThat(result).isInstanceOf(Authorized::class.java)
+                    assertThat(result).isInstanceOf(Captured::class.java)
 
                     printPaymentInfo(paymentId)
                 }

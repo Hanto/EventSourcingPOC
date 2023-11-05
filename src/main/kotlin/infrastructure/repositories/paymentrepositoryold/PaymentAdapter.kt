@@ -68,6 +68,7 @@ class PaymentAdapter
             is ReadyForAuthenticationConfirm -> null
             is ReadyForAuthenticationAndAuthorizeConfirm -> null
             is ReadyForRoutingRetry -> null
+            is ReadyForCaptureVerification -> null
             is ReadyForAuthorization -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = null,
@@ -126,8 +127,23 @@ class PaymentAdapter
             //----------------------------------------------------------------------------------------------------------
 
             is RejectedByGatewayAndNotRetriable -> null
+            is RejectedByRoutingSameAccount -> null
 
-            is Authorized -> AuthPaymentOperation(
+            is Authorized -> if (payment.payload.authorizationType == AuthorizationType.PRE_AUTHORIZATION)
+                AuthPaymentOperation(
+                paymentAccount = payment.paymentAccount,
+                pspReference = payment.authorizeResponse.pspReference.value,
+                reference = payment.attemptReference().value,
+                retry = payment.attempt.didRetry(),
+                eci = payment.authenticateResponse.threeDSStatus.toECI(),
+                exemption = payment.authenticateResponse.threeDSStatus.toExemption(),
+                authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.OK,
+                paymentClassName = payment.toPaymentClassName()
+            ) else null
+
+            is Captured -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = payment.authorizeResponse.pspReference.value,
                 reference = payment.attemptReference().value,
@@ -139,6 +155,7 @@ class PaymentAdapter
                 status = AuthPaymentOperation.Status.OK,
                 paymentClassName = payment.toPaymentClassName()
             )
+
             is Failed -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = payment.authorizeResponse?.pspReference?.value ?: payment.authenticateResponse?.pspReference?.value,
@@ -151,6 +168,7 @@ class PaymentAdapter
                 status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
+
             is RejectedByAuthentication -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = payment.authenticateResponse.pspReference.value,
@@ -163,6 +181,7 @@ class PaymentAdapter
                 status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
+
             is RejectedByAuthorization -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = payment.authorizeResponse.pspReference.value,
@@ -175,6 +194,7 @@ class PaymentAdapter
                 status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
+
             is RejectedByRisk -> AuthPaymentOperation(
                 paymentAccount = null,
                 pspReference = null,
@@ -187,6 +207,7 @@ class PaymentAdapter
                 status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
+
             is RejectedByRouting -> AuthPaymentOperation(
                 paymentAccount = null,
                 pspReference = null,
@@ -199,7 +220,6 @@ class PaymentAdapter
                 status = AuthPaymentOperation.Status.KO,
                 paymentClassName = payment.toPaymentClassName()
             )
-            is RejectedByRoutingSameAccount -> null
 
         }?.let { operations.add(it) }
     }

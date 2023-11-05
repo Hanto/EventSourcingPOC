@@ -79,7 +79,7 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
 
             is AuthenticateResponse.AuthenticateAndAuthorizeSuccess ->
             {
-                Authorized(
+                ReadyForCaptureVerification(
                     version = newVersion,
                     paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,

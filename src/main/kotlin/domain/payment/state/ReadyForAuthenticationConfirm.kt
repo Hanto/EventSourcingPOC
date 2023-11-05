@@ -87,7 +87,7 @@ data class ReadyForAuthenticationConfirm
                 if (payload.paymentMethod is KlarnaPayment)
                     newSideEffectEvents.addIfNew(KlarnaOrderPlacedEvent, isNew)
 
-                Authorized(
+                ReadyForCaptureVerification(
                     version = newVersion,
                     paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
