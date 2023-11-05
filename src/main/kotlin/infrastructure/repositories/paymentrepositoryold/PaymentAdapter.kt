@@ -222,7 +222,7 @@ class PaymentAdapter
             null -> Exemption.NotRequested
             is ThreeDSStatus.NoThreeDS -> Exemption.NotRequested
             is ThreeDSStatus.PendingThreeDS -> Exemption.NotRequested
-            is ThreeDSStatus.ThreeDS -> when (this.info.exemptionStatus)
+            is ThreeDSStatus.ThreeDS -> when (this.exemptionStatus)
             {
                 is ExemptionStatus.ExemptionNotRequested -> Exemption.NotRequested
                 is ExemptionStatus.ExemptionAccepted -> Exemption.Accepted
@@ -236,7 +236,7 @@ class PaymentAdapter
         {
             is ThreeDSStatus.NoThreeDS -> null
             is ThreeDSStatus.PendingThreeDS -> null
-            is ThreeDSStatus.ThreeDS -> this.info.eci.value.toString()
+            is ThreeDSStatus.ThreeDS -> this.eci.value.toString()
         }
 
     private fun AuthorizationType.toTransactionType() =

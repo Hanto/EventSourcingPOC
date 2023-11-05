@@ -197,22 +197,26 @@ class AuthorizeUseCaseDecoupledTest
                 fun whenDifferentAccount()
                 {
                     val authenticateClientActionFingerprint = AuthenticateResponse.AuthenticateClientAction(
-                        threeDSStatus = ThreeDSStatus.PendingThreeDS,
+                        threeDSStatus = ThreeDSStatus.PendingThreeDS(
+                            version = ThreeDSVersion("2.1")
+                        ),
                         pspReference = PSPReference("pspReference"),
                         clientAction = ClientAction(ActionType.FINGERPRINT)
                     )
                     val authenticateClientActionChallenge = AuthenticateResponse.AuthenticateClientAction(
-                        threeDSStatus = ThreeDSStatus.PendingThreeDS,
+                        threeDSStatus = ThreeDSStatus.PendingThreeDS(
+                            version = ThreeDSVersion("2.1")
+                        ),
                         pspReference = PSPReference("pspReference"),
                         clientAction = ClientAction(ActionType.CHALLENGE)
                     )
                     val authenticateReject = AuthenticateResponse.AuthenticateReject(
                         threeDSStatus = ThreeDSStatus.ThreeDS(
-                            ThreeDSInformation(
-                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
-                                version = ThreeDSVersion("2.1"),
-                                eci = ECI(5)
-                            )
+                            exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
+                            version = ThreeDSVersion("2.1"),
+                            eci = ECI(5),
+                            transactionId = ThreeDSTransactionId("transactionId"),
+                            cavv = CAVV("cavv"),
                         ),
                         pspReference = PSPReference("pspReference"),
                         errorDescription = "errorDescription",
@@ -222,11 +226,11 @@ class AuthorizeUseCaseDecoupledTest
                     )
                     val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
                         threeDSStatus = ThreeDSStatus.ThreeDS(
-                            ThreeDSInformation(
-                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
-                                version = ThreeDSVersion("2.1"),
-                                eci = ECI(2)
-                            )
+                            exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
+                            version = ThreeDSVersion("2.1"),
+                            eci = ECI(2),
+                            transactionId = ThreeDSTransactionId("transactionId"),
+                            cavv = CAVV("cavv")
                         ),
                         pspReference = PSPReference("pspReference")
                     )

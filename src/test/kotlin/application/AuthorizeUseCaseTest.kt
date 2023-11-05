@@ -205,8 +205,9 @@ class AuthorizeUseCaseTest
         @Test
         fun when3DSPending()
         {
-            val threeDSStatus =  ThreeDSStatus.PendingThreeDS
-
+            val threeDSStatus =  ThreeDSStatus.PendingThreeDS(
+                version = ThreeDSVersion("2.1")
+            )
             val authClientAction = AuthenticateClientAction(
                 threeDSStatus = threeDSStatus,
                 pspReference = PSPReference("pspReference"),
@@ -239,15 +240,20 @@ class AuthorizeUseCaseTest
                     fun whenRetryButSameAccount()
                     {
                         val authClientAction = AuthenticateClientAction(
-                            threeDSStatus = ThreeDSStatus.PendingThreeDS,
+                            threeDSStatus = ThreeDSStatus.PendingThreeDS(
+                                version = ThreeDSVersion("2.1")
+                            ),
                             pspReference = PSPReference("pspReference"),
                             clientAction = ClientAction(ActionType.CHALLENGE)
                         )
                         val authReject = AuthenticateReject(
-                            threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
+                            threeDSStatus = ThreeDSStatus.ThreeDS(
                                 exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
-                                eci = ECI(5))),
+                                eci = ECI(5),
+                                transactionId = ThreeDSTransactionId("transactionId"),
+                                cavv = CAVV("cavv")
+                            ),
                             pspReference = PSPReference("pspReference"),
                             errorDescription = "errorDescription",
                             errorCode = "errorCode",
@@ -255,10 +261,13 @@ class AuthorizeUseCaseTest
                             rejectionUseCase =  RejectionUseCase.UNDEFINED
                         )
                         val authSuccess = AuthenticateAndAuthorizeSuccess(
-                            threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
+                            threeDSStatus = ThreeDSStatus.ThreeDS(
                                 exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
-                                eci = ECI(2))),
+                                eci = ECI(2),
+                                transactionId = ThreeDSTransactionId("transactionId"),
+                                cavv = CAVV("cavv")
+                            ),
                             pspReference = PSPReference("pspReference")
                         )
 
@@ -286,15 +295,20 @@ class AuthorizeUseCaseTest
                     fun whenRetryAndDifferentAccount()
                     {
                         val authClientAction = AuthenticateClientAction(
-                            threeDSStatus = ThreeDSStatus.PendingThreeDS,
+                            threeDSStatus = ThreeDSStatus.PendingThreeDS(
+                                version = ThreeDSVersion("2.1")
+                            ),
                             pspReference = PSPReference("pspReference"),
                             clientAction = ClientAction(ActionType.CHALLENGE)
                         )
                         val authReject = AuthenticateReject(
-                            threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
+                            threeDSStatus = ThreeDSStatus.ThreeDS(
                                 exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
-                                eci = ECI(5))),
+                                eci = ECI(5),
+                                transactionId = ThreeDSTransactionId("transactionId"),
+                                cavv = CAVV("cavv")
+                            ),
                             pspReference = PSPReference("pspReference"),
                             errorDescription = "errorDescription",
                             errorCode = "errorCode",
@@ -302,10 +316,13 @@ class AuthorizeUseCaseTest
                             rejectionUseCase =  RejectionUseCase.UNDEFINED
                         )
                         val authSuccess = AuthenticateAndAuthorizeSuccess(
-                            threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
+                            threeDSStatus = ThreeDSStatus.ThreeDS(
                                 exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
-                                eci = ECI(2))),
+                                eci = ECI(2),
+                                transactionId = ThreeDSTransactionId("transactionId"),
+                                cavv = CAVV("cavv")
+                            ),
                             pspReference = PSPReference("pspReference")
                         )
 
@@ -334,15 +351,20 @@ class AuthorizeUseCaseTest
                 fun whenSecondRetry()
                 {
                     val authClientAction = AuthenticateClientAction(
-                        threeDSStatus = ThreeDSStatus.PendingThreeDS,
+                        threeDSStatus = ThreeDSStatus.PendingThreeDS(
+                            version = ThreeDSVersion("2.1")
+                        ),
                         pspReference = PSPReference("pspReference"),
                         clientAction = ClientAction(ActionType.CHALLENGE)
                     )
                     val authReject = AuthenticateReject(
-                        threeDSStatus = ThreeDSStatus.ThreeDS(ThreeDSInformation(
+                        threeDSStatus = ThreeDSStatus.ThreeDS(
                             exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                             version = ThreeDSVersion("2.1"),
-                            eci = ECI(5))),
+                            eci = ECI(5),
+                            transactionId = ThreeDSTransactionId("transactionId"),
+                            cavv = CAVV("cavv")
+                        ),
                         pspReference = PSPReference("pspReference"),
                         errorDescription = "errorDescription",
                         errorCode = "errorCode",
