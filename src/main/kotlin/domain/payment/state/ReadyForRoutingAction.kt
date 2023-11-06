@@ -1,35 +1,39 @@
 package domain.payment.state
 
 import domain.payment.data.Attempt
+import domain.payment.data.AuthenticateOutcome
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
+import domain.payment.data.paymentaccount.AuthorisationAction
+import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.paymentevents.PaymentEvent
-import domain.payment.paymentevents.RoutingEvaluatedEvent
-import domain.payment.sideeffectevents.*
-import domain.services.routing.RoutingResult
+import domain.payment.paymentevents.RoutingActionEvaluatedEVent
+import domain.payment.sideeffectevents.SideEffectEvent
+import domain.payment.sideeffectevents.SideEffectEventList
 import java.util.logging.Logger
 
-data class ReadyForRoutingInitial
+data class ReadyForRoutingAction
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
     override val sideEffectEvents: List<SideEffectEvent>,
     override val attempt: Attempt,
     val payload: PaymentPayload,
-    override val riskAssessmentOutcome: RiskAssessmentOutcome,
+    val riskAssessmentOutcome: RiskAssessmentOutcome,
+    val paymentAccount: PaymentAccount,
 
-): AbstractPayment(), Payment, ReadyForRouting
+) : AbstractPayment(), Payment
 {
-    private val log = Logger.getLogger(ReadyForRoutingInitial::class.java.name)
+    private val log = Logger.getLogger(ReadyForRoutingRetry::class.java.name)
 
     override fun payload(): PaymentPayload = payload
-    override fun addRoutingResult(routingResult: RoutingResult): Payment
+    fun decideIf3DS(decouplingEnabled: Boolean): Payment
     {
-        val event = RoutingEvaluatedEvent(
+        val event = RoutingActionEvaluatedEVent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
-            routingResult = routingResult)
+            decuplingEnabled = decouplingEnabled)
 
         return apply(event, isNew = true)
     }
@@ -38,75 +42,74 @@ data class ReadyForRoutingInitial
 
         when (event)
         {
-            is RoutingEvaluatedEvent -> apply(event, isNew)
+            is RoutingActionEvaluatedEVent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: RoutingEvaluatedEvent, isNew: Boolean): Payment
+    private fun apply(event: RoutingActionEvaluatedEVent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
         val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
-        return when (event.routingResult)
+        if (!event.decuplingEnabled)
         {
-            is RoutingResult.RoutingError ->
-            {
-                newSideEffectEvents.addIfNew(PaymentFailedEvent, isNew)
+            return ReadyForAuthentication(
+                version = newVersion,
+                paymentEvents = newEvents,
+                sideEffectEvents = newSideEffectEvents.list,
+                attempt = attempt,
+                payload = payload,
+                riskAssessmentOutcome = riskAssessmentOutcome,
+                paymentAccount = paymentAccount
+            )
+        }
 
-                Failed(
+        return when(paymentAccount.authorisationAction)
+        {
+            is AuthorisationAction.ThreeDS ->
+            {
+                ReadyForAuthentication(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
                     attempt = attempt,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    paymentAccount = null,
-                    authenticateResponse = null,
-                    authorizeResponse = null,
-                    reason = createRoutingErrorReason(event.routingResult))
-            }
-
-            is RoutingResult.Reject ->
-            {
-                newSideEffectEvents.addIfNew(RoutingCompletedEvent, isNew)
-                newSideEffectEvents.addIfNew(PaymentRejectedEvent, isNew)
-
-                RejectedByRouting(
-                    version = newVersion,
-                    paymentEvents = newEvents,
-                    sideEffectEvents = newSideEffectEvents.list,
-                    attempt = attempt,
-                    payload = payload,
-                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount
                 )
             }
 
-            is RoutingResult.Proceed ->
+            is AuthorisationAction.Moto ->
             {
-                newSideEffectEvents.addIfNew(RoutingCompletedEvent, isNew)
-
-                ReadyForRoutingAction(
+                ReadyForAuthorization(
                     version = newVersion,
-                    paymentEvents = newEvents,
+                    paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
                     attempt = attempt,
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
-                    paymentAccount = event.routingResult.account
+                    paymentAccount = paymentAccount,
+                    authenticateResponse = AuthenticateOutcome.Skipped
+                )
+            }
+
+            is AuthorisationAction.Ecommerce ->
+            {
+                ReadyForAuthorization(
+                    version = newVersion,
+                    paymentEvents= newEvents,
+                    sideEffectEvents = newSideEffectEvents.list,
+                    attempt = attempt,
+                    payload = payload,
+                    riskAssessmentOutcome = riskAssessmentOutcome,
+                    paymentAccount = paymentAccount,
+                    authenticateResponse = AuthenticateOutcome.Skipped
                 )
             }
         }
     }
-
-    private fun createRoutingErrorReason(routingError: RoutingResult.RoutingError): String =
-
-        when (routingError)
-        {
-            is RoutingResult.RoutingError.InvalidCurrency -> "Currency not accepted"
-            is RoutingResult.RoutingError.BankAccountNotFound -> "Unable to find bank account"
-        }
 }

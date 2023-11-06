@@ -25,6 +25,7 @@ class AuthorizeUseCaseAdapter
             is ReadyForRisk -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyForRoutingInitial -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyForRoutingRetry -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
+            is ReadyForRoutingAction -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
 
             is RejectedByAuthentication -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is RejectedByAuthorization -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
@@ -34,6 +35,7 @@ class AuthorizeUseCaseAdapter
             is RejectedByRouting -> AuthorizeUseCaseResponse.RejectedByRouting(payment)
             is RejectedByRoutingSameAccount -> AuthorizeUseCaseResponse.RejectedByGatewayAndNoMoreRetries(payment)
             is RejectedByGatewayAndNotRetriable -> AuthorizeUseCaseResponse.RejectedByGatewayAndNoMoreRetries(payment)
+
         }
 
     fun toPayment(paymentPayload: PaymentPayload): Payment =

@@ -108,7 +108,7 @@ data class ReadyForRoutingRetry
                 }
 
                 else
-                    ReadyForAuthentication(
+                    ReadyForRoutingAction(
                         version = newVersion,
                         paymentEvents = newEvents,
                         sideEffectEvents = newSideEffectEvents.list,

@@ -1,8 +1,6 @@
 package domain.payment.state
 
-import domain.payment.data.Attempt
-import domain.payment.data.RiskAssessmentOutcome
-import domain.payment.data.Version
+import domain.payment.data.*
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.AuthorizationType
 import domain.payment.data.paymentpayload.PaymentPayload
@@ -11,8 +9,6 @@ import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.PaymentSettledEvent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
-import domain.services.gateway.AuthenticateResponse
-import domain.services.gateway.AuthorizeResponse
 import java.util.logging.Logger
 
 data class ReadyForCaptureVerification
@@ -24,8 +20,8 @@ data class ReadyForCaptureVerification
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateResponse,
-    val authorizeResponse: AuthorizeResponse.AuthorizeSuccess,
+    val authenticateResponse: AuthenticateOutcome,
+    val authorizeResponse: AuthorizeOutcome,
 
 ): AbstractPayment(), Payment
 {

@@ -1,23 +1,27 @@
 package domain.services.gateway
 
 import domain.payment.data.PSPReference
+import domain.payment.data.threedstatus.ExemptionStatus
 import domain.payment.data.threedstatus.ThreeDSStatus
 
 sealed interface AuthenticateResponse
 {
     val threeDSStatus: ThreeDSStatus
+    val exemptionStatus: ExemptionStatus
     val pspReference: PSPReference
 
     data class AuthenticateSuccess(
 
         override val threeDSStatus: ThreeDSStatus,
-        override val pspReference: PSPReference
+        override val exemptionStatus: ExemptionStatus,
+        override val pspReference: PSPReference,
 
-    ) : AuthenticateResponse
+        ) : AuthenticateResponse
 
     data class AuthenticateAndAuthorizeSuccess(
 
         override val threeDSStatus: ThreeDSStatus,
+        override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference
 
     ) : AuthenticateResponse
@@ -25,6 +29,7 @@ sealed interface AuthenticateResponse
     data class AuthenticateClientAction(
 
         override val threeDSStatus: ThreeDSStatus,
+        override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference,
         val clientAction: ClientAction
 
@@ -33,6 +38,7 @@ sealed interface AuthenticateResponse
     data class AuthenticateReject(
 
         override val threeDSStatus: ThreeDSStatus,
+        override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference,
         val errorDescription: String,
         val errorCode: String,
@@ -44,6 +50,7 @@ sealed interface AuthenticateResponse
     data class AuthenticateFail(
 
         override val threeDSStatus: ThreeDSStatus,
+        override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference,
         val errorDescription: String,
         val timeout: Boolean,

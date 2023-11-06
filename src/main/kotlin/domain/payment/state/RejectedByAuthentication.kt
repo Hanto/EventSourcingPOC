@@ -1,6 +1,7 @@
 package domain.payment.state
 
 import domain.payment.data.Attempt
+import domain.payment.data.AuthenticateOutcome
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
@@ -11,7 +12,6 @@ import domain.payment.sideeffectevents.PaymentRejectedEvent
 import domain.payment.sideeffectevents.PaymentRetriedEvent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
-import domain.services.gateway.AuthenticateResponse
 import java.util.logging.Logger
 
 data class RejectedByAuthentication
@@ -23,7 +23,7 @@ data class RejectedByAuthentication
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateResponse.AuthenticateReject
+    val authenticateResponse: AuthenticateOutcome.Performed,
 
 ): AbstractPayment(), Payment, Rejected, RejectedByGateway
 {

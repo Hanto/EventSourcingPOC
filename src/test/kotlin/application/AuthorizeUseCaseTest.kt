@@ -5,10 +5,14 @@ import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.paymentaccount.AccountId
 import domain.payment.data.paymentaccount.AuthorisationAction
 import domain.payment.data.paymentaccount.AuthorisationAction.AuthorizationPreference.ECI_CHECK
+import domain.payment.data.paymentaccount.AuthorisationAction.ExemptionPreference.DONT_TRY_EXEMPTION
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
 import domain.payment.data.threedstatus.*
+import domain.payment.state.Authorized
+import domain.payment.state.ReadyForAuthenticationAndAuthorizeClientAction
+import domain.payment.state.RejectedByGatewayAndNotRetriable
 import domain.services.authorize.AuthorizeService
 import domain.services.featureflag.FeatureFlag
 import domain.services.featureflag.FeatureFlag.Feature.DECOUPLED_AUTH
@@ -24,6 +28,7 @@ import infrastructure.repositories.paymentrepositoryold.PaymentAdapter
 import infrastructure.repositories.paymentrepositoryold.PaymentRepositoryLegacyInMemory
 import io.mockk.every
 import io.mockk.mockk
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -83,6 +88,7 @@ class AuthorizeUseCaseTest
 
             val authSuccess = AuthenticateAndAuthorizeSuccess(
                 threeDSStatus = threeDSStatus,
+                exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                 pspReference = PSPReference("pspReference"))
 
             every { riskService.assessRisk(any()) }
@@ -95,6 +101,10 @@ class AuthorizeUseCaseTest
                 .returns( authSuccess)
 
             underTest.authorize(paymentPayload)
+
+            val result = paymentRepositoryNew.load(paymentId)
+
+            assertThat(result).isInstanceOf(Authorized::class.java)
 
             printPaymentInfo(paymentId)
         }
@@ -122,6 +132,7 @@ class AuthorizeUseCaseTest
 
                     val authReject = AuthenticateReject(
                         threeDSStatus = threeDSStatus,
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference"),
                         errorDescription = "errorDescription",
                         errorCode = "errorCode",
@@ -130,6 +141,7 @@ class AuthorizeUseCaseTest
                     )
                     val authSuccess = AuthenticateAndAuthorizeSuccess(
                         threeDSStatus = threeDSStatus,
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference")
                     )
 
@@ -166,6 +178,7 @@ class AuthorizeUseCaseTest
 
                     val authReject = AuthenticateReject(
                         threeDSStatus = threeDSStatus,
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference"),
                         errorDescription = "errorDescription",
                         errorCode = "errorCode",
@@ -174,6 +187,7 @@ class AuthorizeUseCaseTest
                     )
                     val authSuccess = AuthenticateAndAuthorizeSuccess(
                         threeDSStatus = threeDSStatus,
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference")
                     )
 
@@ -189,6 +203,10 @@ class AuthorizeUseCaseTest
                         .andThen( authSuccess )
 
                     underTest.authorize(paymentPayload)
+
+                    val result = paymentRepositoryNew.load(paymentId)
+
+                    assertThat(result).isInstanceOf(Authorized::class.java)
 
                     printPaymentInfo(paymentId)
                 }
@@ -211,6 +229,7 @@ class AuthorizeUseCaseTest
 
                 val authReject = AuthenticateReject(
                     threeDSStatus = threeDSStatus,
+                    exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                     pspReference = PSPReference("pspReference"),
                     errorDescription = "errorDescription",
                     errorCode = "errorCode",
@@ -219,6 +238,7 @@ class AuthorizeUseCaseTest
                 )
                 val authSuccess = AuthenticateAndAuthorizeSuccess(
                     threeDSStatus = threeDSStatus,
+                    exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                     pspReference = PSPReference("pspReference")
                 )
 
@@ -237,6 +257,10 @@ class AuthorizeUseCaseTest
                 underTest.authorize(paymentPayload)
 
                 printPaymentInfo(paymentId)
+
+                val result = paymentRepositoryNew.load(paymentId)
+
+                assertThat(result).isInstanceOf(RejectedByGatewayAndNotRetriable::class.java)
             }
         }
     }
@@ -250,7 +274,9 @@ class AuthorizeUseCaseTest
             val routingResult1 = RoutingResult.Proceed(
                 PaymentAccount(
                     accountId = AccountId("id1"),
-                    authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                    authorisationAction = AuthorisationAction.ThreeDS(
+                        exemptionPreference = DONT_TRY_EXEMPTION,
+                        authorizationPreference = ECI_CHECK))
             )
             val threeDSStatus =  ThreeDSStatus.PendingThreeDS(
                 version = ThreeDSVersion("2.1")
@@ -258,6 +284,7 @@ class AuthorizeUseCaseTest
             val authClientAction = AuthenticateClientAction(
                 threeDSStatus = threeDSStatus,
                 pspReference = PSPReference("pspReference"),
+                exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                 clientAction = ClientAction(ActionType.CHALLENGE))
 
             every { riskService.assessRisk(any()) }
@@ -270,6 +297,10 @@ class AuthorizeUseCaseTest
                 .returns( authClientAction )
 
             underTest.authorize(paymentPayload)
+
+            val result = paymentRepositoryNew.load(paymentId)
+
+            assertThat(result).isInstanceOf(ReadyForAuthenticationAndAuthorizeClientAction::class.java)
 
             printPaymentInfo(paymentId)
         }
@@ -289,29 +320,34 @@ class AuthorizeUseCaseTest
                         val routingResult1 = RoutingResult.Proceed(
                             PaymentAccount(
                                 accountId = AccountId("id1"),
-                                authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                                authorisationAction = AuthorisationAction.ThreeDS(
+                                    exemptionPreference = DONT_TRY_EXEMPTION,
+                                    authorizationPreference = ECI_CHECK))
                         )
                         val routingResult2 = RoutingResult.Proceed(
                             PaymentAccount(
                                 accountId = AccountId("id2"),
-                                authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                                authorisationAction =AuthorisationAction.ThreeDS(
+                                    exemptionPreference = DONT_TRY_EXEMPTION,
+                                    authorizationPreference = ECI_CHECK))
                         )
                         val authClientAction = AuthenticateClientAction(
                             threeDSStatus = ThreeDSStatus.PendingThreeDS(
                                 version = ThreeDSVersion("2.1")
                             ),
                             pspReference = PSPReference("pspReference"),
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             clientAction = ClientAction(ActionType.CHALLENGE)
                         )
                         val authReject = AuthenticateReject(
                             threeDSStatus = ThreeDSStatus.ThreeDS(
-                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
                                 eci = ECI(5),
                                 transactionId = ThreeDSTransactionId("transactionId"),
                                 cavv = CAVV("cavv"),
                                 xid = XID("xid")
                             ),
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference"),
                             errorDescription = "errorDescription",
                             errorCode = "errorCode",
@@ -320,13 +356,13 @@ class AuthorizeUseCaseTest
                         )
                         val authSuccess = AuthenticateAndAuthorizeSuccess(
                             threeDSStatus = ThreeDSStatus.ThreeDS(
-                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
                                 eci = ECI(2),
                                 transactionId = ThreeDSTransactionId("transactionId"),
                                 cavv = CAVV("cavv"),
                                 xid = XID("xid")
                             ),
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference")
                         )
 
@@ -346,6 +382,10 @@ class AuthorizeUseCaseTest
 
                         underTest.authorize(paymentPayload)
                         underTest.confirm(paymentId, mapOf("ECI" to "05"))
+
+                        val result = paymentRepositoryNew.load(paymentId)
+
+                        assertThat(result).isInstanceOf(Authorized::class.java)
 
                         printPaymentInfo(paymentId)
                     }
@@ -356,29 +396,34 @@ class AuthorizeUseCaseTest
                         val routingResult1 = RoutingResult.Proceed(
                             PaymentAccount(
                                 accountId = AccountId("id1"),
-                                authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                                authorisationAction = AuthorisationAction.ThreeDS(
+                                    exemptionPreference = DONT_TRY_EXEMPTION,
+                                    authorizationPreference = ECI_CHECK))
                         )
                         val routingResult2 = RoutingResult.Proceed(
                             PaymentAccount(
                                 accountId = AccountId("id2"),
-                                authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                                authorisationAction = AuthorisationAction.ThreeDS(
+                                    exemptionPreference = DONT_TRY_EXEMPTION,
+                                    authorizationPreference = ECI_CHECK))
                         )
                         val authClientAction = AuthenticateClientAction(
                             threeDSStatus = ThreeDSStatus.PendingThreeDS(
                                 version = ThreeDSVersion("2.1")
                             ),
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference"),
                             clientAction = ClientAction(ActionType.CHALLENGE)
                         )
                         val authReject = AuthenticateReject(
                             threeDSStatus = ThreeDSStatus.ThreeDS(
-                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
                                 eci = ECI(5),
                                 transactionId = ThreeDSTransactionId("transactionId"),
                                 cavv = CAVV("cavv"),
                                 xid = XID("xid")
                             ),
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference"),
                             errorDescription = "errorDescription",
                             errorCode = "errorCode",
@@ -387,13 +432,13 @@ class AuthorizeUseCaseTest
                         )
                         val authSuccess = AuthenticateAndAuthorizeSuccess(
                             threeDSStatus = ThreeDSStatus.ThreeDS(
-                                exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                                 version = ThreeDSVersion("2.1"),
                                 eci = ECI(2),
                                 transactionId = ThreeDSTransactionId("transactionId"),
                                 cavv = CAVV("cavv"),
                                 xid = XID("xid")
                             ),
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference")
                         )
 
@@ -413,6 +458,10 @@ class AuthorizeUseCaseTest
 
                         underTest.authorize(paymentPayload)
                         underTest.confirm(paymentId, mapOf("ECI" to "05"))
+
+                        val result = paymentRepositoryNew.load(paymentId)
+
+                        assertThat(result).isInstanceOf(Authorized::class.java)
 
                         printPaymentInfo(paymentId)
                     }
@@ -424,29 +473,34 @@ class AuthorizeUseCaseTest
                     val routingResult1 = RoutingResult.Proceed(
                         PaymentAccount(
                             accountId = AccountId("id1"),
-                            authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                            authorisationAction = AuthorisationAction.ThreeDS(
+                                exemptionPreference = DONT_TRY_EXEMPTION,
+                                authorizationPreference = ECI_CHECK))
                     )
                     val routingResult2 = RoutingResult.Proceed(
                         PaymentAccount(
                             accountId = AccountId("id2"),
-                            authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                            authorisationAction = AuthorisationAction.ThreeDS(
+                                exemptionPreference = DONT_TRY_EXEMPTION,
+                                authorizationPreference = ECI_CHECK))
                     )
                     val authClientAction = AuthenticateClientAction(
                         threeDSStatus = ThreeDSStatus.PendingThreeDS(
                             version = ThreeDSVersion("2.1")
                         ),
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference"),
                         clientAction = ClientAction(ActionType.CHALLENGE)
                     )
                     val authReject = AuthenticateReject(
                         threeDSStatus = ThreeDSStatus.ThreeDS(
-                            exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                             version = ThreeDSVersion("2.1"),
                             eci = ECI(5),
                             transactionId = ThreeDSTransactionId("transactionId"),
                             cavv = CAVV("cavv"),
                             xid = XID("xid")
                         ),
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference"),
                         errorDescription = "errorDescription",
                         errorCode = "errorCode",
@@ -472,6 +526,11 @@ class AuthorizeUseCaseTest
                     underTest.confirm(paymentId, mapOf("ECI" to "05"))
 
                     printPaymentInfo(paymentId)
+
+                    val result = paymentRepositoryNew.load(paymentId)
+
+                    assertThat(result).isInstanceOf(RejectedByGatewayAndNotRetriable::class.java)
+
                 }
             }
         }

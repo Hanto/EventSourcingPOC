@@ -5,6 +5,7 @@ import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.paymentaccount.AccountId
 import domain.payment.data.paymentaccount.AuthorisationAction
 import domain.payment.data.paymentaccount.AuthorisationAction.AuthorizationPreference.ECI_CHECK
+import domain.payment.data.paymentaccount.AuthorisationAction.ExemptionPreference.DONT_TRY_EXEMPTION
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
@@ -82,8 +83,14 @@ class AuthorizeUseCaseDecoupledTest
             )
             val threeDSStatus = ThreeDSStatus.NoThreeDS
 
-            val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(threeDSStatus, PSPReference("pspReference"))
-            val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(PSPReference("pspReference"))
+            val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
+                threeDSStatus = threeDSStatus,
+                exemptionStatus = ExemptionStatus.ExemptionNotRequested,
+                pspReference = PSPReference("pspReference"))
+
+            val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
+                exemptionStatus = ExemptionStatus.ExemptionNotRequested,
+                pspReference = PSPReference("pspReference"))
 
             every { riskService.assessRisk(any()) }
                 .returns(FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS))
@@ -98,6 +105,10 @@ class AuthorizeUseCaseDecoupledTest
                 .returns(authorizeSuccess)
 
             underTest.authorize(paymentPayload)
+
+            val result = paymentRepositoryNew.load(paymentId)
+
+            assertThat(result).isInstanceOf(Captured::class.java)
 
             printPaymentInfo(paymentId)
         }
@@ -127,10 +138,12 @@ class AuthorizeUseCaseDecoupledTest
                         )
                         val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
                             threeDSStatus = ThreeDSStatus.NoThreeDS,
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference"),
                         )
                         val authenticateReject = AuthenticateResponse.AuthenticateReject(
                             threeDSStatus = ThreeDSStatus.NoThreeDS,
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference"),
                             errorDescription = "errorDescription",
                             errorCode = "errorCode",
@@ -138,6 +151,7 @@ class AuthorizeUseCaseDecoupledTest
                             rejectionUseCase = RejectionUseCase.UNDEFINED
                         )
                         val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference"))
 
                         every { riskService.assessRisk(any()) }
@@ -182,16 +196,19 @@ class AuthorizeUseCaseDecoupledTest
                         )
                         val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
                             threeDSStatus = ThreeDSStatus.NoThreeDS,
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference"),
                         )
                         val authorizeReject = AuthorizeResponse.AuthorizeReject(
                             pspReference = PSPReference("pspReference"),
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             errorDescription = "errorDescription",
                             errorCode = "errorCode",
                             errorReason = ErrorReason.AUTHORIZATION_ERROR,
                             rejectionUseCase = RejectionUseCase.UNDEFINED
                         )
                         val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
+                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference")
                         )
 
@@ -238,17 +255,22 @@ class AuthorizeUseCaseDecoupledTest
                     val routingResult1 = RoutingResult.Proceed(
                         PaymentAccount(
                             accountId = AccountId("id1"),
-                            authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                            authorisationAction = AuthorisationAction.ThreeDS(
+                                exemptionPreference = DONT_TRY_EXEMPTION,
+                                authorizationPreference = ECI_CHECK))
                     )
                     val routingResult2 = RoutingResult.Proceed(
                         PaymentAccount(
                             accountId = AccountId("id2"),
-                            authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                            authorisationAction = AuthorisationAction.ThreeDS(
+                                exemptionPreference = DONT_TRY_EXEMPTION,
+                                authorizationPreference = ECI_CHECK))
                     )
                     val authenticateClientActionFingerprint = AuthenticateResponse.AuthenticateClientAction(
                         threeDSStatus = ThreeDSStatus.PendingThreeDS(
                             version = ThreeDSVersion("2.1")
                         ),
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference"),
                         clientAction = ClientAction(ActionType.FINGERPRINT)
                     )
@@ -256,18 +278,19 @@ class AuthorizeUseCaseDecoupledTest
                         threeDSStatus = ThreeDSStatus.PendingThreeDS(
                             version = ThreeDSVersion("2.1")
                         ),
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference"),
                         clientAction = ClientAction(ActionType.CHALLENGE)
                     )
                     val authenticateReject = AuthenticateResponse.AuthenticateReject(
                         threeDSStatus = ThreeDSStatus.ThreeDS(
-                            exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                             version = ThreeDSVersion("2.1"),
                             eci = ECI(5),
                             transactionId = ThreeDSTransactionId("transactionId"),
                             cavv = CAVV("cavv"),
                             xid = XID("xid"),
                         ),
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference"),
                         errorDescription = "errorDescription",
                         errorCode = "errorCode",
@@ -276,16 +299,17 @@ class AuthorizeUseCaseDecoupledTest
                     )
                     val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
                         threeDSStatus = ThreeDSStatus.ThreeDS(
-                            exemptionStatus = ExemptionStatus.ExemptionNotAccepted,
                             version = ThreeDSVersion("2.1"),
                             eci = ECI(2),
                             transactionId = ThreeDSTransactionId("transactionId"),
                             cavv = CAVV("cavv"),
                             xid = XID("xid")
                         ),
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference")
                     )
                     val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
+                        exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                         pspReference = PSPReference("pspReference")
                     )
 

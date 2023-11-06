@@ -1,5 +1,7 @@
 package infrastructure.repositories.paymentrepositoryold
 
+import domain.payment.data.AuthenticateOutcome
+import domain.payment.data.AuthorizeOutcome
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.paymentpayload.AuthorizationType
 import domain.payment.data.threedstatus.ExemptionStatus
@@ -8,6 +10,8 @@ import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.RiskEvaluatedEvent
 import domain.payment.state.*
 import domain.services.fraud.FraudAnalysisResult
+import domain.services.gateway.AuthenticateResponse
+import domain.services.gateway.AuthorizeResponse
 import infrastructure.repositories.paymentrepositoryold.paymentdata.AuthPaymentOperation
 import infrastructure.repositories.paymentrepositoryold.paymentdata.AuthPaymentOperation.Exemption
 import infrastructure.repositories.paymentrepositoryold.paymentdata.PaymentData
@@ -69,6 +73,8 @@ class PaymentAdapter
             is ReadyForAuthenticationAndAuthorizeConfirm -> null
             is ReadyForRoutingRetry -> null
             is ReadyForCaptureVerification -> null
+            is ReadyForRoutingAction -> null
+
             is ReadyForAuthorization -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = null,
@@ -81,6 +87,7 @@ class PaymentAdapter
                 status = AuthPaymentOperation.Status.PENDING,
                 paymentClassName = payment.toPaymentClassName()
             ) else null
+
             is ReadyForAuthentication -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = null,
@@ -99,11 +106,11 @@ class PaymentAdapter
 
             is ReadyForAuthenticationClientAction -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authenticateResponse.pspReference.value,
+                pspReference = payment.authenticateResponse.authenticateResponse.pspReference.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.threeDSStatus.toExemption(),
+                eci = payment.authenticateResponse.authenticateResponse.threeDSStatus.toECI(),
+                exemption = payment.authenticateResponse.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.PENDING,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -112,11 +119,11 @@ class PaymentAdapter
 
             is ReadyForAuthenticationAndAuthorizeClientAction -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authenticateResponse.pspReference.value,
+                pspReference = payment.authenticateResponse.authenticateResponse.pspReference.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.threeDSStatus.toExemption(),
+                eci = payment.authenticateResponse.authenticateResponse.threeDSStatus.toECI(),
+                exemption = payment.authenticateResponse.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.PENDING,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -132,11 +139,11 @@ class PaymentAdapter
             is Authorized -> if (payment.payload.authorizationType == AuthorizationType.PRE_AUTHORIZATION)
                 AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authorizeResponse.pspReference.value,
+                pspReference = toPSPReference(payment.authenticateResponse, payment.authorizeResponse),
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.threeDSStatus.toExemption(),
+                eci = payment.authenticateResponse.toECI(),
+                exemption = toExemption(payment.authenticateResponse, payment.authorizeResponse),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.OK,
@@ -145,11 +152,11 @@ class PaymentAdapter
 
             is Captured -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authorizeResponse.pspReference.value,
+                pspReference = toPSPReference(payment.authenticateResponse, payment.authorizeResponse),
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.threeDSStatus.toExemption(),
+                eci = payment.authenticateResponse.toECI(),
+                exemption = toExemption(payment.authenticateResponse, payment.authorizeResponse),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.OK,
@@ -158,24 +165,11 @@ class PaymentAdapter
 
             is Failed -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authorizeResponse?.pspReference?.value ?: payment.authenticateResponse?.pspReference?.value,
+                pspReference = toPSPReference(payment.authenticateResponse, payment.authorizeResponse),
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse?.threeDSStatus?.toECI(),
-                exemption = payment.authenticateResponse?.threeDSStatus.toExemption(),
-                authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
-                transactionType = payment.payload.authorizationType.toTransactionType(),
-                status = AuthPaymentOperation.Status.KO,
-                paymentClassName = payment.toPaymentClassName()
-            )
-
-            is RejectedByAuthentication -> AuthPaymentOperation(
-                paymentAccount = payment.paymentAccount,
-                pspReference = payment.authenticateResponse.pspReference.value,
-                reference =payment.attemptReference().value,
-                retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.threeDSStatus.toExemption(),
+                eci = payment.authenticateResponse?.toECI(),
+                exemption = toExemption(payment.authenticateResponse, payment.authorizeResponse),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.KO,
@@ -184,11 +178,24 @@ class PaymentAdapter
 
             is RejectedByAuthorization -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authorizeResponse.pspReference.value,
+                pspReference = payment.authorizeResponse.authorizeResponse.pspReference.value,
                 reference =payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.threeDSStatus.toExemption(),
+                eci = payment.authenticateResponse.toECI(),
+                exemption = toExemption(payment.authenticateResponse, payment.authorizeResponse),
+                authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.KO,
+                paymentClassName = payment.toPaymentClassName()
+            )
+
+            is RejectedByAuthentication -> AuthPaymentOperation(
+                paymentAccount = payment.paymentAccount,
+                pspReference = payment.authenticateResponse.authenticateResponse.pspReference.value,
+                reference =payment.attemptReference().value,
+                retry = payment.attempt.didRetry(),
+                eci = payment.authenticateResponse.authenticateResponse.threeDSStatus.toECI(),
+                exemption = payment.authenticateResponse.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.KO,
@@ -235,19 +242,72 @@ class PaymentAdapter
             FraudAnalysisResult.Denied -> null
         }
 
-    private fun ThreeDSStatus?.toExemption() =
+
+    private fun toPSPReference(authenticateOutcome: AuthenticateOutcome?, authorizeOutcome: AuthorizeOutcome?): String =
+
+        when (authenticateOutcome)
+        {
+            is AuthenticateOutcome.Performed -> authenticateOutcome.authenticateResponse.pspReference.value
+            null, is AuthenticateOutcome.Skipped -> when (authorizeOutcome)
+            {
+                is AuthorizeOutcome.Performed -> authorizeOutcome.authorizeResponse.pspReference.value
+                null, is AuthorizeOutcome.Skipped -> "SKIPED"
+            }
+        }
+
+    private fun toExemption(authenticateOutcome: AuthenticateOutcome?, authorizeOutcome: AuthorizeOutcome?): Exemption =
+
+        when (authenticateOutcome.toExemption())
+        {
+            Exemption.Accepted -> Exemption.Accepted
+            Exemption.NotAccepted -> Exemption.NotAccepted
+            Exemption.NotRequested -> authorizeOutcome.toExemption()
+        }
+
+    private fun AuthenticateOutcome?.toExemption(): Exemption =
 
         when (this)
         {
             null -> Exemption.NotRequested
-            is ThreeDSStatus.NoThreeDS -> Exemption.NotRequested
-            is ThreeDSStatus.PendingThreeDS -> Exemption.NotRequested
-            is ThreeDSStatus.ThreeDS -> when (this.exemptionStatus)
-            {
-                is ExemptionStatus.ExemptionNotRequested -> Exemption.NotRequested
-                is ExemptionStatus.ExemptionAccepted -> Exemption.Accepted
-                is ExemptionStatus.ExemptionNotAccepted -> Exemption.NotAccepted
-            }
+            is AuthenticateOutcome.Skipped -> Exemption.NotRequested
+            is AuthenticateOutcome.Performed -> this.authenticateResponse.toExemption()
+        }
+
+    private fun AuthorizeOutcome?.toExemption(): Exemption =
+
+        when (this)
+        {
+            null -> Exemption.NotRequested
+            is AuthorizeOutcome.Skipped -> Exemption.NotRequested
+            is AuthorizeOutcome.Performed -> this.authorizeResponse.toExemption()
+        }
+
+    private fun AuthenticateResponse?.toExemption(): Exemption =
+
+        when (this?.exemptionStatus)
+        {
+            null -> Exemption.NotRequested
+            is ExemptionStatus.ExemptionNotRequested -> Exemption.NotRequested
+            is ExemptionStatus.ExemptionAccepted -> Exemption.Accepted
+            is ExemptionStatus.ExemptionNotAccepted -> Exemption.NotAccepted
+        }
+
+    private fun AuthorizeResponse?.toExemption(): Exemption =
+
+        when (this?.exemptionStatus)
+        {
+            null -> Exemption.NotRequested
+            is ExemptionStatus.ExemptionNotRequested -> Exemption.NotRequested
+            is ExemptionStatus.ExemptionAccepted -> Exemption.Accepted
+            is ExemptionStatus.ExemptionNotAccepted -> Exemption.NotAccepted
+        }
+
+    private fun AuthenticateOutcome.toECI() =
+
+        when (this)
+        {
+            is AuthenticateOutcome.Skipped -> null
+            is AuthenticateOutcome.Performed -> this.authenticateResponse.threeDSStatus.toECI()
         }
 
     private fun ThreeDSStatus.toECI() =
@@ -257,6 +317,7 @@ class PaymentAdapter
             is ThreeDSStatus.NoThreeDS -> null
             is ThreeDSStatus.PendingThreeDS -> null
             is ThreeDSStatus.ThreeDS -> this.eci.value.toString()
+
         }
 
     private fun AuthorizationType.toTransactionType() =
