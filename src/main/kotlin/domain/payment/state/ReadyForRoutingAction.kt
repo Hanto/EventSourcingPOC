@@ -7,6 +7,9 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.AuthorisationAction
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
+import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
+import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
+import domain.payment.data.paymentpayload.paymentmethod.PayPalPayment
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.RoutingActionEvaluatedEVent
 import domain.payment.sideeffectevents.SideEffectEvent
@@ -68,11 +71,11 @@ data class ReadyForRoutingAction
             )
         }
 
-        return when(paymentAccount.authorisationAction)
+        return when(payload.paymentMethod)
         {
-            is AuthorisationAction.ThreeDS ->
+            KlarnaPayment, PayPalPayment ->
             {
-                ReadyForAuthentication(
+                return ReadyForAuthentication(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -83,32 +86,51 @@ data class ReadyForRoutingAction
                 )
             }
 
-            is AuthorisationAction.Moto ->
+            CreditCardPayment ->
             {
-                ReadyForAuthorization(
-                    version = newVersion,
-                    paymentEvents= newEvents,
-                    sideEffectEvents = newSideEffectEvents.list,
-                    attempt = attempt,
-                    payload = payload,
-                    riskAssessmentOutcome = riskAssessmentOutcome,
-                    paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Skipped
-                )
-            }
+                when(paymentAccount.authorisationAction)
+                {
+                    is AuthorisationAction.ThreeDS ->
+                    {
+                        ReadyForAuthentication(
+                            version = newVersion,
+                            paymentEvents = newEvents,
+                            sideEffectEvents = newSideEffectEvents.list,
+                            attempt = attempt,
+                            payload = payload,
+                            riskAssessmentOutcome = riskAssessmentOutcome,
+                            paymentAccount = paymentAccount
+                        )
+                    }
 
-            is AuthorisationAction.Ecommerce ->
-            {
-                ReadyForAuthorization(
-                    version = newVersion,
-                    paymentEvents= newEvents,
-                    sideEffectEvents = newSideEffectEvents.list,
-                    attempt = attempt,
-                    payload = payload,
-                    riskAssessmentOutcome = riskAssessmentOutcome,
-                    paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Skipped
-                )
+                    is AuthorisationAction.Moto ->
+                    {
+                        ReadyForAuthorization(
+                            version = newVersion,
+                            paymentEvents= newEvents,
+                            sideEffectEvents = newSideEffectEvents.list,
+                            attempt = attempt,
+                            payload = payload,
+                            riskAssessmentOutcome = riskAssessmentOutcome,
+                            paymentAccount = paymentAccount,
+                            authenticateResponse = AuthenticateOutcome.Skipped
+                        )
+                    }
+
+                    is AuthorisationAction.Ecommerce ->
+                    {
+                        ReadyForAuthorization(
+                            version = newVersion,
+                            paymentEvents= newEvents,
+                            sideEffectEvents = newSideEffectEvents.list,
+                            attempt = attempt,
+                            payload = payload,
+                            riskAssessmentOutcome = riskAssessmentOutcome,
+                            paymentAccount = paymentAccount,
+                            authenticateResponse = AuthenticateOutcome.Skipped
+                        )
+                    }
+                }
             }
         }
     }
