@@ -11,6 +11,5 @@ data class RiskEvaluatedEvent
     override val version: Version,
     val fraudAnalysisResult: FraudAnalysisResult
 
-        ): PaymentEvent
-{
-}
+): PaymentEvent
+
