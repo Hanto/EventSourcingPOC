@@ -3,6 +3,8 @@ package application
 import domain.payment.data.PSPReference
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.paymentaccount.AccountId
+import domain.payment.data.paymentaccount.AuthorisationAction
+import domain.payment.data.paymentaccount.AuthorisationAction.AuthorizationPreference.ECI_CHECK
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
@@ -72,6 +74,11 @@ class AuthorizeUseCaseTest
         @Test
         fun whenNoRetry()
         {
+            val routingResult1 = RoutingResult.Proceed(
+                PaymentAccount(
+                    accountId = AccountId("id1"),
+                    authorisationAction = AuthorisationAction.Moto)
+            )
             val threeDSStatus = ThreeDSStatus.NoThreeDS
 
             val authSuccess = AuthenticateAndAuthorizeSuccess(
@@ -82,7 +89,7 @@ class AuthorizeUseCaseTest
                 .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
 
             every { routingService.routeForPayment(any()) }
-                .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+                .returns( routingResult1 )
 
             every { authorizationGateway.authenticateAndAuthorize(any()) }
                 .returns( authSuccess)
@@ -101,6 +108,16 @@ class AuthorizeUseCaseTest
                 @Test
                 fun whenRetryButSameAccount()
                 {
+                    val routingResult1 = RoutingResult.Proceed(
+                        PaymentAccount(
+                            accountId = AccountId("id1"),
+                            authorisationAction = AuthorisationAction.Moto)
+                    )
+                    val routingResult2 = RoutingResult.Proceed(
+                        PaymentAccount(
+                            accountId = AccountId("id2"),
+                            authorisationAction = AuthorisationAction.Moto)
+                    )
                     val threeDSStatus = ThreeDSStatus.NoThreeDS
 
                     val authReject = AuthenticateReject(
@@ -120,8 +137,8 @@ class AuthorizeUseCaseTest
                         .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
 
                     every { routingService.routeForPayment(any()) }
-                        .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                        .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+                        .returns( routingResult1 )
+                        .andThen( routingResult2 )
 
                     every { authorizationGateway.authenticateAndAuthorize(any()) }
                         .returns( authReject)
@@ -135,6 +152,16 @@ class AuthorizeUseCaseTest
                 @Test
                 fun whenRetryAndDifferentAccount()
                 {
+                    val routingResult1 = RoutingResult.Proceed(
+                        PaymentAccount(
+                            accountId = AccountId("id1"),
+                            authorisationAction = AuthorisationAction.Moto)
+                    )
+                    val routingResult2 = RoutingResult.Proceed(
+                        PaymentAccount(
+                            accountId = AccountId("id2"),
+                            authorisationAction = AuthorisationAction.Moto)
+                    )
                     val threeDSStatus = ThreeDSStatus.NoThreeDS
 
                     val authReject = AuthenticateReject(
@@ -154,8 +181,8 @@ class AuthorizeUseCaseTest
                         .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
 
                     every { routingService.routeForPayment(any()) }
-                        .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                        .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+                        .returns( routingResult1 )
+                        .andThen( routingResult2 )
 
                     every { authorizationGateway.authenticateAndAuthorize(any()) }
                         .returns( authReject)
@@ -170,6 +197,16 @@ class AuthorizeUseCaseTest
             @Test
             fun whenSecondRetry()
             {
+                val routingResult1 = RoutingResult.Proceed(
+                    PaymentAccount(
+                        accountId = AccountId("id1"),
+                        authorisationAction = AuthorisationAction.Moto)
+                )
+                val routingResult2 = RoutingResult.Proceed(
+                    PaymentAccount(
+                        accountId = AccountId("id2"),
+                        authorisationAction = AuthorisationAction.Moto)
+                )
                 val threeDSStatus = ThreeDSStatus.NoThreeDS
 
                 val authReject = AuthenticateReject(
@@ -189,9 +226,8 @@ class AuthorizeUseCaseTest
                     .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
 
                 every { routingService.routeForPayment(any()) }
-                    .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                    .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
-                    .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id3"))) )
+                    .returns( routingResult1 )
+                    .andThen( routingResult2 )
 
                 every { authorizationGateway.authenticateAndAuthorize(any()) }
                     .returns( authReject)
@@ -211,6 +247,11 @@ class AuthorizeUseCaseTest
         @Test
         fun when3DSPending()
         {
+            val routingResult1 = RoutingResult.Proceed(
+                PaymentAccount(
+                    accountId = AccountId("id1"),
+                    authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+            )
             val threeDSStatus =  ThreeDSStatus.PendingThreeDS(
                 version = ThreeDSVersion("2.1")
             )
@@ -223,7 +264,7 @@ class AuthorizeUseCaseTest
                 .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
 
             every { routingService.routeForPayment(any()) }
-                .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+                .returns( routingResult1 )
 
             every { authorizationGateway.authenticateAndAuthorize(any()) }
                 .returns( authClientAction )
@@ -245,6 +286,16 @@ class AuthorizeUseCaseTest
                     @Test
                     fun whenRetryButSameAccount()
                     {
+                        val routingResult1 = RoutingResult.Proceed(
+                            PaymentAccount(
+                                accountId = AccountId("id1"),
+                                authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                        )
+                        val routingResult2 = RoutingResult.Proceed(
+                            PaymentAccount(
+                                accountId = AccountId("id2"),
+                                authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                        )
                         val authClientAction = AuthenticateClientAction(
                             threeDSStatus = ThreeDSStatus.PendingThreeDS(
                                 version = ThreeDSVersion("2.1")
@@ -283,8 +334,8 @@ class AuthorizeUseCaseTest
                             .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
 
                         every { routingService.routeForPayment(any()) }
-                            .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
+                            .returns( routingResult1 )
+                            .andThen( routingResult2 )
 
                         every { authorizationGateway.authenticateAndAuthorize(any()) }
                             .returns( authClientAction )
@@ -302,6 +353,16 @@ class AuthorizeUseCaseTest
                     @Test
                     fun whenRetryAndDifferentAccount()
                     {
+                        val routingResult1 = RoutingResult.Proceed(
+                            PaymentAccount(
+                                accountId = AccountId("id1"),
+                                authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                        )
+                        val routingResult2 = RoutingResult.Proceed(
+                            PaymentAccount(
+                                accountId = AccountId("id2"),
+                                authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                        )
                         val authClientAction = AuthenticateClientAction(
                             threeDSStatus = ThreeDSStatus.PendingThreeDS(
                                 version = ThreeDSVersion("2.1")
@@ -340,8 +401,8 @@ class AuthorizeUseCaseTest
                             .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
 
                         every { routingService.routeForPayment(any()) }
-                            .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+                            .returns( routingResult1 )
+                            .andThen( routingResult2 )
 
                         every { authorizationGateway.authenticateAndAuthorize(any()) }
                             .returns( authClientAction )
@@ -360,6 +421,16 @@ class AuthorizeUseCaseTest
                 @Test
                 fun whenSecondRetry()
                 {
+                    val routingResult1 = RoutingResult.Proceed(
+                        PaymentAccount(
+                            accountId = AccountId("id1"),
+                            authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                    )
+                    val routingResult2 = RoutingResult.Proceed(
+                        PaymentAccount(
+                            accountId = AccountId("id2"),
+                            authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                    )
                     val authClientAction = AuthenticateClientAction(
                         threeDSStatus = ThreeDSStatus.PendingThreeDS(
                             version = ThreeDSVersion("2.1")
@@ -387,8 +458,8 @@ class AuthorizeUseCaseTest
                         .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
 
                     every { routingService.routeForPayment(any()) }
-                        .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                        .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+                        .returns( routingResult1 )
+                        .andThen( routingResult2 )
 
                     every { authorizationGateway.authenticateAndAuthorize(any()) }
                         .returns( authClientAction )

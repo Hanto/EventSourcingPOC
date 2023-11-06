@@ -3,6 +3,8 @@ package application
 import domain.payment.data.PSPReference
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.paymentaccount.AccountId
+import domain.payment.data.paymentaccount.AuthorisationAction
+import domain.payment.data.paymentaccount.AuthorisationAction.AuthorizationPreference.ECI_CHECK
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
@@ -73,6 +75,11 @@ class AuthorizeUseCaseDecoupledTest
         @Test
         fun whenNoRetry()
         {
+            val routingResult1 = RoutingResult.Proceed(
+                PaymentAccount(
+                    accountId = AccountId("id1"),
+                    authorisationAction = AuthorisationAction.Moto)
+            )
             val threeDSStatus = ThreeDSStatus.NoThreeDS
 
             val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(threeDSStatus, PSPReference("pspReference"))
@@ -82,7 +89,7 @@ class AuthorizeUseCaseDecoupledTest
                 .returns(FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS))
 
             every { routingService.routeForPayment(any()) }
-                .returns(RoutingResult.Proceed(PaymentAccount(AccountId("id1"))))
+                .returns( routingResult1 )
 
             every { authorizationGateway.authenticate(any()) }
                 .returns(authenticateSuccess)
@@ -108,6 +115,16 @@ class AuthorizeUseCaseDecoupledTest
                     @Test
                     fun whenDifferentAccount()
                     {
+                        val routingResult1 = RoutingResult.Proceed(
+                            PaymentAccount(
+                                accountId = AccountId("id1"),
+                                authorisationAction = AuthorisationAction.Moto)
+                        )
+                        val routingResult2 = RoutingResult.Proceed(
+                            PaymentAccount(
+                                accountId = AccountId("id2"),
+                                authorisationAction = AuthorisationAction.Moto)
+                        )
                         val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
                             threeDSStatus = ThreeDSStatus.NoThreeDS,
                             pspReference = PSPReference("pspReference"),
@@ -127,8 +144,8 @@ class AuthorizeUseCaseDecoupledTest
                             .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
 
                         every { routingService.routeForPayment(any()) }
-                            .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+                            .returns( routingResult1 )
+                            .andThen( routingResult2 )
 
                         every { authorizationGateway.authenticate(any()) }
                             .returns( authenticateReject)
@@ -153,6 +170,16 @@ class AuthorizeUseCaseDecoupledTest
                     @Test
                     fun whenDifferentAccount()
                     {
+                        val routingResult1 = RoutingResult.Proceed(
+                            PaymentAccount(
+                                accountId = AccountId("id1"),
+                                authorisationAction = AuthorisationAction.Moto)
+                        )
+                        val routingResult2 = RoutingResult.Proceed(
+                            PaymentAccount(
+                                accountId = AccountId("id2"),
+                                authorisationAction = AuthorisationAction.Moto)
+                        )
                         val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
                             threeDSStatus = ThreeDSStatus.NoThreeDS,
                             pspReference = PSPReference("pspReference"),
@@ -172,8 +199,8 @@ class AuthorizeUseCaseDecoupledTest
                             .returns( FraudAnalysisResult.Approved(RiskAssessmentOutcome.FRICTIONLESS) )
 
                         every { routingService.routeForPayment(any()) }
-                            .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                            .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+                            .returns( routingResult1 )
+                            .andThen( routingResult2 )
 
                         every { authorizationGateway.authenticate(any()) }
                             .returns( authenticateSuccess)
@@ -208,6 +235,16 @@ class AuthorizeUseCaseDecoupledTest
                 @Test
                 fun whenDifferentAccount()
                 {
+                    val routingResult1 = RoutingResult.Proceed(
+                        PaymentAccount(
+                            accountId = AccountId("id1"),
+                            authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                    )
+                    val routingResult2 = RoutingResult.Proceed(
+                        PaymentAccount(
+                            accountId = AccountId("id2"),
+                            authorisationAction = AuthorisationAction.ThreeDS(ECI_CHECK))
+                    )
                     val authenticateClientActionFingerprint = AuthenticateResponse.AuthenticateClientAction(
                         threeDSStatus = ThreeDSStatus.PendingThreeDS(
                             version = ThreeDSVersion("2.1")
@@ -256,8 +293,8 @@ class AuthorizeUseCaseDecoupledTest
                         .returns( FraudAnalysisResult.Approved(riskAssessmentOutcome = RiskAssessmentOutcome.AUTHENTICATION_MANDATORY) )
 
                     every { routingService.routeForPayment(any()) }
-                        .returns( RoutingResult.Proceed(PaymentAccount(AccountId("id1"))) )
-                        .andThen( RoutingResult.Proceed(PaymentAccount(AccountId("id2"))) )
+                        .returns( routingResult1 )
+                        .andThen( routingResult2 )
 
                     // (authon) fingerprint -> (confirm) challenge -> (confirm) reject ->
                     // (authon) challenge -> (confirm) success --> (authze) -> success
