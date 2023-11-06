@@ -20,10 +20,10 @@ data class RejectedByAuthorization
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateOutcome,
-    val authorizeResponse: AuthorizeOutcome.Performed,
+    val authenticateOutcome: AuthenticateOutcome,
+    val authorizeOutcome: AuthorizeOutcome.Performed,
 
-    ): AbstractPayment(), Payment, Rejected, RejectedByGateway
+): AbstractPayment(), Payment, Rejected, RejectedByGateway
 {
     private val log = Logger.getLogger(RejectedByAuthorization::class.java.name)
 

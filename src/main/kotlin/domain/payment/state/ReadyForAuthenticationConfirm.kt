@@ -20,7 +20,7 @@ data class ReadyForAuthenticationConfirm
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateOutcome.Performed,
+    val authenticateOutcome: AuthenticateOutcome.Performed,
 
 ): AbstractPayment(), Payment
 {
@@ -72,7 +72,7 @@ data class ReadyForAuthenticationConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
                 )
             }
             // OPTIONAL FLOW: (TBD)
@@ -92,8 +92,8 @@ data class ReadyForAuthenticationConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
-                    authorizeResponse = AuthorizeOutcome.Skipped
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authorizeOutcome = AuthorizeOutcome.Skipped
                 )
             }
 
@@ -109,7 +109,7 @@ data class ReadyForAuthenticationConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
                 )
             }
 
@@ -126,7 +126,7 @@ data class ReadyForAuthenticationConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
                 )
             }
 
@@ -143,8 +143,8 @@ data class ReadyForAuthenticationConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
-                    authorizeResponse = null,
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authorizeOutcome = null,
                     reason = "exception on authorization"
                 )
             }

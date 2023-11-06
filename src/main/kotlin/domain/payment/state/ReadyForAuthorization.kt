@@ -19,7 +19,7 @@ data class ReadyForAuthorization
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateOutcome,
+    val authenticateOutcome: AuthenticateOutcome,
 
 ): AbstractPayment(), Payment
 {
@@ -70,8 +70,8 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = authenticateResponse,
-                    authorizeResponse = AuthorizeOutcome.Performed(event.authorizeResponse),
+                    authenticateOutcome = authenticateOutcome,
+                    authorizeOutcome = AuthorizeOutcome.Performed(event.authorizeResponse),
                 )
             }
 
@@ -87,8 +87,8 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = authenticateResponse,
-                    authorizeResponse = AuthorizeOutcome.Performed(event.authorizeResponse),
+                    authenticateOutcome = authenticateOutcome,
+                    authorizeOutcome = AuthorizeOutcome.Performed(event.authorizeResponse),
                 )
             }
 
@@ -104,8 +104,8 @@ data class ReadyForAuthorization
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = authenticateResponse,
-                    authorizeResponse = AuthorizeOutcome.Performed(event.authorizeResponse),
+                    authenticateOutcome = authenticateOutcome,
+                    authorizeOutcome = AuthorizeOutcome.Performed(event.authorizeResponse),
                     reason = "exception on authorization"
                 )
             }

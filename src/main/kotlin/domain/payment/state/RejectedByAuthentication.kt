@@ -23,7 +23,7 @@ data class RejectedByAuthentication
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateOutcome.Performed,
+    val authenticateOutcome: AuthenticateOutcome.Performed,
 
 ): AbstractPayment(), Payment, Rejected, RejectedByGateway
 {

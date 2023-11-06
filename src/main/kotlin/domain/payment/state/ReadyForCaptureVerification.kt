@@ -20,8 +20,8 @@ data class ReadyForCaptureVerification
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateOutcome,
-    val authorizeResponse: AuthorizeOutcome,
+    val authenticateOutcome: AuthenticateOutcome,
+    val authorizeOutcome: AuthorizeOutcome,
 
 ): AbstractPayment(), Payment
 {
@@ -70,8 +70,8 @@ data class ReadyForCaptureVerification
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = authenticateResponse,
-                    authorizeResponse = authorizeResponse
+                    authenticateOutcome = authenticateOutcome,
+                    authorizeOutcome = authorizeOutcome
                 )
             }
             AuthorizationType.PRE_AUTHORIZATION ->
@@ -84,8 +84,8 @@ data class ReadyForCaptureVerification
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = authenticateResponse,
-                    authorizeResponse = authorizeResponse
+                    authenticateOutcome = authenticateOutcome,
+                    authorizeOutcome = authorizeOutcome
                 )
             }
         }

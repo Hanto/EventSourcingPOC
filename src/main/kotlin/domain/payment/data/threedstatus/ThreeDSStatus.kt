@@ -14,9 +14,9 @@ sealed class ThreeDSStatus
 
         val version: ThreeDSVersion,
         val eci: ECI,
-        val transactionId: ThreeDSTransactionId,
-        val cavv: CAVV,
-        val xid: XID,
+        val transactionId: ThreeDSTransactionId, // Mask when persisting
+        val cavv: CAVV,                          // Mask when persisting
+        val xid: XID,                            // Mask when persisting
 
     ): ThreeDSStatus()
 }

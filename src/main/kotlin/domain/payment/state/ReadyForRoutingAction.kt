@@ -113,7 +113,7 @@ data class ReadyForRoutingAction
                             payload = payload,
                             riskAssessmentOutcome = riskAssessmentOutcome,
                             paymentAccount = paymentAccount,
-                            authenticateResponse = AuthenticateOutcome.Skipped
+                            authenticateOutcome = AuthenticateOutcome.Skipped
                         )
                     }
 
@@ -127,7 +127,7 @@ data class ReadyForRoutingAction
                             payload = payload,
                             riskAssessmentOutcome = riskAssessmentOutcome,
                             paymentAccount = paymentAccount,
-                            authenticateResponse = AuthenticateOutcome.Skipped
+                            authenticateOutcome = AuthenticateOutcome.Skipped
                         )
                     }
                 }

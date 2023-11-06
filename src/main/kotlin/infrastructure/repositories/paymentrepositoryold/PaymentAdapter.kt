@@ -106,11 +106,11 @@ class PaymentAdapter
 
             is ReadyForAuthenticationClientAction -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authenticateResponse.authenticateResponse.pspReference.value,
+                pspReference = payment.authenticateOutcome.authenticateResponse.pspReference.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.toExemption(),
+                eci = payment.authenticateOutcome.authenticateResponse.threeDSStatus.toECI(),
+                exemption = payment.authenticateOutcome.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.PENDING,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -119,11 +119,11 @@ class PaymentAdapter
 
             is ReadyForAuthenticationAndAuthorizeClientAction -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authenticateResponse.authenticateResponse.pspReference.value,
+                pspReference = payment.authenticateOutcome.authenticateResponse.pspReference.value,
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.toExemption(),
+                eci = payment.authenticateOutcome.authenticateResponse.threeDSStatus.toECI(),
+                exemption = payment.authenticateOutcome.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.PENDING,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.PENDING,
@@ -139,11 +139,11 @@ class PaymentAdapter
             is Authorized -> if (payment.payload.authorizationType == AuthorizationType.PRE_AUTHORIZATION)
                 AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = toPSPReference(payment.authenticateResponse, payment.authorizeResponse),
+                pspReference = toPSPReference(payment.authenticateOutcome, payment.authorizeOutcome),
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.toECI(),
-                exemption = toExemption(payment.authenticateResponse, payment.authorizeResponse),
+                eci = payment.authenticateOutcome.toECI(),
+                exemption = toExemption(payment.authenticateOutcome, payment.authorizeOutcome),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.OK,
@@ -152,11 +152,11 @@ class PaymentAdapter
 
             is Captured -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = toPSPReference(payment.authenticateResponse, payment.authorizeResponse),
+                pspReference = toPSPReference(payment.authenticateOutcome, payment.authorizeOutcome),
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.toECI(),
-                exemption = toExemption(payment.authenticateResponse, payment.authorizeResponse),
+                eci = payment.authenticateOutcome.toECI(),
+                exemption = toExemption(payment.authenticateOutcome, payment.authorizeOutcome),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.OK,
@@ -165,11 +165,11 @@ class PaymentAdapter
 
             is Failed -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = toPSPReference(payment.authenticateResponse, payment.authorizeResponse),
+                pspReference = toPSPReference(payment.authenticateOutcome, payment.authorizeOutcome),
                 reference = payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse?.toECI(),
-                exemption = toExemption(payment.authenticateResponse, payment.authorizeResponse),
+                eci = payment.authenticateOutcome?.toECI(),
+                exemption = toExemption(payment.authenticateOutcome, payment.authorizeOutcome),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.KO,
@@ -178,11 +178,11 @@ class PaymentAdapter
 
             is RejectedByAuthorization -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authorizeResponse.authorizeResponse.pspReference.value,
+                pspReference = payment.authorizeOutcome.authorizeResponse.pspReference.value,
                 reference =payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.toECI(),
-                exemption = toExemption(payment.authenticateResponse, payment.authorizeResponse),
+                eci = payment.authenticateOutcome.toECI(),
+                exemption = toExemption(payment.authenticateOutcome, payment.authorizeOutcome),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.KO,
@@ -191,11 +191,11 @@ class PaymentAdapter
 
             is RejectedByAuthentication -> AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
-                pspReference = payment.authenticateResponse.authenticateResponse.pspReference.value,
+                pspReference = payment.authenticateOutcome.authenticateResponse.pspReference.value,
                 reference =payment.attemptReference().value,
                 retry = payment.attempt.didRetry(),
-                eci = payment.authenticateResponse.authenticateResponse.threeDSStatus.toECI(),
-                exemption = payment.authenticateResponse.toExemption(),
+                eci = payment.authenticateOutcome.authenticateResponse.threeDSStatus.toECI(),
+                exemption = payment.authenticateOutcome.toExemption(),
                 authenticationStatus = AuthPaymentOperation.AuthenticationStatus.COMPLETED,
                 transactionType = payment.payload.authorizationType.toTransactionType(),
                 status = AuthPaymentOperation.Status.KO,

@@ -20,7 +20,7 @@ data class ReadyForAuthenticationClientAction
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateResponse: AuthenticateOutcome.Performed,
+    val authenticateOutcome: AuthenticateOutcome.Performed,
 
 ): AbstractPayment(), Payment
 {
@@ -50,7 +50,7 @@ data class ReadyForAuthenticationClientAction
             riskAssessmentOutcome = riskAssessmentOutcome,
             attempt = attempt,
             paymentAccount = paymentAccount,
-            authenticateResponse = authenticateResponse,
+            authenticateOutcome = authenticateOutcome,
         )
     }
 }

@@ -79,7 +79,7 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse)
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse)
                 )
             }
             // OPTIONAL FLOW: (TBD)
@@ -99,8 +99,8 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
-                    authorizeResponse = AuthorizeOutcome.Skipped
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authorizeOutcome = AuthorizeOutcome.Skipped
                 )
             }
 
@@ -117,7 +117,7 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse)
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse)
                 )
             }
 
@@ -133,7 +133,7 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse)
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse)
                 )
             }
 
@@ -149,8 +149,8 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
-                    authorizeResponse = null,
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authorizeOutcome = null,
                     reason = "Authentication failed"
                 )
             }
@@ -182,8 +182,8 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
-                    authorizeResponse = null,
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authorizeOutcome = null,
                     reason = "Response not valid for not-decoupled Authenticate flow"
                 )
             }
@@ -203,8 +203,8 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
-                    authorizeResponse = AuthorizeOutcome.Skipped
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authorizeOutcome = AuthorizeOutcome.Skipped
                 )
             }
 
@@ -221,7 +221,7 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse)
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse)
                 )
             }
 
@@ -237,7 +237,7 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse)
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse)
                 )
             }
 
@@ -253,8 +253,8 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateResponse = AuthenticateOutcome.Performed(event.authenticateResponse),
-                    authorizeResponse = null,
+                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authorizeOutcome = null,
                     reason = "Authentication failed"
                 )
             }

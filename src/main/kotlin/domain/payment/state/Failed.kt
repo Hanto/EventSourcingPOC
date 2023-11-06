@@ -15,11 +15,11 @@ data class Failed
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome?,
     val paymentAccount: PaymentAccount?,
-    val authenticateResponse: AuthenticateOutcome?,
-    val authorizeResponse: AuthorizeOutcome?,
+    val authenticateOutcome: AuthenticateOutcome?,
+    val authorizeOutcome: AuthorizeOutcome?,
     val reason: String,
 
-): AbstractPayment(), Payment
+    ): AbstractPayment(), Payment
 {
     override fun payload(): PaymentPayload = payload
     override fun apply(event: PaymentEvent, isNew: Boolean): Payment = this
