@@ -102,11 +102,11 @@ class AuthorizeUseCaseTest
 
             underTest.authorize(paymentPayload)
 
+            printPaymentInfo(paymentId)
+
             val result = paymentRepositoryNew.load(paymentId)
 
             assertThat(result).isInstanceOf(Authorized::class.java)
-
-            printPaymentInfo(paymentId)
         }
 
         @Nested
@@ -159,6 +159,10 @@ class AuthorizeUseCaseTest
                     underTest.authorize(paymentPayload)
 
                     printPaymentInfo(paymentId)
+
+                    val result = paymentRepositoryNew.load(paymentId)
+
+                    assertThat(result).isInstanceOf(Authorized::class.java)
                 }
 
                 @Test
@@ -204,11 +208,11 @@ class AuthorizeUseCaseTest
 
                     underTest.authorize(paymentPayload)
 
+                    printPaymentInfo(paymentId)
+
                     val result = paymentRepositoryNew.load(paymentId)
 
                     assertThat(result).isInstanceOf(Authorized::class.java)
-
-                    printPaymentInfo(paymentId)
                 }
             }
 
@@ -298,11 +302,11 @@ class AuthorizeUseCaseTest
 
             underTest.authorize(paymentPayload)
 
+            printPaymentInfo(paymentId)
+
             val result = paymentRepositoryNew.load(paymentId)
 
             assertThat(result).isInstanceOf(ReadyForAuthenticationAndAuthorizeClientAction::class.java)
-
-            printPaymentInfo(paymentId)
         }
 
         @Nested
@@ -383,11 +387,11 @@ class AuthorizeUseCaseTest
                         underTest.authorize(paymentPayload)
                         underTest.confirm(paymentId, mapOf("ECI" to "05"))
 
+                        printPaymentInfo(paymentId)
+
                         val result = paymentRepositoryNew.load(paymentId)
 
                         assertThat(result).isInstanceOf(Authorized::class.java)
-
-                        printPaymentInfo(paymentId)
                     }
 
                     @Test
@@ -459,11 +463,11 @@ class AuthorizeUseCaseTest
                         underTest.authorize(paymentPayload)
                         underTest.confirm(paymentId, mapOf("ECI" to "05"))
 
+                        printPaymentInfo(paymentId)
+
                         val result = paymentRepositoryNew.load(paymentId)
 
                         assertThat(result).isInstanceOf(Authorized::class.java)
-
-                        printPaymentInfo(paymentId)
                     }
                 }
 

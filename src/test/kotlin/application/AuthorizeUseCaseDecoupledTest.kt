@@ -106,13 +106,12 @@ class AuthorizeUseCaseDecoupledTest
 
             underTest.authorize(paymentPayload)
 
+            printPaymentInfo(paymentId)
+
             val result = paymentRepositoryNew.load(paymentId)
 
             assertThat(result).isInstanceOf(Captured::class.java)
-
-            printPaymentInfo(paymentId)
         }
-
 
         @Nested
         inner class WhenRetry
@@ -170,11 +169,11 @@ class AuthorizeUseCaseDecoupledTest
 
                         underTest.authorize(paymentPayload)
 
+                        printPaymentInfo(paymentId)
+
                         val result = paymentRepositoryNew.load(paymentId)
 
                         assertThat(result).isInstanceOf(Captured::class.java)
-
-                        printPaymentInfo(paymentId)
                     }
                 }
 
@@ -229,11 +228,11 @@ class AuthorizeUseCaseDecoupledTest
 
                         underTest.authorize(paymentPayload)
 
+                        printPaymentInfo(paymentId)
+
                         val result = paymentRepositoryNew.load(paymentId)
 
                         assertThat(result).isInstanceOf(Captured::class.java)
-
-                        printPaymentInfo(paymentId)
                     }
                 }
             }
@@ -342,9 +341,9 @@ class AuthorizeUseCaseDecoupledTest
 
                     val result = paymentRepositoryNew.load(paymentId)
 
-                    assertThat(result).isInstanceOf(Captured::class.java)
-
                     printPaymentInfo(paymentId)
+
+                    assertThat(result).isInstanceOf(Captured::class.java)
                 }
             }
         }
