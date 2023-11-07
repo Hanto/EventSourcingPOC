@@ -285,7 +285,7 @@ class AuthorizeUseCaseDecoupledTest
                         .returns( authenticateClientActionFingerprint )
                         .andThen( authenticateClientActionChallenge )
 
-                    every { authorizationGateway.confirmAuthenticate( any()) }
+                    every { authorizationGateway.continueAuthenticate( any()) }
                         .returns( authenticateClientActionChallenge )
                         .andThen( authenticateSuccessButIncorrectECI )
                         .andThen ( authenticateSuccess )

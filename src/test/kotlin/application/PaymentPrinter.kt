@@ -32,8 +32,8 @@ class PaymentPrinter
             is ReadyForPaymentRequest -> Unit
             is ReadyForRisk -> Unit
             is ReadyForRoutingInitial -> Unit
-            is ReadyForAuthenticationConfirm -> Unit
-            is ReadyForAuthenticationAndAuthorizeConfirm -> Unit
+            is ReadyForAuthenticationContinuation -> Unit
+            is ReadyForAuthenticationAndAuthorizeContinuation -> Unit
             is ReadyForRoutingRetry -> Unit
             is ReadyForCaptureVerification -> Unit
             is ReadyToDecideAuthMethod -> Unit

@@ -381,7 +381,7 @@ class AuthorizeUseCaseNotDecoupledTest
                             .returns( authClientAction )
                             .andThen( authSuccess )
 
-                        every { authorizationGateway.confirmAuthenticateAndAuthorize( any()) }
+                        every { authorizationGateway.continueAuthenticateAndAuthorize( any()) }
                             .returns( authReject )
 
                         underTest.authorize(paymentPayload)
@@ -457,7 +457,7 @@ class AuthorizeUseCaseNotDecoupledTest
                             .returns( authClientAction )
                             .andThen( authSuccess )
 
-                        every { authorizationGateway.confirmAuthenticateAndAuthorize( any()) }
+                        every { authorizationGateway.continueAuthenticateAndAuthorize( any()) }
                             .returns( authReject )
 
                         underTest.authorize(paymentPayload)
@@ -523,7 +523,7 @@ class AuthorizeUseCaseNotDecoupledTest
                         .returns( authClientAction )
                         .andThen( authReject )
 
-                    every { authorizationGateway.confirmAuthenticateAndAuthorize( any()) }
+                    every { authorizationGateway.continueAuthenticateAndAuthorize( any()) }
                         .returns( authReject )
 
                     underTest.authorize(paymentPayload)

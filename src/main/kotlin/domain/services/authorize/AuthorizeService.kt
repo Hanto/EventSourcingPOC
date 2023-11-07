@@ -48,9 +48,9 @@ class AuthorizeService
     {
         return payment
             .letAndSaveIf { it: ReadyForAuthenticationAndAuthorizeClientAction -> it.addConfirmParameters(confirmParams)  }
-            .letAndSaveIf { it: ReadyForAuthenticationAndAuthorizeConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticateAndAuthorize(it) ) }
+            .letAndSaveIf { it: ReadyForAuthenticationAndAuthorizeContinuation -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticateAndAuthorize(it) ) }
             .letAndSaveIf { it: ReadyForAuthenticationClientAction -> it.addConfirmParameters(confirmParams) }
-            .letAndSaveIf { it: ReadyForAuthenticationConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticate(it) ) }
+            .letAndSaveIf { it: ReadyForAuthenticationContinuation -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticate(it) ) }
             .letAndSaveIf { it: ReadyForECIVerfication -> it.verifyECI()  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }

@@ -1,16 +1,16 @@
 package domain.services.gateway
 
 import domain.payment.state.ReadyForAuth
-import domain.payment.state.ReadyForAuthenticationAndAuthorizeConfirm
-import domain.payment.state.ReadyForAuthenticationConfirm
+import domain.payment.state.ReadyForAuthenticationAndAuthorizeContinuation
+import domain.payment.state.ReadyForAuthenticationContinuation
 import domain.payment.state.ReadyForAuthorization
 
 interface AuthorizationGateway
 {
     fun authenticate(payment: ReadyForAuth): AuthenticateResponse
-    fun confirmAuthenticate(payment: ReadyForAuthenticationConfirm): AuthenticateResponse
+    fun continueAuthenticate(payment: ReadyForAuthenticationContinuation): AuthenticateResponse
     fun authorize(payment: ReadyForAuthorization): AuthorizeResponse
 
     fun authenticateAndAuthorize(payment: ReadyForAuth): AuthenticateResponse
-    fun confirmAuthenticateAndAuthorize(payment: ReadyForAuthenticationAndAuthorizeConfirm): AuthenticateResponse
+    fun continueAuthenticateAndAuthorize(payment: ReadyForAuthenticationAndAuthorizeContinuation): AuthenticateResponse
 }

@@ -15,7 +15,7 @@ import domain.services.gateway.AuthenticateResponse
 import domain.services.gateway.AuthorizeOutcome
 import java.util.logging.Logger
 
-data class ReadyForAuthenticationConfirm
+data class ReadyForAuthenticationContinuation
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -28,7 +28,7 @@ data class ReadyForAuthenticationConfirm
 
 ): AbstractPayment(), Payment
 {
-    private val log = Logger.getLogger(ReadyForAuthenticationConfirm::class.java.name)
+    private val log = Logger.getLogger(ReadyForAuthenticationContinuation::class.java.name)
 
     override fun payload(): PaymentPayload = payload
     fun addAuthenticateConfirmResponse(authenticateResponse: AuthenticateResponse): Payment
