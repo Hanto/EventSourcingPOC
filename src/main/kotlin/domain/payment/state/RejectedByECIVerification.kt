@@ -35,7 +35,6 @@ data class RejectedByECIVerification
         val event = TriedToRetryEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
-            attempt = attempt,
         )
 
         return apply(event, isNew = true)
