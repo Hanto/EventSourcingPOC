@@ -11,7 +11,7 @@ import domain.payment.data.paymentpayload.*
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
 import domain.payment.data.threedstatus.*
 import domain.payment.state.Authorized
-import domain.payment.state.ReadyForAuthenticationAndAuthorizeClientAction
+import domain.payment.state.ReadyToReturnFromAuthenticationAndAuthorization
 import domain.payment.state.RejectedByGatewayAndNotRetriable
 import domain.services.authorize.AuthorizeService
 import domain.services.featureflag.FeatureFlag
@@ -306,7 +306,7 @@ class AuthorizeUseCaseNotDecoupledTest
 
             val result = paymentRepositoryNew.load(paymentId)
 
-            assertThat(result).isInstanceOf(ReadyForAuthenticationAndAuthorizeClientAction::class.java)
+            assertThat(result).isInstanceOf(ReadyToReturnFromAuthenticationAndAuthorization::class.java)
         }
 
         @Nested

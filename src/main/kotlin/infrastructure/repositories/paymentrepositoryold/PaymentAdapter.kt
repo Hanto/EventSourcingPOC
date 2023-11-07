@@ -69,12 +69,12 @@ class PaymentAdapter
             is ReadyForPaymentRequest -> null
             is ReadyForRisk -> null
             is ReadyForRoutingInitial -> null
-            is ReadyForAuthenticationContinuation -> null
-            is ReadyForAuthenticationAndAuthorizeContinuation -> null
+            is ReadyToContinueAuthentication -> null
+            is ReadyToContinuaAuthenticationAndAuthorization -> null
             is ReadyForRoutingRetry -> null
-            is ReadyForCaptureVerification -> null
+            is ReadyToEndAuthorization -> null
             is ReadyToDecideAuthMethod -> null
-            is ReadyForECIVerfication -> null
+            is ReadyToVerifyAuthentication -> null
 
             is ReadyForAuthorization -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
@@ -89,7 +89,7 @@ class PaymentAdapter
                 paymentClassName = payment.toPaymentClassName()
             ) else null
 
-            is ReadyForAuthentication -> if (isLastEvent) AuthPaymentOperation(
+            is ReadyToInitiateAuthentication -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = null,
                 reference = payment.attemptReference().value,
@@ -102,7 +102,7 @@ class PaymentAdapter
                 paymentClassName = payment.toPaymentClassName()
             ) else null
 
-            is ReadyForAuthenticationAndAuthorization -> if (isLastEvent) AuthPaymentOperation(
+            is ReadyToInitiateAuthenticationAndAuthorization -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = null,
                 reference = payment.attemptReference().value,
@@ -118,7 +118,7 @@ class PaymentAdapter
             // PENDING STATES:
             //----------------------------------------------------------------------------------------------------------
 
-            is ReadyForAuthenticationClientAction -> if (isLastEvent) AuthPaymentOperation(
+            is ReadyToReturnFromAuthentication -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = payment.authenticateOutcome.pspReference.value,
                 reference = payment.attemptReference().value,
@@ -131,7 +131,7 @@ class PaymentAdapter
                 paymentClassName = payment.toPaymentClassName()
             ) else null
 
-            is ReadyForAuthenticationAndAuthorizeClientAction -> if (isLastEvent) AuthPaymentOperation(
+            is ReadyToReturnFromAuthenticationAndAuthorization -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = payment.authenticateOutcome.pspReference.value,
                 reference = payment.attemptReference().value,

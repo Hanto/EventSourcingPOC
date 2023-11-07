@@ -11,7 +11,7 @@ import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
 import domain.services.gateway.AuthenticateResponse
 
-data class ReadyForAuthenticationClientAction
+data class ReadyToReturnFromAuthenticationAndAuthorization
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -42,7 +42,7 @@ data class ReadyForAuthenticationClientAction
         val newEvents = addEventIfNew(event, isNew)
         val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
-        return ReadyForAuthenticationContinuation(
+        return ReadyToContinuaAuthenticationAndAuthorization(
             version = newVersion,
             paymentEvents = newEvents,
             sideEffectEvents = newSideEffectEvents.list,

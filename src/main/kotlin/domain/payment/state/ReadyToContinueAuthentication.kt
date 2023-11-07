@@ -6,7 +6,7 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
-import domain.payment.paymentevents.AuthenticateConfirmedEvent
+import domain.payment.paymentevents.AuthenticateContinuedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
@@ -15,7 +15,7 @@ import domain.services.gateway.AuthenticateResponse
 import domain.services.gateway.AuthorizeOutcome
 import java.util.logging.Logger
 
-data class ReadyForAuthenticationContinuation
+data class ReadyToContinueAuthentication
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -28,12 +28,12 @@ data class ReadyForAuthenticationContinuation
 
 ): AbstractPayment(), Payment
 {
-    private val log = Logger.getLogger(ReadyForAuthenticationContinuation::class.java.name)
+    private val log = Logger.getLogger(ReadyToContinueAuthentication::class.java.name)
 
     override fun payload(): PaymentPayload = payload
     fun addAuthenticateConfirmResponse(authenticateResponse: AuthenticateResponse): Payment
     {
-        val event = AuthenticateConfirmedEvent(
+        val event = AuthenticateContinuedEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
             authenticateResponse = authenticateResponse)
@@ -45,14 +45,14 @@ data class ReadyForAuthenticationContinuation
 
         when (event)
         {
-            is AuthenticateConfirmedEvent -> apply(event, isNew)
+            is AuthenticateContinuedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: AuthenticateConfirmedEvent, isNew: Boolean): Payment
+    private fun apply(event: AuthenticateContinuedEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
@@ -62,7 +62,7 @@ data class ReadyForAuthenticationContinuation
         {
             is AuthenticateResponse.AuthenticateSuccess ->
             {
-                ReadyForECIVerfication(
+                ReadyToVerifyAuthentication(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -82,7 +82,7 @@ data class ReadyForAuthenticationContinuation
                 if (payload.paymentMethod is KlarnaPayment)
                     newSideEffectEvents.addIfNew(KlarnaOrderPlacedEvent, isNew)
 
-                ReadyForCaptureVerification(
+                ReadyToEndAuthorization(
                     version = newVersion,
                     paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -99,7 +99,7 @@ data class ReadyForAuthenticationContinuation
             {
                 newSideEffectEvents.addIfNew(getClientActionEvent(event.authenticateResponse), isNew)
 
-                ReadyForAuthenticationClientAction(
+                ReadyToReturnFromAuthentication(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,

@@ -4,7 +4,7 @@ import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentId
-import domain.payment.paymentevents.AuthorizationPerformedEvent
+import domain.payment.paymentevents.AuthorizationEndedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.RiskEvaluatedEvent
 import domain.payment.paymentevents.RoutingEvaluatedEvent
@@ -41,7 +41,7 @@ class PaymentDataAdapter
 
     private fun toFirstAuthorizationRequestedEvent(paymentData: PaymentData, firstOperation: AuthPaymentOperation) =
 
-        AuthorizationPerformedEvent(
+        AuthorizationEndedEvent(
             paymentId = PaymentId(paymentData.id),
             version = Version(3),
             authorizeResponse = toAuthorizeResponse(firstOperation)

@@ -9,8 +9,8 @@ import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.CreditCardPayment
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
 import domain.payment.data.paymentpayload.paymentmethod.PayPalPayment
+import domain.payment.paymentevents.DecidedAuthMethodEvent
 import domain.payment.paymentevents.PaymentEvent
-import domain.payment.paymentevents.RoutingActionEvaluatedEVent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
 import domain.services.gateway.AuthenticateOutcome
@@ -33,7 +33,7 @@ data class ReadyToDecideAuthMethod
     override fun payload(): PaymentPayload = payload
     fun decideAuthMethod(decouplingEnabled: Boolean): Payment
     {
-        val event = RoutingActionEvaluatedEVent(
+        val event = DecidedAuthMethodEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
             decuplingEnabled = decouplingEnabled)
@@ -45,14 +45,14 @@ data class ReadyToDecideAuthMethod
 
         when (event)
         {
-            is RoutingActionEvaluatedEVent -> apply(event, isNew)
+            is DecidedAuthMethodEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: RoutingActionEvaluatedEVent, isNew: Boolean): Payment
+    private fun apply(event: DecidedAuthMethodEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
@@ -60,7 +60,7 @@ data class ReadyToDecideAuthMethod
 
         if (!event.decuplingEnabled)
         {
-            return ReadyForAuthenticationAndAuthorization(
+            return ReadyToInitiateAuthenticationAndAuthorization(
                 version = newVersion,
                 paymentEvents = newEvents,
                 sideEffectEvents = newSideEffectEvents.list,
@@ -75,7 +75,7 @@ data class ReadyToDecideAuthMethod
         {
             KlarnaPayment, PayPalPayment ->
             {
-                return ReadyForAuthenticationAndAuthorization(
+                return ReadyToInitiateAuthenticationAndAuthorization(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -92,7 +92,7 @@ data class ReadyToDecideAuthMethod
                 {
                     is AuthorisationAction.ThreeDS ->
                     {
-                        ReadyForAuthentication(
+                        ReadyToInitiateAuthentication(
                             version = newVersion,
                             paymentEvents = newEvents,
                             sideEffectEvents = newSideEffectEvents.list,

@@ -6,7 +6,7 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
-import domain.payment.paymentevents.AuthorizationPerformedEvent
+import domain.payment.paymentevents.AuthorizationEndedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.AuthenticateOutcome
@@ -26,12 +26,12 @@ data class ReadyForAuthorization
 
 ): AbstractPayment(), Payment
 {
-    private val log = Logger.getLogger(ReadyForAuthentication::class.java.name)
+    private val log = Logger.getLogger(ReadyToInitiateAuthentication::class.java.name)
 
     override fun payload(): PaymentPayload = payload
     fun addAuthorizeResponse(authorizeResponse: AuthorizeResponse): Payment
     {
-        val event = AuthorizationPerformedEvent(
+        val event = AuthorizationEndedEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
             authorizeResponse = authorizeResponse)
@@ -43,14 +43,14 @@ data class ReadyForAuthorization
 
         when (event)
         {
-            is AuthorizationPerformedEvent -> apply(event, isNew)
+            is AuthorizationEndedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: AuthorizationPerformedEvent, isNew: Boolean): Payment
+    private fun apply(event: AuthorizationEndedEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
@@ -65,7 +65,7 @@ data class ReadyForAuthorization
                 if (payload.paymentMethod is KlarnaPayment)
                     newSideEffectEvents.addIfNew(KlarnaOrderPlacedEvent, isNew)
 
-                ReadyForCaptureVerification(
+                ReadyToEndAuthorization(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,

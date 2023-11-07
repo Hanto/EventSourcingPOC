@@ -6,7 +6,7 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
-import domain.payment.paymentevents.AuthenticationPerformedEvent
+import domain.payment.paymentevents.AuthenticateStartedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
@@ -15,7 +15,7 @@ import domain.services.gateway.AuthorizationGateway
 import domain.services.gateway.AuthorizeOutcome
 import java.util.logging.Logger
 
-data class ReadyForAuthentication
+data class ReadyToInitiateAuthenticationAndAuthorization
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -27,15 +27,15 @@ data class ReadyForAuthentication
 
 ): AbstractPayment(), Payment, ReadyForAuth
 {
-    private val log = Logger.getLogger(ReadyForAuthentication::class.java.name)
+    private val log = Logger.getLogger(ReadyToInitiateAuthentication::class.java.name)
 
     override fun payload(): PaymentPayload = payload
 
     override fun addAuthenticationResponse(authorizeService: AuthorizationGateway): Payment
     {
-        val authenticateResponse = authorizeService.authenticate(this)
+        val authenticateResponse = authorizeService.authenticateAndAuthorize(this)
 
-        val event = AuthenticationPerformedEvent(
+        val event = AuthenticateStartedEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents),
             authenticateResponse = authenticateResponse)
@@ -47,14 +47,14 @@ data class ReadyForAuthentication
 
         when (event)
         {
-            is AuthenticationPerformedEvent -> apply(event, isNew)
+            is AuthenticateStartedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
-    // APPLY EVENT: (AUTHENTICATION)
+    // APPLY EVENT: (AUTHENTICATION AND AUTHORIZATION)
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: AuthenticationPerformedEvent, isNew: Boolean): Payment
+    private fun apply(event: AuthenticateStartedEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
@@ -64,9 +64,11 @@ data class ReadyForAuthentication
 
         return when (event.authenticateResponse)
         {
+            // INVALID RESPONSE: (TBD)
+
             is AuthenticateResponse.AuthenticateSuccess ->
             {
-                ReadyForECIVerfication(
+                Failed(
                     version = newVersion,
                     paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -74,10 +76,11 @@ data class ReadyForAuthentication
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateOutcome = event.authenticateResponse
+                    authenticateOutcome = event.authenticateResponse,
+                    authorizeOutcome = AuthorizeOutcome.Skipped,
+                    reason = "Response not valid for not-decoupled Authenticate flow"
                 )
             }
-            // OPTIONAL FLOW: (TBD)
 
             is AuthenticateResponse.AuthenticateAndAuthorizeSuccess ->
             {
@@ -86,7 +89,7 @@ data class ReadyForAuthentication
                 if (payload.paymentMethod is KlarnaPayment)
                     newSideEffectEvents.addIfNew(KlarnaOrderPlacedEvent, isNew)
 
-                ReadyForCaptureVerification(
+                ReadyToEndAuthorization(
                     version = newVersion,
                     paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
@@ -104,7 +107,7 @@ data class ReadyForAuthentication
                 newSideEffectEvents.addIfNew(PaymentAuthenticationStartedEvent, isNew)
                 newSideEffectEvents.addIfNew(getClientActionEvent(event.authenticateResponse), isNew)
 
-                ReadyForAuthenticationClientAction(
+                ReadyToReturnFromAuthenticationAndAuthorization(
                     version = newVersion,
                     paymentEvents= newEvents,
                     sideEffectEvents = newSideEffectEvents.list,

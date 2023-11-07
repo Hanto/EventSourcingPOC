@@ -29,7 +29,7 @@ class AuthorizeService
         return saveAndSendEvents(payment)
             .letAndSaveIf { it: ReadyForRisk -> it.addFraudAnalysisResult(riskService.assessRisk(it)) }
             .letIf { it: ReadyForRoutingInitial -> tryToAuthorize(it) }
-            .letAndSaveIf { it: ReadyForCaptureVerification -> it.checkIfPaymentCaptured() }
+            .letAndSaveIf { it: ReadyToEndAuthorization -> it.checkIfPaymentCaptured() }
     }
 
     private fun tryToAuthorize(payment: ReadyForRouting): Payment
@@ -38,7 +38,7 @@ class AuthorizeService
             .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(it)) }
             .letAndSaveIf { it: ReadyToDecideAuthMethod -> it.decideAuthMethod(featureFlag.isFeatureEnabledFor(DECOUPLED_AUTH)) }
             .letAndSaveIf { it: ReadyForAuth -> it.addAuthenticationResponse(authorizeService) }
-            .letAndSaveIf { it: ReadyForECIVerfication -> it.verifyECI()  }
+            .letAndSaveIf { it: ReadyToVerifyAuthentication -> it.verifyECI()  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
@@ -47,15 +47,15 @@ class AuthorizeService
     fun confirm(payment: Payment, confirmParams: Map<String, Any>): Payment
     {
         return payment
-            .letAndSaveIf { it: ReadyForAuthenticationAndAuthorizeClientAction -> it.addConfirmParameters(confirmParams)  }
-            .letAndSaveIf { it: ReadyForAuthenticationAndAuthorizeContinuation -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticateAndAuthorize(it) ) }
-            .letAndSaveIf { it: ReadyForAuthenticationClientAction -> it.addConfirmParameters(confirmParams) }
-            .letAndSaveIf { it: ReadyForAuthenticationContinuation -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticate(it) ) }
-            .letAndSaveIf { it: ReadyForECIVerfication -> it.verifyECI()  }
+            .letAndSaveIf { it: ReadyToReturnFromAuthenticationAndAuthorization -> it.addConfirmParameters(confirmParams)  }
+            .letAndSaveIf { it: ReadyToContinuaAuthenticationAndAuthorization -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticateAndAuthorize(it) ) }
+            .letAndSaveIf { it: ReadyToReturnFromAuthentication -> it.addConfirmParameters(confirmParams) }
+            .letAndSaveIf { it: ReadyToContinueAuthentication -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticate(it) ) }
+            .letAndSaveIf { it: ReadyToVerifyAuthentication -> it.verifyECI()  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
-            .letAndSaveIf { it: ReadyForCaptureVerification -> it.checkIfPaymentCaptured() }
+            .letAndSaveIf { it: ReadyToEndAuthorization -> it.checkIfPaymentCaptured() }
     }
 
     // PERSISTENCE:

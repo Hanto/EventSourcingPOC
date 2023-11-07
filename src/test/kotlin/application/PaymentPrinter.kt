@@ -32,22 +32,22 @@ class PaymentPrinter
             is ReadyForPaymentRequest -> Unit
             is ReadyForRisk -> Unit
             is ReadyForRoutingInitial -> Unit
-            is ReadyForAuthenticationContinuation -> Unit
-            is ReadyForAuthenticationAndAuthorizeContinuation -> Unit
+            is ReadyToContinueAuthentication -> Unit
+            is ReadyToContinuaAuthenticationAndAuthorization -> Unit
             is ReadyForRoutingRetry -> Unit
-            is ReadyForCaptureVerification -> Unit
+            is ReadyToEndAuthorization -> Unit
             is ReadyToDecideAuthMethod -> Unit
-            is ReadyForECIVerfication -> Unit
+            is ReadyToVerifyAuthentication -> Unit
 
-            is ReadyForAuthenticationAndAuthorization -> if (isLastEvent) println(payment)
-            is ReadyForAuthentication -> if (isLastEvent) println(payment)
+            is ReadyToInitiateAuthenticationAndAuthorization -> if (isLastEvent) println(payment)
+            is ReadyToInitiateAuthentication -> if (isLastEvent) println(payment)
             is ReadyForAuthorization -> if (isLastEvent) println(payment)
 
             // PENDING STATES:
             //----------------------------------------------------------------------------------------------------------
 
-            is ReadyForAuthenticationClientAction -> if (isLastEvent) println(payment)
-            is ReadyForAuthenticationAndAuthorizeClientAction ->if (isLastEvent) println(payment)
+            is ReadyToReturnFromAuthentication -> if (isLastEvent) println(payment)
+            is ReadyToReturnFromAuthenticationAndAuthorization ->if (isLastEvent) println(payment)
 
             // FINAL STATES:
             //----------------------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.threedstatus.ECI
 import domain.payment.data.threedstatus.ExemptionStatus
 import domain.payment.data.threedstatus.ThreeDSStatus
-import domain.payment.paymentevents.ECIVerifiedEvent
+import domain.payment.paymentevents.AuthenticationEndedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.AuthorizationAttemptRejectedEvent
 import domain.payment.sideeffectevents.PaymentAuthenticationCompletedEvent
@@ -20,7 +20,7 @@ import domain.payment.sideeffectevents.SideEffectEventList
 import domain.services.gateway.AuthenticateResponse
 import java.util.logging.Logger
 
-data class ReadyForECIVerfication
+data class ReadyToVerifyAuthentication
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -33,12 +33,12 @@ data class ReadyForECIVerfication
 
 ): AbstractPayment(), Payment
 {
-    private val log = Logger.getLogger(ReadyForECIVerfication::class.java.name)
+    private val log = Logger.getLogger(ReadyToVerifyAuthentication::class.java.name)
 
     override fun payload(): PaymentPayload = payload
     fun verifyECI(): Payment
     {
-        val event = ECIVerifiedEvent(
+        val event = AuthenticationEndedEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents))
 
@@ -49,14 +49,14 @@ data class ReadyForECIVerfication
 
         when (event)
         {
-            is ECIVerifiedEvent -> apply(event, isNew)
+            is AuthenticationEndedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: ECIVerifiedEvent, isNew: Boolean): Payment
+    private fun apply(event: AuthenticationEndedEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)

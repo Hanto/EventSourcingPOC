@@ -6,7 +6,7 @@ import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.AuthorizationType
 import domain.payment.data.paymentpayload.PaymentPayload
-import domain.payment.paymentevents.PaymentCapturedCheckEvent
+import domain.payment.paymentevents.PaymentCapturedCheckedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.PaymentSettledEvent
 import domain.payment.sideeffectevents.SideEffectEvent
@@ -15,7 +15,7 @@ import domain.services.gateway.AuthenticateOutcome
 import domain.services.gateway.AuthorizeOutcome
 import java.util.logging.Logger
 
-data class ReadyForCaptureVerification
+data class ReadyToEndAuthorization
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -29,13 +29,13 @@ data class ReadyForCaptureVerification
 
 ): AbstractPayment(), Payment
 {
-    private val log = Logger.getLogger(ReadyForCaptureVerification::class.java.name)
+    private val log = Logger.getLogger(ReadyToEndAuthorization::class.java.name)
 
     override fun payload(): PaymentPayload = payload
 
     fun checkIfPaymentCaptured(): Payment
     {
-        val event = PaymentCapturedCheckEvent(
+        val event = PaymentCapturedCheckedEvent(
             paymentId = payload.id,
             version = version.nextEventVersion(paymentEvents)
         )
@@ -47,14 +47,14 @@ data class ReadyForCaptureVerification
 
         when (event)
         {
-            is PaymentCapturedCheckEvent -> apply(event, isNew)
+            is PaymentCapturedCheckedEvent -> apply(event, isNew)
             else -> { log.warning("invalid event type: ${event::class.java.simpleName}"); this }
         }
 
     // APPLY EVENT:
     //------------------------------------------------------------------------------------------------------------------
 
-    private fun apply(event: PaymentCapturedCheckEvent, isNew: Boolean): Payment
+    private fun apply(event: PaymentCapturedCheckedEvent, isNew: Boolean): Payment
     {
         val newVersion = version.updateToEventVersionIfReplay(event, isNew)
         val newEvents = addEventIfNew(event, isNew)
