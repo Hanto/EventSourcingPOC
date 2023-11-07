@@ -545,8 +545,10 @@ class AuthorizeUseCaseNotDecoupledTest
 
     private fun printPaymentInfo(paymentId: PaymentId)
     {
+        val events = paymentRepositoryNew.loadEvents(paymentId)
+
         println("\nPAYMENT EVENTS:\n")
-        paymentRepositoryNew.loadEvents(paymentId).forEach { println(it) }
+        events.forEach { println(it) }
 
         println("\nSIDE EFFECTS:\n")
         eventPublisher.list.forEach { println(it) }
@@ -558,5 +560,10 @@ class AuthorizeUseCaseNotDecoupledTest
         println("\nPAYMENT OPERATIONS:\n")
         paymentData?.operations?.forEach { println(it) }
         println("\n")
+
+        println("\nPAYMENT STATES:\n")
+        PaymentPrinter().printPaymentStates(events)
+
+        println("\n\n")
     }
 }
