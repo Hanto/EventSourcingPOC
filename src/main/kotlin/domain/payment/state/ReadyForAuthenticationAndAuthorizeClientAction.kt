@@ -1,7 +1,6 @@
 package domain.payment.state
 
 import domain.payment.data.Attempt
-import domain.payment.data.AuthenticateOutcome
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
@@ -10,6 +9,7 @@ import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.ReturnedFromClientEvent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
+import domain.services.gateway.AuthenticateResponse
 
 data class ReadyForAuthenticationAndAuthorizeClientAction
 (
@@ -20,7 +20,7 @@ data class ReadyForAuthenticationAndAuthorizeClientAction
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateOutcome: AuthenticateOutcome.Performed,
+    val authenticateOutcome: AuthenticateResponse.AuthenticateClientAction,
 
 ): AbstractPayment(), Payment
 {

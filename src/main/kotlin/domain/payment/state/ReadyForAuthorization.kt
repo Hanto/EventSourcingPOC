@@ -1,12 +1,15 @@
 package domain.payment.state
 
-import domain.payment.data.*
+import domain.payment.data.Attempt
+import domain.payment.data.RiskAssessmentOutcome
+import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.paymentpayload.paymentmethod.KlarnaPayment
 import domain.payment.paymentevents.AuthorizationPerformedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
+import domain.services.gateway.AuthenticateOutcome
 import domain.services.gateway.AuthorizeResponse
 import java.util.logging.Logger
 
@@ -71,7 +74,7 @@ data class ReadyForAuthorization
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
                     authenticateOutcome = authenticateOutcome,
-                    authorizeOutcome = AuthorizeOutcome.Performed(event.authorizeResponse),
+                    authorizeOutcome = event.authorizeResponse,
                 )
             }
 
@@ -88,7 +91,7 @@ data class ReadyForAuthorization
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
                     authenticateOutcome = authenticateOutcome,
-                    authorizeOutcome = AuthorizeOutcome.Performed(event.authorizeResponse),
+                    authorizeOutcome = event.authorizeResponse,
                 )
             }
 
@@ -105,7 +108,7 @@ data class ReadyForAuthorization
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
                     authenticateOutcome = authenticateOutcome,
-                    authorizeOutcome = AuthorizeOutcome.Performed(event.authorizeResponse),
+                    authorizeOutcome = event.authorizeResponse,
                     reason = "exception on authorization"
                 )
             }

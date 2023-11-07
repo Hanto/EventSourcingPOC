@@ -14,7 +14,7 @@ import domain.payment.sideeffectevents.SideEffectEventList
 import domain.services.gateway.AuthenticateResponse
 import java.util.logging.Logger
 
-data class RejectedByAuthentication
+data class RejectedByECIVerification
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -23,11 +23,11 @@ data class RejectedByAuthentication
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateOutcome: AuthenticateResponse.AuthenticateReject,
+    val authenticateOutcome: AuthenticateResponse.AuthenticateSuccess,
 
 ): AbstractPayment(), Payment, Rejected, RejectedByGateway
 {
-    private val log = Logger.getLogger(RejectedByAuthentication::class.java.name)
+    private val log = Logger.getLogger(RejectedByECIVerification::class.java.name)
 
     override fun payload(): PaymentPayload = payload
     override fun prepareForRetry(): Payment

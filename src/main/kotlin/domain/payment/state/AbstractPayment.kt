@@ -65,6 +65,11 @@ sealed class AbstractPayment : Payment
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
             )
+            is RejectedByECIVerification -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
             is RejectedByGatewayAndNotRetriable -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
@@ -116,6 +121,11 @@ sealed class AbstractPayment : Payment
                 sideEffectEvents = sideEffectEvents
             )
             is ReadyForRoutingAction -> this.copy(
+                version = version.updateToLatestEventVersion(paymentEvents),
+                paymentEvents = emptyList(),
+                sideEffectEvents = sideEffectEvents
+            )
+            is ReadyForECIVerfication -> this.copy(
                 version = version.updateToLatestEventVersion(paymentEvents),
                 paymentEvents = emptyList(),
                 sideEffectEvents = sideEffectEvents
@@ -194,6 +204,11 @@ sealed class AbstractPayment : Payment
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()
             )
+            is RejectedByECIVerification -> this.copy(
+                version = version,
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
             is ReadyForAuthenticationClientAction -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
@@ -225,6 +240,11 @@ sealed class AbstractPayment : Payment
                 sideEffectEvents = emptyList()
             )
             is ReadyForRoutingAction -> this.copy(
+                version = version,
+                paymentEvents = paymentEvents,
+                sideEffectEvents = emptyList()
+            )
+            is ReadyForECIVerfication -> this.copy(
                 version = version,
                 paymentEvents = paymentEvents,
                 sideEffectEvents = emptyList()

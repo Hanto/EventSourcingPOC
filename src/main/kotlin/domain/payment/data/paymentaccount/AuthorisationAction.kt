@@ -4,19 +4,25 @@ sealed class AuthorisationAction
 {
     data object Moto : AuthorisationAction()
 
+    sealed interface NoMoto
+    {
+        val exemptionPreference: ExemptionPreference
+        val authorizationPreference: AuthorizationPreference
+    }
+
     data class Ecommerce(
 
-        val exemptionPreference: ExemptionPreference,
-        val authorizationPreference: AuthorizationPreference
+        override val exemptionPreference: ExemptionPreference,
+        override val authorizationPreference: AuthorizationPreference
 
-    ) : AuthorisationAction()
+    ) : AuthorisationAction(), NoMoto
 
     data class ThreeDS(
 
-        val exemptionPreference: ExemptionPreference,
-        val authorizationPreference: AuthorizationPreference
+        override val exemptionPreference: ExemptionPreference,
+        override val authorizationPreference: AuthorizationPreference
 
-    ) : AuthorisationAction()
+    ) : AuthorisationAction(), NoMoto
 
     enum class ExemptionPreference
     {

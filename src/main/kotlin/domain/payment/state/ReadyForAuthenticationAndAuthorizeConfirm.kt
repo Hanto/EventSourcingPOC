@@ -1,13 +1,17 @@
 package domain.payment.state
 
-import domain.payment.data.*
+import domain.payment.data.Attempt
+import domain.payment.data.RiskAssessmentOutcome
+import domain.payment.data.Version
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.paymentevents.AuthenticateConfirmedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.*
 import domain.services.gateway.ActionType
+import domain.services.gateway.AuthenticateOutcome
 import domain.services.gateway.AuthenticateResponse
+import domain.services.gateway.AuthorizeOutcome
 import java.util.logging.Logger
 
 data class ReadyForAuthenticationAndAuthorizeConfirm
@@ -19,7 +23,7 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
     val payload: PaymentPayload,
     val riskAssessmentOutcome: RiskAssessmentOutcome,
     val paymentAccount: PaymentAccount,
-    val authenticateOutcome: AuthenticateOutcome.Performed,
+    val authenticateOutcome: AuthenticateOutcome
 
 ): AbstractPayment(), Payment
 {
@@ -68,8 +72,8 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
-                    authorizeOutcome = null,
+                    authenticateOutcome = event.authenticateResponse,
+                    authorizeOutcome = AuthorizeOutcome.Skipped,
                     reason = "Response not valid for decoupled Authenticate flow"
                 )
             }
@@ -84,7 +88,7 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authenticateOutcome = event.authenticateResponse,
                     authorizeOutcome = AuthorizeOutcome.Skipped
                 )
             }
@@ -101,7 +105,7 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse)
+                    authenticateOutcome = event.authenticateResponse
                 )
             }
 
@@ -118,7 +122,7 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authenticateOutcome = event.authenticateResponse,
                 )
             }
 
@@ -135,7 +139,7 @@ data class ReadyForAuthenticationAndAuthorizeConfirm
                     payload = payload,
                     riskAssessmentOutcome = riskAssessmentOutcome,
                     paymentAccount = paymentAccount,
-                    authenticateOutcome = AuthenticateOutcome.Performed(event.authenticateResponse),
+                    authenticateOutcome = event.authenticateResponse,
                     authorizeOutcome = null,
                     reason = "exception on authorization"
                 )

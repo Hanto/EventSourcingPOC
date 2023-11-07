@@ -13,7 +13,7 @@ sealed interface AuthorizeResponse
         override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference
 
-    ) : AuthorizeResponse
+    ) : AuthorizeResponse, AuthorizeOutcome
 
     data class AuthorizeReject(
 
@@ -24,7 +24,7 @@ sealed interface AuthorizeResponse
         val errorReason: ErrorReason = ErrorReason.AUTHORIZATION_ERROR,
         val rejectionUseCase: RejectionUseCase = RejectionUseCase.UNDEFINED
 
-    ) : AuthorizeResponse
+    ) : AuthorizeResponse, AuthorizeOutcome
 
     data class AuthorizeFail(
 
@@ -34,5 +34,5 @@ sealed interface AuthorizeResponse
         val timeout: Boolean,
         val exception: Exception
 
-    ) : AuthorizeResponse
+    ) : AuthorizeResponse, AuthorizeOutcome
 }

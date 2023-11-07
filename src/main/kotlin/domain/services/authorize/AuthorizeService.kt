@@ -40,6 +40,7 @@ class AuthorizeService
             .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(it)) }
             .letAndSaveIf { it: ReadyForRoutingAction -> it.decideIf3DS(isDecouplingEnabled) }
             .letAndSaveIf { it: ReadyForAuthentication -> authenticate(it, isDecouplingEnabled) }
+            .letAndSaveIf { it: ReadyForECIVerfication -> it.verifyECI()  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
@@ -52,6 +53,7 @@ class AuthorizeService
             .letAndSaveIf { it: ReadyForAuthenticationAndAuthorizeConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticateAndAuthorize(it) ) }
             .letAndSaveIf { it: ReadyForAuthenticationClientAction -> it.addConfirmParameters(confirmParams) }
             .letAndSaveIf { it: ReadyForAuthenticationConfirm -> it.addAuthenticateConfirmResponse(authorizeService.confirmAuthenticate(it) ) }
+            .letAndSaveIf { it: ReadyForECIVerfication -> it.verifyECI()  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }

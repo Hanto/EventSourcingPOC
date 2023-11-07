@@ -81,13 +81,6 @@ class AuthorizeUseCaseDecoupledTest
                     accountId = AccountId("id1"),
                     authorisationAction = AuthorisationAction.Moto)
             )
-            val threeDSStatus = ThreeDSStatus.NoThreeDS
-
-            val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
-                threeDSStatus = threeDSStatus,
-                exemptionStatus = ExemptionStatus.ExemptionNotRequested,
-                pspReference = PSPReference("pspReference"))
-
             val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
                 exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                 pspReference = PSPReference("pspReference"))
@@ -97,9 +90,6 @@ class AuthorizeUseCaseDecoupledTest
 
             every { routingService.routeForPayment(any()) }
                 .returns( routingResult1 )
-
-            every { authorizationGateway.authenticate(any()) }
-                .returns(authenticateSuccess)
 
             every { authorizationGateway.authorize(any()) }
                 .returns(authorizeSuccess)
@@ -135,20 +125,6 @@ class AuthorizeUseCaseDecoupledTest
                                 accountId = AccountId("id2"),
                                 authorisationAction = AuthorisationAction.Moto)
                         )
-                        val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
-                            threeDSStatus = ThreeDSStatus.NoThreeDS,
-                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
-                            pspReference = PSPReference("pspReference"),
-                        )
-                        val authenticateReject = AuthenticateResponse.AuthenticateReject(
-                            threeDSStatus = ThreeDSStatus.NoThreeDS,
-                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
-                            pspReference = PSPReference("pspReference"),
-                            errorDescription = "errorDescription",
-                            errorCode = "errorCode",
-                            errorReason = ErrorReason.AUTHORIZATION_ERROR,
-                            rejectionUseCase = RejectionUseCase.UNDEFINED
-                        )
                         val authorizeSuccess = AuthorizeResponse.AuthorizeSuccess(
                             exemptionStatus = ExemptionStatus.ExemptionNotRequested,
                             pspReference = PSPReference("pspReference"))
@@ -159,10 +135,6 @@ class AuthorizeUseCaseDecoupledTest
                         every { routingService.routeForPayment(any()) }
                             .returns( routingResult1 )
                             .andThen( routingResult2 )
-
-                        every { authorizationGateway.authenticate(any()) }
-                            .returns( authenticateReject)
-                            .andThen( authenticateSuccess )
 
                         every { authorizationGateway.authorize(any()) }
                             .returns( authorizeSuccess )
@@ -193,11 +165,6 @@ class AuthorizeUseCaseDecoupledTest
                                 accountId = AccountId("id2"),
                                 authorisationAction = AuthorisationAction.Moto)
                         )
-                        val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
-                            threeDSStatus = ThreeDSStatus.NoThreeDS,
-                            exemptionStatus = ExemptionStatus.ExemptionNotRequested,
-                            pspReference = PSPReference("pspReference"),
-                        )
                         val authorizeReject = AuthorizeResponse.AuthorizeReject(
                             pspReference = PSPReference("pspReference"),
                             exemptionStatus = ExemptionStatus.ExemptionNotRequested,
@@ -217,10 +184,6 @@ class AuthorizeUseCaseDecoupledTest
                         every { routingService.routeForPayment(any()) }
                             .returns( routingResult1 )
                             .andThen( routingResult2 )
-
-                        every { authorizationGateway.authenticate(any()) }
-                            .returns( authenticateSuccess)
-                            .andThen( authenticateSuccess )
 
                         every { authorizationGateway.authorize(any()) }
                             .returns( authorizeReject )
@@ -281,20 +244,16 @@ class AuthorizeUseCaseDecoupledTest
                         pspReference = PSPReference("pspReference"),
                         clientAction = ClientAction(ActionType.CHALLENGE)
                     )
-                    val authenticateReject = AuthenticateResponse.AuthenticateReject(
+                    val authenticateSuccessButIncorrectECI = AuthenticateResponse.AuthenticateSuccess(
                         threeDSStatus = ThreeDSStatus.ThreeDS(
                             version = ThreeDSVersion("2.1"),
-                            eci = ECI(5),
+                            eci = ECI(7),
                             transactionId = ThreeDSTransactionId("transactionId"),
                             cavv = CAVV("cavv"),
-                            xid = XID("xid"),
+                            xid = XID("xid")
                         ),
                         exemptionStatus = ExemptionStatus.ExemptionNotRequested,
-                        pspReference = PSPReference("pspReference"),
-                        errorDescription = "errorDescription",
-                        errorCode = "errorCode",
-                        errorReason = ErrorReason.AUTHORIZATION_ERROR,
-                        rejectionUseCase = RejectionUseCase.UNDEFINED
+                        pspReference = PSPReference("pspReference")
                     )
                     val authenticateSuccess = AuthenticateResponse.AuthenticateSuccess(
                         threeDSStatus = ThreeDSStatus.ThreeDS(
@@ -328,7 +287,7 @@ class AuthorizeUseCaseDecoupledTest
 
                     every { authorizationGateway.confirmAuthenticate( any()) }
                         .returns( authenticateClientActionChallenge )
-                        .andThen( authenticateReject )
+                        .andThen( authenticateSuccessButIncorrectECI )
                         .andThen ( authenticateSuccess )
 
                     every { authorizationGateway.authorize( any() ) }
@@ -354,8 +313,10 @@ class AuthorizeUseCaseDecoupledTest
 
     private fun printPaymentInfo(paymentId: PaymentId)
     {
+        val events = paymentRepositoryNew.loadEvents(paymentId)
+
         println("\nPAYMENT EVENTS:\n")
-        paymentRepositoryNew.loadEvents(paymentId).forEach { println(it) }
+        events.forEach { println(it) }
 
         println("\nSIDE EFFECTS:\n")
         eventPublisher.list.forEach { println(it) }
@@ -366,6 +327,10 @@ class AuthorizeUseCaseDecoupledTest
 
         println("\nPAYMENT OPERATIONS:\n")
         paymentData?.operations?.forEach { println(it) }
-        println("\n")
+
+        println("\nPAYMENT STATES:\n")
+        PaymentPrinter().printPaymentStates(events)
+
+        println("\n\n")
     }
 }

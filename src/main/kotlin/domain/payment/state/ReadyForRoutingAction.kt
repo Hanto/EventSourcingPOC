@@ -1,7 +1,6 @@
 package domain.payment.state
 
 import domain.payment.data.Attempt
-import domain.payment.data.AuthenticateOutcome
 import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
 import domain.payment.data.paymentaccount.AuthorisationAction
@@ -14,6 +13,7 @@ import domain.payment.paymentevents.PaymentEvent
 import domain.payment.paymentevents.RoutingActionEvaluatedEVent
 import domain.payment.sideeffectevents.SideEffectEvent
 import domain.payment.sideeffectevents.SideEffectEventList
+import domain.services.gateway.AuthenticateOutcome
 import java.util.logging.Logger
 
 data class ReadyForRoutingAction

@@ -26,9 +26,11 @@ class AuthorizeUseCaseAdapter
             is ReadyForRoutingInitial -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyForRoutingRetry -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyForRoutingAction -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
+            is ReadyForECIVerfication -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
 
             is RejectedByAuthentication -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is RejectedByAuthorization -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
+            is RejectedByECIVerification -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyForCaptureVerification -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
 
             is RejectedByRisk -> AuthorizeUseCaseResponse.RejectedByFraudEvaluation(payment)
