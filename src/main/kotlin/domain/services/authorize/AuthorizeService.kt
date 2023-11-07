@@ -38,7 +38,7 @@ class AuthorizeService
             .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(it)) }
             .letAndSaveIf { it: ReadyToDecideAuthMethod -> it.decideAuthMethod(featureFlag.isFeatureEnabledFor(DECOUPLED_AUTH)) }
             .letAndSaveIf { it: ReadyForAuth -> it.addAuthenticationResponse(authorizeService) }
-            .letAndSaveIf { it: ReadyToVerifyAuthentication -> it.verifyECI()  }
+            .letAndSaveIf { it: ReadyToVerifyAuthentication -> it.verifyAuthentication()  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
@@ -48,10 +48,10 @@ class AuthorizeService
     {
         return payment
             .letAndSaveIf { it: ReadyToReturnFromAuthenticationAndAuthorization -> it.addConfirmParameters(confirmParams)  }
-            .letAndSaveIf { it: ReadyToContinuaAuthenticationAndAuthorization -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticateAndAuthorize(it) ) }
+            .letAndSaveIf { it: ReadyToContinueAuthenticationAndAuthorization -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticateAndAuthorize(it) ) }
             .letAndSaveIf { it: ReadyToReturnFromAuthentication -> it.addConfirmParameters(confirmParams) }
             .letAndSaveIf { it: ReadyToContinueAuthentication -> it.addAuthenticateConfirmResponse(authorizeService.continueAuthenticate(it) ) }
-            .letAndSaveIf { it: ReadyToVerifyAuthentication -> it.verifyECI()  }
+            .letAndSaveIf { it: ReadyToVerifyAuthentication -> it.verifyAuthentication()  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }

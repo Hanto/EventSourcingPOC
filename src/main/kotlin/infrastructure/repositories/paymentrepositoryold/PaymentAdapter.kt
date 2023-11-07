@@ -70,7 +70,7 @@ class PaymentAdapter
             is ReadyForRisk -> null
             is ReadyForRoutingInitial -> null
             is ReadyToContinueAuthentication -> null
-            is ReadyToContinuaAuthenticationAndAuthorization -> null
+            is ReadyToContinueAuthenticationAndAuthorization -> null
             is ReadyForRoutingRetry -> null
             is ReadyToEndAuthorization -> null
             is ReadyToDecideAuthMethod -> null

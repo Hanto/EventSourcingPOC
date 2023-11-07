@@ -14,7 +14,7 @@ import domain.services.gateway.AuthenticateResponse
 import domain.services.gateway.AuthorizeOutcome
 import java.util.logging.Logger
 
-data class ReadyToContinuaAuthenticationAndAuthorization
+data class ReadyToContinueAuthenticationAndAuthorization
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,

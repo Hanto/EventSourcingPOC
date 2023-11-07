@@ -42,7 +42,7 @@ data class ReadyToReturnFromAuthenticationAndAuthorization
         val newEvents = addEventIfNew(event, isNew)
         val newSideEffectEvents = SideEffectEventList(sideEffectEvents)
 
-        return ReadyToContinuaAuthenticationAndAuthorization(
+        return ReadyToContinueAuthenticationAndAuthorization(
             version = newVersion,
             paymentEvents = newEvents,
             sideEffectEvents = newSideEffectEvents.list,

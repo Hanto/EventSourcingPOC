@@ -33,7 +33,7 @@ class PaymentPrinter
             is ReadyForRisk -> Unit
             is ReadyForRoutingInitial -> Unit
             is ReadyToContinueAuthentication -> Unit
-            is ReadyToContinuaAuthenticationAndAuthorization -> Unit
+            is ReadyToContinueAuthenticationAndAuthorization -> Unit
             is ReadyForRoutingRetry -> Unit
             is ReadyToEndAuthorization -> Unit
             is ReadyToDecideAuthMethod -> Unit
@@ -52,8 +52,8 @@ class PaymentPrinter
             // FINAL STATES:
             //----------------------------------------------------------------------------------------------------------
 
-            is RejectedByGatewayAndNotRetriable -> null
-            is RejectedByRoutingSameAccount -> null
+            is RejectedByGatewayAndNotRetriable -> Unit
+            is RejectedByRoutingSameAccount -> Unit
 
             is Authorized -> println(payment)
             is Captured -> println(payment)

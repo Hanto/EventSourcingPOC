@@ -19,7 +19,7 @@ class AuthorizeUseCaseAdapter
             is ReadyToInitiateAuthenticationAndAuthorization -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyToInitiateAuthentication -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyToReturnFromAuthenticationAndAuthorization -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
-            is ReadyToContinuaAuthenticationAndAuthorization -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
+            is ReadyToContinueAuthenticationAndAuthorization -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyToReturnFromAuthentication -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyToContinueAuthentication -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)
             is ReadyForAuthorization -> AuthorizeUseCaseResponse.InvalidPaymentStatus(payment.payload.id)

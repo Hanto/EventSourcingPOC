@@ -36,7 +36,7 @@ data class ReadyToVerifyAuthentication
     private val log = Logger.getLogger(ReadyToVerifyAuthentication::class.java.name)
 
     override fun payload(): PaymentPayload = payload
-    fun verifyECI(): Payment
+    fun verifyAuthentication(): Payment
     {
         val event = AuthenticationEndedEvent(
             paymentId = payload.id,
