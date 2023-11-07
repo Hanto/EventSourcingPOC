@@ -12,7 +12,7 @@ sealed interface AuthenticateResponse
 
     data class AuthenticateSuccess(
 
-        override val threeDSStatus: ThreeDSStatus.ThreeDS,
+        override val threeDSStatus: ThreeDSStatus,
         override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference,
 

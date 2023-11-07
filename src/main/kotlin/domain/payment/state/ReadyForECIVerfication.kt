@@ -5,10 +5,12 @@ import domain.payment.data.RiskAssessmentOutcome
 import domain.payment.data.Version
 import domain.payment.data.paymentaccount.AuthorisationAction
 import domain.payment.data.paymentaccount.AuthorisationAction.AuthorizationPreference.ECI_CHECK
+import domain.payment.data.paymentaccount.AuthorisationAction.AuthorizationPreference.NO_PREFERENCE
 import domain.payment.data.paymentaccount.PaymentAccount
 import domain.payment.data.paymentpayload.PaymentPayload
 import domain.payment.data.threedstatus.ECI
 import domain.payment.data.threedstatus.ExemptionStatus
+import domain.payment.data.threedstatus.ThreeDSStatus
 import domain.payment.paymentevents.ECIVerifiedEvent
 import domain.payment.paymentevents.PaymentEvent
 import domain.payment.sideeffectevents.AuthorizationAttemptRejectedEvent
@@ -75,9 +77,23 @@ data class ReadyForECIVerfication
                     authenticateOutcome = authenticateOutcome
                 )
             }
-            else -> when (paymentAccount.authorisationAction)
+            else -> when (authenticateOutcome.threeDSStatus)
             {
-                AuthorisationAction.Moto ->
+                ThreeDSStatus.NoThreeDS ->
+                {
+                    ReadyForAuthorization(
+                        version = newVersion,
+                        paymentEvents= newEvents,
+                        sideEffectEvents = newSideEffectEvents.list,
+                        attempt = attempt,
+                        payload = payload,
+                        riskAssessmentOutcome = riskAssessmentOutcome,
+                        paymentAccount = paymentAccount,
+                        authenticateOutcome = authenticateOutcome
+                    )
+                }
+
+                is ThreeDSStatus.PendingThreeDS ->
                 {
                     newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
                     newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
@@ -92,18 +108,18 @@ data class ReadyForECIVerfication
                         paymentAccount = paymentAccount,
                         authenticateOutcome = authenticateOutcome,
                         authorizeOutcome = null,
-                        reason = "Invalid status MOTO"
+                        reason = "The final authenticate response cannot be pending"
                     )
                 }
 
-                is AuthorisationAction.NoMoto ->
+                is ThreeDSStatus.ThreeDS ->
                 {
-                    val eciCheckForced = paymentAccount.authorisationAction.authorizationPreference == ECI_CHECK
+                    val isEciCheckForced = paymentAccount.isEciCheckForced()
                     val eci = authenticateOutcome.threeDSStatus.eci.result()
 
                     when
                     {
-                        eciCheckForced && eci != ECI.EciResult.SUCCESSFUL ->
+                        isEciCheckForced && eci != ECI.EciResult.SUCCESSFUL ->
                         {
                             newSideEffectEvents.addIfNew(AuthorizationAttemptRejectedEvent, isNew)
                             newSideEffectEvents.addIfNew(PaymentAuthenticationCompletedEvent, isNew)
@@ -139,5 +155,15 @@ data class ReadyForECIVerfication
         }
     }
 
+    private fun PaymentAccount.isEciCheckForced(): Boolean =
 
+        when (this.authorisationAction)
+        {
+            AuthorisationAction.Moto -> false
+            is AuthorisationAction.NoMoto -> when (this.authorisationAction.authorizationPreference)
+            {
+                ECI_CHECK -> true
+                NO_PREFERENCE -> false
+            }
+        }
 }
