@@ -28,7 +28,7 @@ sealed interface AuthenticateResponse
 
     data class AuthenticateClientAction(
 
-        override val threeDSStatus: ThreeDSStatus,
+        override val threeDSStatus: ThreeDSStatus.PendingThreeDS,
         override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference,
         val clientAction: ClientAction

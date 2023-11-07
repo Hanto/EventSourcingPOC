@@ -36,9 +36,10 @@ class PaymentPrinter
             is ReadyForAuthenticationAndAuthorizeConfirm -> Unit
             is ReadyForRoutingRetry -> Unit
             is ReadyForCaptureVerification -> Unit
-            is ReadyForRoutingAction -> Unit
+            is ReadyToDecideAuthMethod -> Unit
             is ReadyForECIVerfication -> Unit
 
+            is ReadyForAuthenticationAndAuthorization -> if (isLastEvent) println(payment)
             is ReadyForAuthentication -> if (isLastEvent) println(payment)
             is ReadyForAuthorization -> if (isLastEvent) println(payment)
 

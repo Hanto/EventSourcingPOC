@@ -34,12 +34,10 @@ class AuthorizeService
 
     private fun tryToAuthorize(payment: ReadyForRouting): Payment
     {
-        val isDecouplingEnabled = featureFlag.isFeatureEnabledFor(DECOUPLED_AUTH)
-
         return payment
             .letAndSaveIf { it: ReadyForRouting -> it.addRoutingResult(routingService.routeForPayment(it)) }
-            .letAndSaveIf { it: ReadyForRoutingAction -> it.decideIf3DS(isDecouplingEnabled) }
-            .letAndSaveIf { it: ReadyForAuthentication -> authenticate(it, isDecouplingEnabled) }
+            .letAndSaveIf { it: ReadyToDecideAuthMethod -> it.decideAuthMethod(featureFlag.isFeatureEnabledFor(DECOUPLED_AUTH)) }
+            .letAndSaveIf { it: ReadyForAuth -> it.addAuthenticationResponse(authorizeService) }
             .letAndSaveIf { it: ReadyForECIVerfication -> it.verifyECI()  }
             .letAndSaveIf { it: ReadyForAuthorization -> it.addAuthorizeResponse(authorizeService.authorize(it)) }
             .letAndSaveIf { it: RejectedByGateway -> it.prepareForRetry()  }
@@ -59,17 +57,6 @@ class AuthorizeService
             .letIf { it: ReadyForRoutingRetry -> tryToAuthorize(it) }
             .letAndSaveIf { it: ReadyForCaptureVerification -> it.checkIfPaymentCaptured() }
     }
-
-    // PERSISTENCE:
-    //------------------------------------------------------------------------------------------------------------------
-
-    private fun authenticate(payment: ReadyForAuthentication, isDecouplingEnabled: Boolean): Payment =
-
-        when (isDecouplingEnabled)
-        {
-            true -> payment.addAuthenticationResponse(authorizeService.authenticate(payment))
-            false -> payment.addAuthenticationAndAuthorizationResponse(authorizeService.authenticateAndAuthorize(payment))
-        }
 
     // PERSISTENCE:
     //------------------------------------------------------------------------------------------------------------------

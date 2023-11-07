@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.*
 
-class AuthorizeUseCaseTest
+class AuthorizeUseCaseNotDecoupledTest
 {
     private val riskService = mockk<RiskAssessmentService>()
     private val routingService = mockk<RoutingService>()

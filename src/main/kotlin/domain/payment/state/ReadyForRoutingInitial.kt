@@ -89,7 +89,7 @@ data class ReadyForRoutingInitial
             {
                 newSideEffectEvents.addIfNew(RoutingCompletedEvent, isNew)
 
-                ReadyForRoutingAction(
+                ReadyToDecideAuthMethod(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,

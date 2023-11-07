@@ -1,6 +1,6 @@
 package domain.payment.state
 
-sealed interface RejectedByGateway
+sealed interface RejectedByGateway: Payment
 {
     fun prepareForRetry(): Payment
 }

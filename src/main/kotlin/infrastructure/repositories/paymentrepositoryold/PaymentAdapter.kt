@@ -73,7 +73,7 @@ class PaymentAdapter
             is ReadyForAuthenticationAndAuthorizeConfirm -> null
             is ReadyForRoutingRetry -> null
             is ReadyForCaptureVerification -> null
-            is ReadyForRoutingAction -> null
+            is ReadyToDecideAuthMethod -> null
             is ReadyForECIVerfication -> null
 
             is ReadyForAuthorization -> if (isLastEvent) AuthPaymentOperation(
@@ -90,6 +90,19 @@ class PaymentAdapter
             ) else null
 
             is ReadyForAuthentication -> if (isLastEvent) AuthPaymentOperation(
+                paymentAccount = payment.paymentAccount,
+                pspReference = null,
+                reference = payment.attemptReference().value,
+                retry = payment.attempt.didRetry(),
+                eci = null,
+                exemption = Exemption.NotRequested,
+                authenticationStatus = AuthPaymentOperation.AuthenticationStatus.NOT_APPLICABLE,
+                transactionType = payment.payload.authorizationType.toTransactionType(),
+                status = AuthPaymentOperation.Status.PENDING,
+                paymentClassName = payment.toPaymentClassName()
+            ) else null
+
+            is ReadyForAuthenticationAndAuthorization -> if (isLastEvent) AuthPaymentOperation(
                 paymentAccount = payment.paymentAccount,
                 pspReference = null,
                 reference = payment.attemptReference().value,

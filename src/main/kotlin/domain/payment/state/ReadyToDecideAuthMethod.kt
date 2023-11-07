@@ -16,7 +16,7 @@ import domain.payment.sideeffectevents.SideEffectEventList
 import domain.services.gateway.AuthenticateOutcome
 import java.util.logging.Logger
 
-data class ReadyForRoutingAction
+data class ReadyToDecideAuthMethod
 (
     override val version: Version,
     override val paymentEvents: List<PaymentEvent>,
@@ -31,7 +31,7 @@ data class ReadyForRoutingAction
     private val log = Logger.getLogger(ReadyForRoutingRetry::class.java.name)
 
     override fun payload(): PaymentPayload = payload
-    fun decideIf3DS(decouplingEnabled: Boolean): Payment
+    fun decideAuthMethod(decouplingEnabled: Boolean): Payment
     {
         val event = RoutingActionEvaluatedEVent(
             paymentId = payload.id,
@@ -60,7 +60,7 @@ data class ReadyForRoutingAction
 
         if (!event.decuplingEnabled)
         {
-            return ReadyForAuthentication(
+            return ReadyForAuthenticationAndAuthorization(
                 version = newVersion,
                 paymentEvents = newEvents,
                 sideEffectEvents = newSideEffectEvents.list,
@@ -75,7 +75,7 @@ data class ReadyForRoutingAction
         {
             KlarnaPayment, PayPalPayment ->
             {
-                return ReadyForAuthentication(
+                return ReadyForAuthenticationAndAuthorization(
                     version = newVersion,
                     paymentEvents = newEvents,
                     sideEffectEvents = newSideEffectEvents.list,
