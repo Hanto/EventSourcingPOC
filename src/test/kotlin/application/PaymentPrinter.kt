@@ -63,6 +63,7 @@ class PaymentPrinter
             is RejectedByECIVerification -> println(payment)
             is RejectedByRisk -> println(payment)
             is RejectedByRouting -> println(payment)
+            else -> Unit
         }
     }
 }

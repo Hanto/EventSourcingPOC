@@ -4,7 +4,7 @@ import domain.payment.data.PSPReference
 import domain.payment.data.threedstatus.ExemptionStatus
 import domain.payment.data.threedstatus.ThreeDSStatus
 
-sealed interface AuthenticateResponse
+sealed interface AuthenticateResponse: AuthenticateOutcome
 {
     val threeDSStatus: ThreeDSStatus
     val exemptionStatus: ExemptionStatus
@@ -16,7 +16,7 @@ sealed interface AuthenticateResponse
         override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference,
 
-    ) : AuthenticateResponse, AuthenticateOutcome
+    ) : AuthenticateResponse
 
     data class AuthenticateAndAuthorizeSuccess(
 
@@ -24,7 +24,7 @@ sealed interface AuthenticateResponse
         override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference
 
-    ) : AuthenticateResponse, AuthenticateOutcome
+    ) : AuthenticateResponse
 
     data class AuthenticateClientAction(
 
@@ -33,7 +33,7 @@ sealed interface AuthenticateResponse
         override val pspReference: PSPReference,
         val clientAction: ClientAction
 
-    ) : AuthenticateResponse, AuthenticateOutcome
+    ) : AuthenticateResponse
 
     data class AuthenticateReject(
 
@@ -45,7 +45,7 @@ sealed interface AuthenticateResponse
         val errorReason: ErrorReason = ErrorReason.AUTHENTICATION_ERROR,
         val rejectionUseCase: RejectionUseCase = RejectionUseCase.UNDEFINED
 
-    ) : AuthenticateResponse, AuthenticateOutcome
+    ) : AuthenticateResponse
 
     data class AuthenticateFail(
 
@@ -56,5 +56,5 @@ sealed interface AuthenticateResponse
         val timeout: Boolean,
         val exception: Exception
 
-    ) : AuthenticateResponse, AuthenticateOutcome
+    ) : AuthenticateResponse
 }

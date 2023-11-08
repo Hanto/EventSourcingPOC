@@ -21,7 +21,7 @@ class AuthorizeService
     private val featureFlag: FeatureFlag
 )
 {
-    // DECOUPLED:
+    // MAIN:
     //------------------------------------------------------------------------------------------------------------------
 
     fun authorize(payment: Payment): Payment

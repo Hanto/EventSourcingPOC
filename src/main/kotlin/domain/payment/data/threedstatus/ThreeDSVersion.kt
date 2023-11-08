@@ -1,7 +1,7 @@
 package domain.payment.data.threedstatus
 
 data class ThreeDSVersion
-    (
+(
     val value: String
 )
 {

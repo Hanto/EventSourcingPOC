@@ -3,7 +3,7 @@ package domain.services.gateway
 import domain.payment.data.PSPReference
 import domain.payment.data.threedstatus.ExemptionStatus
 
-sealed interface AuthorizeResponse
+sealed interface AuthorizeResponse: AuthorizeOutcome
 {
     val exemptionStatus: ExemptionStatus
     val pspReference: PSPReference
@@ -13,7 +13,7 @@ sealed interface AuthorizeResponse
         override val exemptionStatus: ExemptionStatus,
         override val pspReference: PSPReference
 
-    ) : AuthorizeResponse, AuthorizeOutcome
+    ) : AuthorizeResponse
 
     data class AuthorizeReject(
 
@@ -24,7 +24,7 @@ sealed interface AuthorizeResponse
         val errorReason: ErrorReason = ErrorReason.AUTHORIZATION_ERROR,
         val rejectionUseCase: RejectionUseCase = RejectionUseCase.UNDEFINED
 
-    ) : AuthorizeResponse, AuthorizeOutcome
+    ) : AuthorizeResponse
 
     data class AuthorizeFail(
 
@@ -34,5 +34,5 @@ sealed interface AuthorizeResponse
         val timeout: Boolean,
         val exception: Exception
 
-    ) : AuthorizeResponse, AuthorizeOutcome
+    ) : AuthorizeResponse
 }
